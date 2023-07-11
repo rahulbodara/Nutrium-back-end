@@ -8,7 +8,7 @@ const upload = multer({ dest: 'uploads/' });
 
 userRoute.post(
   '/accounts/sign_up',
-  upload.single('coverImage'),
+  upload.single('image'),
   userController.SignUp
 );
 userRoute.post('/accounts/sign_in', userController.SignIn);
