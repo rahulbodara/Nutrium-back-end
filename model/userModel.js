@@ -1,14 +1,16 @@
 const mongoose = require('mongoose');
+const { isEmail } = require('validator');
 
 const userSchema = mongoose.Schema({
   fullName: {
     type: String,
-    required: true,
+    required: [true, 'Please enter a full name'],
   },
   email: {
     type: String,
-    required: [true, 'please enter a email'],
-    unique: [true, 'email already exist'],
+    required: [true, 'Please enter an email'],
+    unique: true,
+    validate: [isEmail, 'Please enter a valid email'],
   },
   password: {
     type: String,
@@ -45,7 +47,7 @@ const userSchema = mongoose.Schema({
   profession: {
     type: String,
     required: [true, 'Please select a profession'],
-    enum: ['nutritionist', 'dietitian', 'nutritional therapist'],
+    enum: ['Nutritionist', 'Dietitian', 'Nutritional therapist','Health Coach', 'Student', 'Other'],
   },
   professionCardNumber: {
     type: Number,
@@ -70,3 +72,5 @@ const userSchema = mongoose.Schema({
     type: String,
   },
 });
+
+module.exports = mongoose.model('user', userSchema);
