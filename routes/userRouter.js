@@ -12,10 +12,6 @@ userRoute.post(
   userController.SignUp
 );
 userRoute.post('/accounts/sign_in', userController.SignIn);
-userRoute.get(
-  '/professionals/:id',
-  isAuthenticated,
-  userController.getUserProfile
-);
+userRoute.get('/professionals', isAuthenticated, userController.getUserProfile);
 
 module.exports = userRoute;
