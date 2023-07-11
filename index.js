@@ -8,7 +8,7 @@ const serviceRoutes=require("./routes/service")
 
 const app = express();
 
-const userRouter = require('./router/userRouter');
+const userRouter = require('./routes/userRouter');
 
 ConnectDB();
 

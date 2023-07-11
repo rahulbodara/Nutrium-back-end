@@ -1,6 +1,5 @@
 const Service = require('../model/Service');
 
-// Create a new service
 const createService = (req, res) => {
   const serviceData = req.body;
 
@@ -15,7 +14,6 @@ const createService = (req, res) => {
     });
 };
 
-// Get all services
 const getAllServices = (req, res) => {
   Service.find()
     .then(services => {
@@ -27,7 +25,6 @@ const getAllServices = (req, res) => {
     });
 };
 
-// Get a specific service by ID
 const getServiceById = (req, res) => {
   const serviceId = req.params.id;
 
@@ -45,7 +42,6 @@ const getServiceById = (req, res) => {
     });
 };
 
-// Update a specific service by ID
 const updateService = (req, res) => {
   const serviceId = req.params.id;
   const updates = req.body;
@@ -64,7 +60,6 @@ const updateService = (req, res) => {
     });
 };
 
-// Delete a specific service by ID
 const deleteService = (req, res) => {
   const serviceId = req.params.id;
 
