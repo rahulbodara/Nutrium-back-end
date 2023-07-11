@@ -2,27 +2,10 @@ const bcrypt = require('bcrypt');
 const User = require('../model/userModel');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET;
 
 const SignUp = async (req, res, next) => {
   try {
-    const {
-      fullName,
-      email,
-      password,
-      gender,
-      country,
-      DOB,
-      Number,
-      profession,
-      nutrium,
-      wokplace,
-      expertise,
-      clientPerMonth,
-      university,
-      courseEndDate,
-      zipcode,
-    } = req.body;
+    const { fullName, email, password } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
 
@@ -37,22 +20,10 @@ const SignUp = async (req, res, next) => {
       });
     }
 
-    const signup = new User({
+    const signup = new user({
       email,
       fullName,
       password: hashedPassword,
-      gender,
-      country,
-      zipcode,
-      DOB,
-      Number,
-      profession,
-      nutrium,
-      wokplace,
-      expertise,
-      clientPerMonth,
-      university,
-      courseEndDate,
     });
 
     const userData = await signup.save();
