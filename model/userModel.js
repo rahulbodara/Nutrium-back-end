@@ -47,6 +47,7 @@ const userSchema = mongoose.Schema({
   profession: {
     type: String,
     required: [true, 'Please select a profession'],
+    enum: ['nutritionist', 'dietitian', 'nutritional therapist'],
   },
   professionCardNumber: {
     type: Number,
