@@ -106,9 +106,7 @@ const SignIn = async (req, res, next) => {
 
 const getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select(
-      'fullName email profession country DOB gender zipcode'
-    );
+    const user = await User.findById(req.params.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User Not Found!' });
     }
@@ -118,4 +116,58 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { SignUp, SignIn, getUserProfile };
+const UpdateProfile = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const {
+      fullName,
+      email,
+      gender,
+      country,
+      DOB,
+      Number,
+      profession,
+      nutrium,
+      zipcode,
+    } = req.body;
+
+    const user = await User.findById(id);
+    if (user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (user._id !== userId) {
+      return res.status(403).json({ message: 'Unauthorized User' });
+    }
+    if (user.image) {
+      fs.unlink(user.image, (err) => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    user.fullName = fullName;
+    user.email = email;
+    user.gender = gender;
+    user.country = country;
+    user.DOB = DOB;
+    user.Number = Number;
+    user.profession = profession;
+    user.nutrium = nutrium;
+    user.wokplace = wokplace;
+    user.zipcode = zipcode;
+
+    const updatedUserData = await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'User profile updated successfully',
+      userData: updatedUserData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { SignUp, SignIn, getUserProfile, UpdateProfile };
