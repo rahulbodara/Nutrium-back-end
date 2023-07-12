@@ -1,11 +1,29 @@
 const bcrypt = require('bcrypt');
 const User = require('../model/userModel');
+const Workplace = require('../model/workplaceModel');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const SignUp = async (req, res, next) => {
   try {
-    const { fullName, email, password } = req.body;
+    const {
+      fullName,
+      email,
+      password,
+      gender,
+      country,
+      DOB,
+      Number,
+      profession,
+      nutrium,
+      workplace,
+      expertise,
+      clientPerMonth,
+      university,
+      courseEndDate,
+      zipcode,
+      professionCardNumber,
+    } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
 
@@ -20,17 +38,59 @@ const SignUp = async (req, res, next) => {
       });
     }
 
-    const signup = new user({
-      email,
-      fullName,
-      password: hashedPassword,
-    });
+    let userData;
+    if (profession === 'Student') {
+      userData = await new User({
+        fullName,
+        email,
+        password: hashedPassword,
+        gender,
+        country,
+        zipcode,
+        DOB,
+        Number,
+        profession,
+        nutrium,
+        university,
+        courseEndDate,
+        professionCardNumber,
+      });
+    } else {
+      userData = await new User({
+        fullName,
+        email,
+        password: hashedPassword,
+        gender,
+        country,
+        zipcode,
+        DOB,
+        Number,
+        profession,
+        nutrium,
+        expertise,
+        clientPerMonth,
+        professionCardNumber,
+      });
+    }
 
-    const userData = await signup.save();
+    const savedUser = await userData.save();
+    if (workplace) {
+      const workplaceData = await new Workplace({
+        name: fullName,
+        country,
+        phone: Number,
+        user: savedUser._id,
+        color: null,
+        zipcode,
+        address: null,
+        addressStatus: null,
+      });
+      await workplaceData.save();
+    }
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
-      userData,
+      userData: savedUser,
     });
   } catch (error) {
     next(error);
@@ -57,7 +117,6 @@ const SignIn = async (req, res, next) => {
           expiresIn: '1h',
         }
       );
-      user.token = token;
       const { password, ...userdetails } = user._doc;
       return res.status(200).json({
         token: token,
@@ -77,7 +136,8 @@ const SignIn = async (req, res, next) => {
 
 const getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const userId = req.userId;
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User Not Found!' });
     }

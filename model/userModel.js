@@ -47,7 +47,14 @@ const userSchema = mongoose.Schema({
   profession: {
     type: String,
     required: [true, 'Please select a profession'],
-    enum: ['Nutritionist', 'Dietitian', 'Nutritional therapist','Health Coach', 'Student', 'Other'],
+    enum: [
+      'Nutritionist',
+      'Dietitian',
+      'Nutritional therapist',
+      'Health Coach',
+      'Student',
+      'Other',
+    ],
   },
   professionCardNumber: {
     type: Number,
@@ -56,7 +63,7 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please select What are you looking for in Nutrium?'],
   },
-  wokplace: {
+  workplace: {
     type: String,
   },
   expertise: {
