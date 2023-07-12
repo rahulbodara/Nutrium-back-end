@@ -21,6 +21,7 @@ app.listen(port, () => {
 
 app.use("/api/v1", workplaceRoutes);
 app.use("/api/v1", serviceRoutes);
+app.use('/api/v1', userRouter);
 app.use((req, res, next) => {
   console.log("HTTP Method - " + req.method + ",URL - " + req.url);
   next();
