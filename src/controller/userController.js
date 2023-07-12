@@ -1,12 +1,17 @@
 const bcrypt = require('bcrypt');
-const User = require('../model/userModel');
-const Workplace = require('../model/workplaceModel');
+const User = require('../model/User');
+const Workplace = require('../model/Workplace');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
+const mongoose = require('mongoose');
 
 const SignUp = async (req, res, next) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const {
       fullName,
       email,
@@ -14,7 +19,7 @@ const SignUp = async (req, res, next) => {
       gender,
       country,
       DOB,
-      Number,
+      MobileNumber,
       profession,
       nutrium,
       workplace,
@@ -22,15 +27,14 @@ const SignUp = async (req, res, next) => {
       clientPerMonth,
       university,
       courseEndDate,
-      zipcode,
       professionCardNumber,
+      zipcode,
     } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
-
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const exist = await User.findOne({ email });
+    const exist = await User.findOne({ email }).session(session);
 
     if (exist) {
       return res.status(400).json({
@@ -41,60 +45,61 @@ const SignUp = async (req, res, next) => {
 
     let userData;
     if (profession === 'Student') {
-      userData = await new User({
+      userData = new User({
         fullName,
         email,
         password: hashedPassword,
         gender,
         country,
-        zipcode,
         DOB,
-        Number,
+        MobileNumber,
         profession,
         nutrium,
         university,
         courseEndDate,
         professionCardNumber,
+        zipcode,
       });
     } else {
-      userData = await new User({
+      userData = new User({
         fullName,
         email,
         password: hashedPassword,
         gender,
         country,
-        zipcode,
         DOB,
-        Number,
+        MobileNumber,
         profession,
         nutrium,
         expertise,
         clientPerMonth,
         professionCardNumber,
+        zipcode,
       });
     }
 
-    const savedUser = await userData.save();
+    const savedUser = await userData.save({ session });
+
     if (workplace) {
-      const workplaceData = await new Workplace({
-        name: fullName,
+      const workplaceData = new Workplace({
+        name: workplace,
         country,
-        phone: Number,
-        user: savedUser._id,
-        color: null,
-        zipcode,
-        address: null,
-        addressStatus: null,
       });
-      await workplaceData.save();
+      await workplaceData.save({ session });
     }
+
+    await session.commitTransaction();
+
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
       userData: savedUser,
     });
   } catch (error) {
+    await session.abortTransaction();
     next(error);
+  } finally {
+    session.endSession();
   }
 };
 

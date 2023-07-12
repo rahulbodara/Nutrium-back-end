@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use(cors());
 
-app.use('/', userRouter);
+app.use('/api/v1', userRouter);
 
 app.listen(port, () => {
   console.log(`server is running on ${port}`);
