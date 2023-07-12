@@ -7,11 +7,11 @@ const { isAuthenticated } = require('../middleware/auth');
 const upload = multer({ dest: 'uploads/' });
 
 userRoute.post(
-  '/accounts/sign_up',
+  '/sign_up',
   upload.single('image'),
   userController.SignUp
 );
-userRoute.post('/accounts/sign_in', userController.SignIn);
+userRoute.post('/sign_in', userController.SignIn);
 userRoute.get('/professionals', isAuthenticated, userController.getUserProfile);
 
 module.exports = userRoute;

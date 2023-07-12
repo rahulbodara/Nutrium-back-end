@@ -26,6 +26,7 @@ const userSchema = mongoose.Schema({
   gender: {
     type: String,
     required: [true, 'Please select a gender'],
+    enum: ['Male', 'Female', 'Others'],
   },
   country: {
     type: String,
@@ -35,8 +36,9 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please enter a date of birth'],
   },
-  mobileNumber: {
-    type: String,
+  MobileNumber: {
+    type: Number,
+    required: [true, 'Please enter a Mobile Number'],
     validate: {
       validator: function (value) {
         return /^[0-9]+$/.test(value);
