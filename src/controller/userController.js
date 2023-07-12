@@ -1,10 +1,10 @@
-const bcrypt = require('bcrypt');
-const User = require('../model/User');
-const Workplace = require('../model/Workplace');
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
+const User = require("../model/User");
+const Workplace = require("../model/Workplace");
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const SignUp = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -39,12 +39,12 @@ const SignUp = async (req, res, next) => {
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: 'This email already exists',
+        message: "This email already exists",
       });
     }
 
     let userData;
-    if (profession === 'Student') {
+    if (profession === "Student") {
       userData = new User({
         fullName,
         email,
@@ -82,9 +82,11 @@ const SignUp = async (req, res, next) => {
 
     if (workplace) {
       const workplaceData = new Workplace({
+        userId: savedUser.id,
         name: workplace,
         country,
       });
+      console.log(workplaceData, "wowowowo");
       await workplaceData.save({ session });
     }
 
@@ -92,7 +94,7 @@ const SignUp = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'User Signup successfully',
+      message: "User Signup successfully",
       userData: savedUser,
     });
   } catch (error) {
@@ -109,7 +111,7 @@ const SignIn = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
@@ -120,20 +122,20 @@ const SignIn = async (req, res, next) => {
         },
         JWT_SECRET,
         {
-          expiresIn: '1h',
+          expiresIn: "1h",
         }
       );
       const { password, ...userdetails } = user._doc;
       return res.status(200).json({
         token: token,
-        message: 'Login successfully',
+        message: "Login successfully",
         status: 200,
         userdetails,
       });
     } else {
       return res
         .status(400)
-        .send({ message: 'Invalid Credentials', status: 400 });
+        .send({ message: "Invalid Credentials", status: 400 });
     }
   } catch (error) {
     next(error);
@@ -143,9 +145,9 @@ const SignIn = async (req, res, next) => {
 const getUserProfile = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select("-password");
     if (!user) {
-      return res.status(404).json({ message: 'User Not Found!' });
+      return res.status(404).json({ message: "User Not Found!" });
     }
     res.status(200).json(user);
   } catch (error) {
