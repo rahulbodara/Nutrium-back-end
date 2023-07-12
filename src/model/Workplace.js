@@ -4,6 +4,7 @@ const workplaceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: 'user',
   },
   name: {
     type: String,
