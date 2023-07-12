@@ -1,25 +1,25 @@
 const bcrypt = require('bcrypt');
-const mongoose = require('mongoose');
 const User = require('../model/User');
 const Workplace = require('../model/Workplace');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
-const fs = require('fs');
+const mongoose = require('mongoose');
 
 const SignUp = async (req, res, next) => {
-  const session = await User.startSession();
-  session.startTransaction();
+  const session = await mongoose.startSession();
 
   try {
+    session.startTransaction();
+
     const {
       fullName,
       email,
       password,
       gender,
       country,
-      dateOfBirth,
-      phoneNumber,
+      DOB,
+      MobileNumber,
       profession,
       nutrium,
       workplace,
@@ -34,11 +34,9 @@ const SignUp = async (req, res, next) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const exist = await User.findOne({ email });
+    const exist = await User.findOne({ email }).session(session);
 
     if (exist) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({
         success: false,
         message: 'This email already exists',
@@ -53,8 +51,8 @@ const SignUp = async (req, res, next) => {
         password: hashedPassword,
         gender,
         country,
-        dateOfBirth,
-        phoneNumber,
+        DOB,
+        MobileNumber,
         profession,
         nutrium,
         university,
@@ -69,8 +67,8 @@ const SignUp = async (req, res, next) => {
         password: hashedPassword,
         gender,
         country,
-        dateOfBirth,
-        phoneNumber,
+        DOB,
+        MobileNumber,
         profession,
         nutrium,
         expertise,
@@ -81,20 +79,16 @@ const SignUp = async (req, res, next) => {
     }
 
     const savedUser = await userData.save({ session });
-    // console.log('saveUser---------------------->', savedUser._id);
 
     if (workplace) {
       const workplaceData = new Workplace({
         name: workplace,
-        userId: savedUser._id,
         country,
       });
-      // console.log('workplace------------------------>', workplaceData);
       await workplaceData.save({ session });
     }
 
     await session.commitTransaction();
-    session.endSession();
 
     return res.status(200).json({
       success: true,
@@ -103,8 +97,9 @@ const SignUp = async (req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
     next(error);
+  } finally {
+    session.endSession();
   }
 };
 
@@ -158,69 +153,4 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
-const UpdateProfile = async (req, res, next) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
-    const {
-      fullName,
-      email,
-      gender,
-      country,
-      dateOfBirth,
-      phoneNumber,
-      profession,
-      professionCardNumber,
-      zipcode,
-    } = req.body;
-
-    const userId = req.userId;
-    const user = await User.findById(userId).session(session);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-
-    if (user.image) {
-      fs.unlink(user.image, async (err) => {
-        if (err) {
-          console.error(err);
-        }
-      });
-    }
-
-    user.fullName = fullName;
-    user.email = email;
-    user.gender = gender;
-    user.country = country;
-    user.dateOfBirth = dateOfBirth;
-    user.phoneNumber = phoneNumber;
-    user.profession = profession;
-    user.professionCardNumber = professionCardNumber;
-    user.zipcode = zipcode;
-    if (req.file) {
-      user.image = req.file.path;
-    }
-
-    await user.save({ session });
-
-    await session.commitTransaction();
-
-    return res.status(200).json({
-      success: true,
-      message: 'User profile updated successfully',
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    next(error);
-  } finally {
-    session.endSession();
-  }
-};
-
-module.exports = { SignUp, SignIn, getUserProfile, UpdateProfile };
+module.exports = { SignUp, SignIn, getUserProfile };

@@ -1,8 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const workplaceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
+    required: true,
     ref: 'user',
   },
   name: {
@@ -20,7 +21,7 @@ const workplaceSchema = new mongoose.Schema({
       validator: function (value) {
         return /^\d{10}$/.test(value);
       },
-      message: 'Invalid phone number format',
+      message: "Invalid phone number format",
     },
   },
   color: {
@@ -51,12 +52,12 @@ const workplaceSchema = new mongoose.Schema({
         validator: function (value) {
           return /^\d{5}(?:-\d{4})?$/.test(value);
         },
-        message: 'Invalid zip code format',
+        message: "Invalid zip code format",
       },
     },
   },
 });
 
-const Workplace = mongoose.model('Workplace', workplaceSchema);
+const Workplace = mongoose.model("Workplace", workplaceSchema);
 
 module.exports = Workplace;

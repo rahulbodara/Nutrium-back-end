@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const serviceSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
   typeOfService: {
     type: String,
     required: true,
