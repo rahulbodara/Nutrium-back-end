@@ -9,11 +9,6 @@ const upload = multer({ dest: 'src/uploads/' });
 userRoute.post('/sign_up', upload.single('image'), userController.SignUp);
 userRoute.post('/sign_in', userController.SignIn);
 userRoute.get('/professionals', isAuthenticated, userController.getUserProfile);
-userRoute.put(
-  '/professionals',
-  upload.single('image'),
-  isAuthenticated,
-  userController.UpdateProfile
-);
+userRoute.put('/professionals',upload.single('image'),isAuthenticated,userController.UpdateProfile);
 
 module.exports = userRoute;
