@@ -32,11 +32,11 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please select a country'],
   },
-  DOB: {
+  dateOfBirth: {
     type: String,
     required: [true, 'Please enter a date of birth'],
   },
-  MobileNumber: {
+  phoneNumber: {
     type: Number,
     required: [true, 'Please enter a Mobile Number'],
     validate: {

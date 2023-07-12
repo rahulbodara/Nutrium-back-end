@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const workplaceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
   },
   name: {
     type: String,
