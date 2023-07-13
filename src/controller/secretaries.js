@@ -3,17 +3,23 @@ const Secretaries = require("../model/Secretaries");
 const createSecretaries = async (req, res) => {
   try {
     const userId = req.userId;
+    const { name, email, workplace } = req.body;
+    const existingSecretary = await Secretaries.findOne({ email });
+    if (existingSecretary) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
     const secretariesData = {
-      ...req.body,
-      userId: userId,
+      userId,
+      name,
+      email,
+      workplace,
     };
     const service = new Secretaries(secretariesData);
     const savedSecretaries = await service.save();
-
-    res.status(201).json(savedSecretaries);
+    res.status(200).json(savedSecretaries);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to save Secretaries" });
+    res.status(500).json({ message: "Failed to save Secretaries" });
   }
 };
 
@@ -37,13 +43,13 @@ const getSecretariesById = async (req, res) => {
     const secretaries = await Secretaries.findById(secretariesId);
 
     if (secretaries) {
-      res.json(secretaries);
+      res.status(200).json(secretaries);
     } else {
-      res.status(404).json({ error: "Secretaries not found" });
+      res.status(404).json({ message: "Secretaries not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch Secretaries" });
+    res.status(500).json({ message: "Failed to fetch Secretaries" });
   }
 };
 
@@ -59,13 +65,13 @@ const updateSecretaries = async (req, res) => {
       }
     );
     if (updatedSecretaries) {
-      res.json(updatedSecretaries);
+      res.status(200).json(updatedSecretaries);
     } else {
-      res.status(404).json({ error: "Secretaries not found" });
+      res.status(404).json({ message: "Secretaries not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update Secretaries" });
+    res.status(500).json({ message: "Failed to update Secretaries" });
   }
 };
 
@@ -73,16 +79,18 @@ const deleteSecretaries = async (req, res) => {
   try {
     const secretariesId = req.params.id;
 
-    const deletedSecretaries = await Service.findByIdAndRemove(secretariesId);
+    const deletedSecretaries = await Secretaries.findByIdAndRemove(
+      secretariesId
+    );
 
     if (deletedSecretaries) {
-      res.json({ message: "Secretaries deleted successfully" });
+      res.status(200).json({ message: "Secretaries deleted successfully" });
     } else {
-      res.status(404).json({ error: "Secretaries not found" });
+      res.status(404).json({ message: "Secretaries not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete Secretaries" });
+    res.status(500).json({ message: "Failed to delete Secretaries" });
   }
 };
 

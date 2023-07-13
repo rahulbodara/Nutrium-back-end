@@ -13,7 +13,7 @@ const createService = async (req, res) => {
     res.status(201).json(savedService);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to save service" });
+    res.status(500).json({ message: "Failed to save service" });
   }
 };
 
@@ -37,13 +37,13 @@ const getServiceById = async (req, res) => {
     const service = await Service.findById(serviceId);
 
     if (service) {
-      res.json(service);
+      res.status(200).json(service);
     } else {
-      res.status(404).json({ error: "Service not found" });
+      res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch service" });
+    res.status(500).json({ message: "Failed to fetch service" });
   }
 };
 
@@ -57,13 +57,13 @@ const updateService = async (req, res) => {
     });
 
     if (updatedService) {
-      res.json(updatedService);
+      res.status(200).json(updatedService);
     } else {
-      res.status(404).json({ error: "Service not found" });
+      res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update service" });
+    res.status(500).json({ message: "Failed to update service" });
   }
 };
 
@@ -74,13 +74,13 @@ const deleteService = async (req, res) => {
     const deletedService = await Service.findByIdAndRemove(serviceId);
 
     if (deletedService) {
-      res.json({ message: "Service deleted successfully" });
+      res.status(200).json({ message: "Service deleted successfully" });
     } else {
-      res.status(404).json({ error: "Service not found" });
+      res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete service" });
+    res.status(500).json({ message: "Failed to delete service" });
   }
 };
 
