@@ -34,6 +34,7 @@ app.use(cors());
 // app.use('/api/v1', serviceRoutes);
 // app.use('/api/v1', secretariesRoutes);
 
+
 app.use(HandleError);
 app.use(notFoundMiddleware);
 
