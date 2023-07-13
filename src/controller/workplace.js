@@ -14,7 +14,7 @@ const createWorkplace = async (req, res) => {
     res.status(201).json(savedWorkplace);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to save workplace" });
+    res.status(500).json({ message: "Failed to save workplace" });
   }
 };
 
@@ -38,13 +38,13 @@ const getWorkplaceById = async (req, res) => {
     const workplace = await Workplace.findById(workplaceId);
 
     if (workplace) {
-      res.json(workplace);
+      res.status(200).json(workplace);
     } else {
-      res.status(404).json({ error: "Workplace not found" });
+      res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch workplace" });
+    res.status(500).json({ message: "Failed to fetch workplace" });
   }
 };
 
@@ -60,13 +60,13 @@ const updateWorkplace = async (req, res) => {
     );
 
     if (updatedWorkplace) {
-      res.json(updatedWorkplace);
+      res.status(200).json(updatedWorkplace);
     } else {
-      res.status(404).json({ error: "Workplace not found" });
+      res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update workplace" });
+    res.status(500).json({ message: "Failed to update workplace" });
   }
 };
 
@@ -77,13 +77,13 @@ const deleteWorkplace = async (req, res) => {
     const deletedWorkplace = await Workplace.findByIdAndRemove(workplaceId);
 
     if (deletedWorkplace) {
-      res.json({ message: "Workplace deleted successfully" });
+      res.status(200).json({ message: "Workplace deleted successfully" });
     } else {
-      res.status(404).json({ error: "Workplace not found" });
+      res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete workplace" });
+    res.status(500).json({ message: "Failed to delete workplace" });
   }
 };
 
