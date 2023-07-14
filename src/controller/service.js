@@ -1,6 +1,6 @@
 const Service = require("../model/Service");
 
-const createService = async (req, res) => {
+const createService = async (req, res, next) => {
   try {
     const userId = req.userId;
     const serviceData = {
@@ -12,8 +12,7 @@ const createService = async (req, res) => {
 
     res.status(201).json(savedService);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to save service" });
+    next(error);
   }
 };
 
@@ -30,7 +29,7 @@ const getAllServices = async (req, res, next) => {
   }
 };
 
-const getServiceById = async (req, res) => {
+const getServiceById = async (req, res, next) => {
   try {
     const serviceId = req.params.id;
 
@@ -42,12 +41,11 @@ const getServiceById = async (req, res) => {
       res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch service" });
+    next(error);
   }
 };
 
-const updateService = async (req, res) => {
+const updateService = async (req, res, next) => {
   try {
     const serviceId = req.params.id;
     const updates = req.body;
@@ -62,12 +60,11 @@ const updateService = async (req, res) => {
       res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update service" });
+    next(error);
   }
 };
 
-const deleteService = async (req, res) => {
+const deleteService = async (req, res, next) => {
   try {
     const serviceId = req.params.id;
 
@@ -79,8 +76,7 @@ const deleteService = async (req, res) => {
       res.status(404).json({ message: "Service not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to delete service" });
+    next(error);
   }
 };
 

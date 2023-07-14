@@ -1,6 +1,6 @@
 const Workplace = require("../model/Workplace");
 
-const createWorkplace = async (req, res) => {
+const createWorkplace = async (req, res, next) => {
   try {
     const userId = req.userId;
     const workplaceData = {
@@ -13,8 +13,7 @@ const createWorkplace = async (req, res) => {
 
     res.status(201).json(savedWorkplace);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to save workplace" });
+    next(error);
   }
 };
 
@@ -32,7 +31,7 @@ const getAllWorkplaces = async (req, res, next) => {
   }
 };
 
-const getWorkplaceById = async (req, res) => {
+const getWorkplaceById = async (req, res, next) => {
   try {
     const workplaceId = req.params.id;
     const workplace = await Workplace.findById(workplaceId);
@@ -43,12 +42,11 @@ const getWorkplaceById = async (req, res) => {
       res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch workplace" });
+    next(error);
   }
 };
 
-const updateWorkplace = async (req, res) => {
+const updateWorkplace = async (req, res, error) => {
   try {
     const workplaceId = req.params.id;
     const updates = req.body;
@@ -65,12 +63,11 @@ const updateWorkplace = async (req, res) => {
       res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update workplace" });
+    next(error);
   }
 };
 
-const deleteWorkplace = async (req, res) => {
+const deleteWorkplace = async (req, res, next) => {
   try {
     const workplaceId = req.params.id;
 
@@ -82,8 +79,7 @@ const deleteWorkplace = async (req, res) => {
       res.status(404).json({ message: "Workplace not found" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to delete workplace" });
+    next(error);
   }
 };
 

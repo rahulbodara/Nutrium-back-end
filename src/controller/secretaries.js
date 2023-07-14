@@ -1,6 +1,6 @@
 const Secretaries = require("../model/Secretaries");
 
-const createSecretaries = async (req, res) => {
+const createSecretaries = async (req, res, next) => {
   try {
     const userId = req.userId;
     const { name, email, workplace } = req.body;
@@ -19,7 +19,7 @@ const createSecretaries = async (req, res) => {
     res.status(200).json(savedSecretaries);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to save Secretaries" });
+    next(error);
   }
 };
 
@@ -36,7 +36,7 @@ const getAllSecretaries = async (req, res, next) => {
   }
 };
 
-const getSecretariesById = async (req, res) => {
+const getSecretariesById = async (req, res, next) => {
   try {
     const secretariesId = req.params.id;
 
@@ -49,11 +49,11 @@ const getSecretariesById = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to fetch Secretaries" });
+    next(error);
   }
 };
 
-const updateSecretaries = async (req, res) => {
+const updateSecretaries = async (req, res, next) => {
   try {
     const secretariesId = req.params.id;
     const updates = req.body;
@@ -71,11 +71,11 @@ const updateSecretaries = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to update Secretaries" });
+    next(error);
   }
 };
 
-const deleteSecretaries = async (req, res) => {
+const deleteSecretaries = async (req, res, next) => {
   try {
     const secretariesId = req.params.id;
 
@@ -90,7 +90,7 @@ const deleteSecretaries = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to delete Secretaries" });
+    next(error);
   }
 };
 

@@ -1,17 +1,15 @@
 const Subscription = require("../model/Subscription");
 
-const getSubscription = async (req, res) => {
+const getSubscription = async (res, next) => {
   try {
-    const userId = req.userId;
-    const subscription = await Subscription.find({ userId });
+    const subscription = await Subscription.findOne();
     res.status(200).json(subscription);
   } catch (error) {
-    console.error("Error retrieving subscription:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    next(error);
   }
 };
 
-const createSubscription = async (req, res) => {
+const createSubscription = async (req, res, next) => {
   const userId = req.userId;
   const {
     trialPeriodEndDate,
@@ -37,15 +35,14 @@ const createSubscription = async (req, res) => {
       },
       price: { priceCurrency, priceValue },
     });
-    const savedSubscription = await newSubscription.save();
 
+    const savedSubscription = await newSubscription.save();
     res.status(200).json(savedSubscription);
   } catch (error) {
-    console.error("Error creating subscription:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    next(error);
   }
 };
-const updateSubscription = async (req, res) => {
+const updateSubscription = async (req, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -72,8 +69,7 @@ const updateSubscription = async (req, res) => {
 
     res.status(200).json(subscription);
   } catch (error) {
-    console.error("Error updating subscription:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    next(error);
   }
 };
 module.exports = {

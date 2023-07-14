@@ -1,22 +1,21 @@
 const BillingInformation = require("../model/BillingInformation");
 const User = require("../model/User");
 
-const getBillingInformation = async (req, res) => {
+const getBillingInformation = async (res, next) => {
   try {
-    const userId = req.userId;
-    const billingInformation = await BillingInformation.find({ userId });
+    const billingInformation = await BillingInformation.findOne();
     res.status(200).json(billingInformation);
   } catch (error) {
-    console.error("Error retrieving billingInformation:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    console.error("Error retrieving billingInformation:", error);
+    next(error);
   }
 };
-const createBillingInformation = async (req, res) => {
+const createBillingInformation = async (req, res, next) => {
   try {
     const userId = req.userId;
     const user = await User.findOne({ _id: userId });
     if (!user) {
-      return res.status(404).json({ messege: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
     const { name, vatIdentificationNumber, address, city, zipcode } = req.body;
     const { fullName, country } = user;
@@ -35,38 +34,32 @@ const createBillingInformation = async (req, res) => {
 
     res.status(200).json(savedBillingInformation);
   } catch (error) {
-    console.error("Error creating billing information:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    console.error("Error creating billing information:", error);
+    next(error);
   }
 };
-
-const updateBillingInformation = async (req, res) => {
+const updateBillingInformation = async (req, res, next) => {
   try {
     const billingInformationId = req.params.id;
+    console.log(billingInformationId);
     const { name, country, vatIdentificationNumber, address, city, zipcode } =
       req.body;
 
     const updatedBillingInformation =
       await BillingInformation.findByIdAndUpdate(
         billingInformationId,
-        {
-          name,
-          country,
-          vatIdentificationNumber,
-          address,
-          city,
-          zipcode,
-        },
+        { name, country, vatIdentificationNumber, address, city, zipcode },
         { new: true }
       );
+    console.log(updatedBillingInformation, "qewed");
     if (!updatedBillingInformation) {
-      return res.status(404).json({ messege: "Billing information not found" });
+      return res.status(404).json({ message: "Billing information not found" });
     }
 
     res.status(200).json(updatedBillingInformation);
   } catch (error) {
-    console.error("Error updating billing information:", messege);
-    res.status(500).json({ messege: "An error occurred" });
+    console.error("Error updating billing information:", error);
+    next(error);
   }
 };
 
