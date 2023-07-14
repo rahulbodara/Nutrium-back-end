@@ -1,22 +1,26 @@
 const mongoose = require("mongoose");
-const { isEmail } = require("validator");
+// const { isEmail } = require("validator");
+// const mongoose = require('mongoose');
+const validator = require('validator');
 
 const userSchema = mongoose.Schema(
   {
     fullName: {
       type: String,
-      required: [true, "Please enter a full name"],
+      required: [true, 'Please enter your name'],
+      maxLength: [30, 'Name cannot exceed 30 charaters'],
+      minLength: [4, 'Name should have more then 4 charaters'],
     },
     email: {
       type: String,
-      required: [true, "Please enter an email"],
+      required: [true, 'Please enter an email'],
       unique: true,
-      validate: [isEmail, "Please enter a valid email"],
+      validate: [validator.isEmail, 'Please enter a valid email'],
     },
     password: {
       type: String,
-      required: [true, "Please enter a password"],
-      minlength: [8, "Password must be at least 8 characters long"],
+      required: [true, 'Please enter your password'],
+      minLength: [8, 'Name should be greater then 8 charaters'],
     },
     image: {
       type: String,
@@ -26,37 +30,51 @@ const userSchema = mongoose.Schema(
     },
     gender: {
       type: String,
-      required: [true, "Please select a gender"],
-      enum: ["Male", "Female", "Others"],
+      required: [true, 'Please select a gender'],
+      enum: ['Male', 'Female', 'Others'],
     },
     country: {
       type: String,
-      required: [true, "Please select a country"],
+      required: [true, 'Please select a country'],
     },
     dateOfBirth: {
       type: String,
-      required: [true, "Please enter a date of birth"],
+      required: [true, 'Please enter a date of birth'],
+      validate: {
+        validator: function (value) {
+          const dateRegex =
+            /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+          if (!dateRegex.test(value)) {
+            return false;
+          }
+          const parts = value.split('/');
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          const date = new Date(year, month - 1, day);
+          return (
+            date.getDate() === day &&
+            date.getMonth() === month - 1 &&
+            date.getFullYear() === year
+          );
+        },
+        message: 'Please enter a valid date of birth (DD/MM/YYYY)',
+      },
     },
     phoneNumber: {
       type: Number,
-      required: [true, "Please enter a Mobile Number"],
-      validate: {
-        validator: function (value) {
-          return /^[0-9]+$/.test(value);
-        },
-        message: "Please enter a valid mobile number",
-      },
+      required: [true, 'Please enter a Mobile Number'],
     },
     profession: {
       type: String,
-      required: [true, "Please select a profession"],
+      required: [true, 'Please select a profession'],
       enum: [
-        "Nutritionist",
-        "Dietitian",
-        "Nutritional therapist",
-        "Health Coach",
-        "Student",
-        "Other",
+        'Nutritionist',
+        'Dietitian',
+        'Nutritional therapist',
+        'Health Coach',
+        'Student',
+        'Other',
       ],
     },
     professionCardNumber: {
@@ -64,27 +82,48 @@ const userSchema = mongoose.Schema(
     },
     nutrium: {
       type: String,
-      required: [true, "Please select What are you looking for in Nutrium?"],
+      required: [true, 'Please select What are you looking for in Nutrium?'],
     },
     workplace: {
       type: String,
+      required: function () {
+        return this.profession !== 'Student';
+      },
     },
     expertise: {
       type: Array,
+      required: function () {
+        return this.profession !== 'Student';
+      },
     },
     clientPerMonth: {
       type: String,
+      required: function () {
+        return this.profession !== 'Student';
+      },
     },
     university: {
       type: String,
+      required: function () {
+        return this.profession === 'Student';
+      },
     },
     courseEndDate: {
       type: String,
+      required: function () {
+        return this.profession === 'Student';
+      },
+    },
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpires: {
+      type: Date,
+      default: null,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("user", userSchema);
