@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken');
 
 const generateResetToken = async (user) => {
   const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: '1h',
+    expiresIn: '5m',
   });
-  const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
+  const resetTokenExpires = new Date(Date.now() + 5 * 60 * 1000);
 
   user.resetToken = token;
   user.resetTokenExpires = resetTokenExpires;
@@ -23,13 +23,13 @@ const sendEmail = async (email, resetToken) => {
       pass: process.env.MAIL_PASSWORD,
     },
   });
-  // const resetUrl = `http://localhost:8080/api/v1/forget-password?token=${resetToken}`;
+  const resetUrl = `http://localhost:8080/api/v1/forget-password?token=${resetToken}`;
   const mailOptions = {
     from: process.env.GMAIL,
     to: email,
     subject: 'Password Reset',
     html: `<p>Please click the following link to reset your password:</p>
-    <a href="http://localhost:8080/api/v1/forget-password?token=${resetToken}">Reset Password</a>`,
+    <a href="${resetUrl}">Reset Password</a>`,
   };
   await transporter.sendMail(mailOptions);
 };
