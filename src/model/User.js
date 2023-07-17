@@ -1,6 +1,4 @@
-const mongoose = require("mongoose");
-// const { isEmail } = require("validator");
-// const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const validator = require('validator');
 
 const userSchema = mongoose.Schema(
@@ -86,9 +84,7 @@ const userSchema = mongoose.Schema(
     },
     workplace: {
       type: String,
-      required: function () {
-        return this.profession !== 'Student';
-      },
+      required: [true, 'Please enter a Your Work Place'],
     },
     expertise: {
       type: Array,
@@ -102,17 +98,8 @@ const userSchema = mongoose.Schema(
         return this.profession !== 'Student';
       },
     },
-    university: {
-      type: String,
-      required: function () {
-        return this.profession === 'Student';
-      },
-    },
     courseEndDate: {
       type: String,
-      required: function () {
-        return this.profession === 'Student';
-      },
     },
     resetToken: {
       type: String,
@@ -122,8 +109,12 @@ const userSchema = mongoose.Schema(
       type: Date,
       default: null,
     },
+    isActive: {
+      type: Number,
+      default: 1,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model('user', userSchema);

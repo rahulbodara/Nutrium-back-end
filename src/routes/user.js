@@ -17,7 +17,7 @@ userRoute.put(
 );
 userRoute.post('/forget-password', userController.forgotPassword);
 userRoute.post('/resetPassword', userController.resetPassword);
-userRoute.delete(
+userRoute.put(
   '/delete-account',
   isAuthenticated,
   userController.deleteUserProfile

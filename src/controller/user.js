@@ -25,7 +25,6 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
-      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -57,7 +56,6 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
-      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -87,7 +85,11 @@ const SignUp = async (req, res, next) => {
 const SignIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: 'Please provide email and password' });
+    }
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
@@ -125,8 +127,13 @@ const SignIn = async (req, res, next) => {
 
 const getUserProfile = async (req, res, next) => {
   try {
-    const userId = req.userId;
-    const user = await User.findById(userId).select('-password');
+    const query = {
+      _id: req.userId,
+      isActive: 1,
+    };
+
+    const user = await User.findOne(query).select('-password');
+    console.log(query);
     if (!user) {
       return res.status(404).json({ message: 'User Not Found!' });
     }
@@ -227,7 +234,15 @@ const resetPassword = async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: 'Invalid or expired token.' });
+    }
+
+    if (user.resetToken === null) {
+      return res.status(400).json({ message: 'Token has already been used.' });
+    }
+
+    if (user.resetTokenExpires <= new Date()) {
+      return res.status(400).json({ message: 'Token has expired.' });
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -250,7 +265,12 @@ const deleteUserProfile = async (req, res, next) => {
     const userId = req.userId;
     const password = req.body.password;
 
-    const user = await User.findById(userId);
+    const user = await User.findOneAndUpdate(
+      { _id: userId, isActive: 1 },
+      { $set: { isActive: 0 } },
+      { new: true }
+    );
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -258,26 +278,30 @@ const deleteUserProfile = async (req, res, next) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: 'Invalid password' });
-    } else {
-      const deletedUser = await User.findByIdAndDelete(userId);
-
-      if (!deletedUser) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      if (deletedUser.image) {
-        fs.unlink(deletedUser.image, async (err) => {
-          if (err) {
-            console.error(err);
-          }
-        });
-      }
-      await Workplace.deleteMany({ userId: userId });
-      await Service.deleteMany({ userId: userId });
-      await Secretaries.deleteMany({ userId: userId });
-
-      res.status(200).json({ message: 'Account deleted successfully' });
     }
+
+    if (user.image) {
+      fs.unlink(user.image, async (err) => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    await Workplace.updateMany(
+      { userId: userId, isActive: 1 },
+      { $set: { isActive: 0 } }
+    );
+    await Service.updateMany(
+      { userId: userId, isActive: 1 },
+      { $set: { isActive: 0 } }
+    );
+    await Secretaries.updateMany(
+      { userId: userId, isActive: 1 },
+      { $set: { isActive: 0 } }
+    );
+
+    res.status(200).json({ message: 'Account deleted successfully' });
   } catch (error) {
     next(error);
   }
