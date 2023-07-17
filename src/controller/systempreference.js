@@ -33,6 +33,7 @@ const createSystemPreference = async (req, res, next) => {
     next(error);
   }
 };
+
 const getSystemPreference = async ( res, next) => {
   try {
     const systemPreference = await SystemPreference.findOne();
@@ -41,6 +42,7 @@ const getSystemPreference = async ( res, next) => {
     next(error);
   }
 };
+
 const updateSystemPreference = async (req, res, next) => {
   try {
     const { id } = req.params;

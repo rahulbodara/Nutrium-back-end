@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { isEmail } = require('validator');
 
 const secretariesSchema = new mongoose.Schema({
@@ -8,20 +8,24 @@ const secretariesSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: [true, "Please enter a full name"],
+    required: [true, 'Please enter a full name'],
   },
   email: {
     type: String,
-    required: [true, "Please enter an email"],
+    required: [true, 'Please enter an email'],
     unique: true,
-    validate: [isEmail, "Please enter a valid email"],
+    validate: [isEmail, 'Please enter a valid email'],
   },
   workplace: {
     type: String,
     required: true,
   },
+  isActive: {
+    type: Number,
+    default: 1,
+  },
 });
 
-const Secretaries = mongoose.model("Secretaries", secretariesSchema);
+const Secretaries = mongoose.model('Secretaries', secretariesSchema);
 
 module.exports = Secretaries;

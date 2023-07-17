@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const billingInformationSchema = new mongoose.Schema({
   userId: {
@@ -28,7 +28,7 @@ const billingInformationSchema = new mongoose.Schema({
 });
 
 const BillingInformation = mongoose.model(
-  "BillingInformation",
+  'BillingInformation',
   billingInformationSchema
 );
 

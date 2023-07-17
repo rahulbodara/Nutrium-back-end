@@ -1,8 +1,8 @@
-const CalenderSetting = require("../model/CalenderSetting");
+const CalenderSetting = require('../model/CalenderSetting');
 
 const createCalenderSetting = async (req, res, next) => {
   const userId = req.userId;
-  console.log(userId, "pp");
+  console.log(userId, 'pp');
   try {
     const { birthdaySystem, appointmentRequestSystem } = req.body;
 
@@ -16,7 +16,7 @@ const createCalenderSetting = async (req, res, next) => {
 
     res.status(200).json(savedCalenderSetting);
   } catch (error) {
-    console.error("Error creating calender setting:", error);
+    console.error('Error creating calender setting:', error);
     next(error);
   }
 };
@@ -26,7 +26,7 @@ const getCalenderSetting = async (req, res, next) => {
 
     res.status(200).json(calenderSettings);
   } catch (error) {
-    console.error("Error retrieving calendar settings:", error);
+    console.error('Error retrieving calendar settings:', error);
     next(error);
   }
 };
@@ -42,12 +42,12 @@ const updateCalenderSetting = async (req, res, next) => {
     );
 
     if (!updatedCalenderSetting) {
-      return res.status(404).json({ message: "Calender setting not found" });
+      return res.status(404).json({ message: 'Calender setting not found' });
     }
 
     res.status(200).json(updatedCalenderSetting);
   } catch (error) {
-    console.error("Error updating calender setting:", error);
+    console.error('Error updating calender setting:', error);
     next(error);
   }
 };

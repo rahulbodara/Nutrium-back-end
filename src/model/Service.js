@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const serviceSchema = new mongoose.Schema({
   userId: {
@@ -29,8 +29,12 @@ const serviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isActive: {
+    type: Number,
+    default: 1,
+  },
 });
 
-const Service = mongoose.model("Service", serviceSchema);
+const Service = mongoose.model('Service', serviceSchema);
 
 module.exports = Service;
