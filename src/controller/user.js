@@ -158,48 +158,51 @@ const UpdateProfile = async (req, res, next) => {
     } = req.body;
 
     const userId = req.userId;
+    const updatedFields = {
+      fullName,
+      email,
+      gender,
+      country,
+      dateOfBirth,
+      phoneNumber,
+      profession,
+      professionCardNumber,
+      zipcode,
+    };
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        fullName,
-        email,
-        gender,
-        country,
-        dateOfBirth,
-        phoneNumber,
-        profession,
-        professionCardNumber,
-        zipcode,
-      },
-      { new: true }
-    );
+    if (req.file) {
+      updatedFields.image = req.file.filename;
+    }
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    if (user.image && req.file) {
+      fs.unlink(user.image, (err) => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, updatedFields, {
+      new: true,
+    });
 
     if (!updatedUser) {
       return res.status(404).json({
         success: false,
         message: 'User not found',
       });
-    } else {
-      if (updatedUser.image) {
-        fs.unlink(updatedUser.image, async (err) => {
-          if (err) {
-            console.error(err);
-          }
-        });
-      }
-
-      if (req.file) {
-        updatedUser.image = req.file.path;
-      }
-
-      await updatedUser.save();
-
-      return res.status(200).json({
-        success: true,
-        message: 'User profile updated successfully',
-      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: 'User profile updated successfully',
+    });
   } catch (error) {
     next(error);
   }
