@@ -9,6 +9,11 @@ const {
   getClientByID,
   getAllClient,
   updateClient,
+  appointmentInfo,
+  updateAppointmentInfo,
+  updatePersonalHistory,
+  updateObservation,
+  deleteObservation,
 } = require('../controller/client/client');
 
 const upload = multer({ dest: 'src/uploads/' });
@@ -22,6 +27,26 @@ router.put(
   upload.single('image'),
   isAuthenticated,
   updateClient
+);
+
+router.put('/client/information/:id', isAuthenticated, updateAppointmentInfo);
+
+router.put(
+  '/client/information/personal-history/:id',
+  isAuthenticated,
+  updatePersonalHistory
+);
+
+router.put(
+  '/client/information/observation/:id',
+  isAuthenticated,
+  updateObservation
+);
+
+router.put(
+  '/client/information/observation/:id/:observationId',
+  isAuthenticated,
+  deleteObservation
 );
 
 module.exports = router;
