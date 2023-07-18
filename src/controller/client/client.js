@@ -186,10 +186,134 @@ const deleteClient = async (req, res, next) => {
   }
 };
 
+const updateAppointmentInfo = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const { appointmentInformation } = req.body;
+
+    const client = await Client.findById(clientId);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client not found',
+      });
+    }
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { appointmentInformation: appointmentInformation },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Client information updated successfully',
+      client: updatedClient,
+    });
+  } catch (error) {
+    console.log('error', error);
+    next(error);
+  }
+};
+
+const updatePersonalHistory = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const { personalhistory } = req.body;
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { pesonalhistory: personalhistory },
+      { new: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Client personal history updated successfully',
+      client: updatedClient,
+    });
+  } catch (error) {
+    console.log('error', error);
+    next(error);
+  }
+};
+
+const updateObservation = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const { observationDetail } = req.body;
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { observationDetail: observationDetail },
+      { new: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Client Observation updated successfully',
+      client: updatedClient,
+    });
+  } catch (error) {
+    console.log('error', error);
+    next(error);
+  }
+};
+
+const deleteObservation = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const observationId = req.params.observationId;
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      {
+        $pull: {
+          observationDetail: { _id: observationId },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Observation deleted successfully',
+      client: updatedClient,
+    });
+  } catch (error) {
+    console.log('error', error);
+    next(error);
+  }
+};
+
 module.exports = {
   registerClient,
   deleteClient,
   getClientByID,
   getAllClient,
   updateClient,
+  updateAppointmentInfo,
+  updatePersonalHistory,
+  updateObservation,
+  deleteObservation,
 };
