@@ -14,6 +14,7 @@ const {
   updatePersonalHistory,
   updateObservation,
   deleteObservation,
+  updateMedicalHistory,
 } = require('../controller/client/client');
 
 const upload = multer({ dest: 'src/uploads/' });
@@ -47,6 +48,12 @@ router.put(
   '/client/information/observation/:id/:observationId',
   isAuthenticated,
   deleteObservation
+);
+
+router.put(
+  '/client/information/medical-history/:id',
+  isAuthenticated,
+  updateMedicalHistory
 );
 
 module.exports = router;
