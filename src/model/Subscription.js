@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const subscriptionSchema = new mongoose.Schema({
   userId: {
@@ -10,43 +10,43 @@ const subscriptionSchema = new mongoose.Schema({
   },
   subscriptionStatus: {
     type: String,
-    enum: ['In trial', 'Active'],
-    default: 'In trial',
+    enum: ["In trial", "Active"],
+    default: "In trial",
   },
   currentPlan: {
     type: String,
-    enum: ['Follow-up', 'Meal Plans'],
-    default: 'Follow-up',
+    enum: ["Follow-up", "Meal Plans"],
+    default: "Follow-up",
   },
   limitOfActiveClientsPerMonth: {
     type: String,
-    enum: ['10', '25', '75', 'Unlimited'],
-    default: '10',
+    enum: ["10", "25", "75", "Unlimited"],
+    default: "10",
   },
   subscriptionPeriod: {
-    month: {
+    period: {
       type: String,
-      enum: ['Monthly', 'Quarterly', 'Semiannual', 'Annual'],
-      default: 'Monthly',
+      enum: ["Monthly", "Quarterly", "Semiannual", "Annual"],
+      default: "Monthly",
     },
     currency: {
       type: String,
-      default: 'US$',
+      default: "US$",
     },
     discount: {
       type: Number,
-      enum: [-5, -10, -20],
+      enum: [0, -5, -10, -20],
     },
     value: {
       type: Number,
-      enum: [56.0, 53.2, 50.4, 44.8],
-      default: 50.4,
+      enum: [76.0, 72.2, 68.4, 60.8],
+      default: 76.0,
     },
   },
   price: {
     priceCurrency: {
       type: String,
-      default: 'US$',
+      default: "US$",
     },
     priceValue: {
       type: Number,
@@ -54,6 +54,6 @@ const subscriptionSchema = new mongoose.Schema({
   },
 });
 
-const Subscription = mongoose.model('Subscription', subscriptionSchema);
+const Subscription = mongoose.model("Subscription", subscriptionSchema);
 
 module.exports = Subscription;

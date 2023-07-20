@@ -10,14 +10,14 @@ const getBillingInformation = async (res, next) => {
     next(error);
   }
 };
-const createBillingInformation = async (req, res, next) => {
+const createBillingInformation = async (userId, billingData, next) => {
   try {
-    const userId = req.userId;
     const user = await User.findOne({ _id: userId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const { name, vatIdentificationNumber, address, city, zipcode } = req.body;
+    const { name, vatIdentificationNumber, address, city, zipcode } =
+      billingData;
     const { fullName, country } = user;
 
     const newBillingInformation = new BillingInformation({
@@ -35,7 +35,6 @@ const createBillingInformation = async (req, res, next) => {
     res.status(200).json(savedBillingInformation);
   } catch (error) {
     console.error("Error creating billing information:", error);
-    next(error);
   }
 };
 const updateBillingInformation = async (req, res, next) => {
