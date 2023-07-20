@@ -1,5 +1,7 @@
 const Client = require('../../model/Client');
 const fs = require('fs');
+const mongoose = require('mongoose');
+const AppointmentInformation = require('../../model/AppointmentInformation');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -189,28 +191,62 @@ const deleteClient = async (req, res, next) => {
 const updateAppointmentInfo = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { appointmentInformation } = req.body;
+    const { appointmentReason, expectations, clinicGoals, otherInfo } =
+      req.body;
 
-    const client = await Client.findById(clientId);
-    if (!client) {
-      return res.status(404).json({
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
         success: false,
-        message: 'Client not found',
+        message: 'Invalid appointment ID',
       });
     }
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
-      { appointmentInformation: appointmentInformation },
-      { new: true }
-    );
+    const userId = req.userId;
 
-    return res.status(200).json({
-      success: true,
-      message: 'Client information updated successfully',
-      client: updatedClient,
+    // Check if the client exists in the database
+    const existingAppointmentInfo = await AppointmentInformation.findOne({
+      clientId: clientId,
     });
+
+    if (existingAppointmentInfo) {
+      // If the client exists, update the existing document
+      const updatedAppointmentInfo =
+        await AppointmentInformation.findByIdAndUpdate(
+          existingAppointmentInfo._id,
+          {
+            userId: userId,
+            appointmentReason,
+            expectations,
+            clinicGoals,
+            otherInfo,
+          },
+          { new: true }
+        );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Appointment Information updated successfully',
+        appointment: updatedAppointmentInfo,
+      });
+    } else {
+      // If the client does not exist, create a new document
+      const newAppointmentInfo = new AppointmentInformation({
+        userId: userId,
+        clientId: clientId,
+        appointmentReason,
+        expectations,
+        clinicGoals,
+        otherInfo,
+      });
+
+      const savedAppointmentInfo = await newAppointmentInfo.save();
+
+      return res.status(201).json({
+        success: true,
+        message: 'New Appointment Information created',
+        appointment: savedAppointmentInfo,
+      });
+    }
   } catch (error) {
-    console.log('error', error);
     next(error);
   }
 };
@@ -239,7 +275,6 @@ const updatePersonalHistory = async (req, res, next) => {
       client: updatedClient,
     });
   } catch (error) {
-    console.log('error', error);
     next(error);
   }
 };
@@ -268,7 +303,6 @@ const updateObservation = async (req, res, next) => {
       client: updatedClient,
     });
   } catch (error) {
-    console.log('error', error);
     next(error);
   }
 };
@@ -301,7 +335,34 @@ const deleteObservation = async (req, res, next) => {
       client: updatedClient,
     });
   } catch (error) {
-    console.log('error', error);
+    next(error);
+  }
+};
+
+const updateMedicalHistory = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const { medicalHistory } = req.body;
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { medicalHistory: medicalHistory },
+      { new: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Medical History updated successfully',
+      client: updatedClient,
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -316,4 +377,5 @@ module.exports = {
   updatePersonalHistory,
   updateObservation,
   deleteObservation,
+  updateMedicalHistory,
 };

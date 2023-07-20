@@ -92,24 +92,6 @@ const clientSchema = mongoose.Schema(
       type: Number,
       default: 1,
     },
-    appointmentInformation: [
-      {
-        appointmentReason: {
-          type: String,
-        },
-        expectations: {
-          type: String,
-        },
-        clinicGoals: [
-          {
-            type: String,
-          },
-        ],
-        otherInfo: {
-          type: String,
-        },
-      },
-    ],
     pesonalhistory: [
       {
         bowelMovements: {
@@ -188,16 +170,16 @@ const clientSchema = mongoose.Schema(
         },
       },
     ],
-    diseasesDetail: [
+    medicalHistory: [
       {
-        diseases: {
-          type: String,
-        },
-        diseasesInfo: [
+        diseases: [
           {
             type: String,
           },
         ],
+        diseasesDetail: {
+          type: String,
+        },
         medication: {
           type: String,
         },
@@ -210,6 +192,54 @@ const clientSchema = mongoose.Schema(
         otherInfo: {
           type: String,
         },
+      },
+    ],
+    dietaryHistory: [
+      {
+        wakeupTime: {
+          type: String,
+        },
+        bedTime: {
+          type: String,
+        },
+        typeOfDiet: [
+          {
+            type: String,
+          },
+        ],
+        typeOfDietDetail: {
+          type: String,
+        },
+        favoriteFood: {
+          type: String,
+        },
+        dislikeFood: {
+          type: String,
+        },
+        allergies: [
+          {
+            type: String,
+          },
+        ],
+        allergiesDetail: {
+          type: String,
+        },
+        foodIntolerances: [
+          {
+            type: String,
+          },
+        ],
+        foodIntolerancesDetail: {
+          type: String,
+        },
+        nutritionalDeficiencies: [
+          {
+            type: String,
+          },
+        ],
+        nutritionalDeficienciesDetail:{
+
+        }
       },
     ],
   },
