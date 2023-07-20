@@ -15,6 +15,8 @@ const {
   updateObservation,
   deleteObservation,
   updateMedicalHistory,
+  updateDietHistory,
+  getAppointmentInfo,
 } = require('../controller/client/client');
 
 const upload = multer({ dest: 'src/uploads/' });
@@ -30,30 +32,24 @@ router.put(
   updateClient
 );
 
-router.put('/client/information/:id', isAuthenticated, updateAppointmentInfo);
+router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
 
 router.put(
-  '/client/information/personal-history/:id',
+  '/client/personal-history/:id',
   isAuthenticated,
   updatePersonalHistory
 );
-
-router.put(
-  '/client/information/observation/:id',
-  isAuthenticated,
-  updateObservation
-);
-
-router.put(
-  '/client/information/observation/:id/:observationId',
+router.put('/client/observation/:id', isAuthenticated, updateObservation);
+router.delete(
+  '/client/observation/:clientId/:id',
   isAuthenticated,
   deleteObservation
 );
-
 router.put(
-  '/client/information/medical-history/:id',
+  '/client/medical-history/:id',
   isAuthenticated,
   updateMedicalHistory
 );
+router.put('/client/diet-history/:id', isAuthenticated, updateDietHistory);
 
 module.exports = router;

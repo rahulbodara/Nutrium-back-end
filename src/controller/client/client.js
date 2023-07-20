@@ -2,6 +2,10 @@ const Client = require('../../model/Client');
 const fs = require('fs');
 const mongoose = require('mongoose');
 const AppointmentInformation = require('../../model/AppointmentInformation');
+const PersonalHistory = require('../../model/PersonalHistory');
+const Observations = require('../../model/Observations');
+const MedicalHistory = require('../../model/MedicalHistory');
+const DietHistory = require('../../model/DietHistory');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -67,6 +71,23 @@ const getAllClient = async (req, res, next) => {
   }
 };
 
+// const getClientByID = async (req, res, next) => {
+//   try {
+//     const query = {
+//       _id: req.params.id,
+//       userId: req.userId,
+//       isActive: 1,
+//     };
+//     const client = await Client.findOne(query);
+//     if (!client) {
+//       return res.status(404).json({ message: 'client Not Found!' });
+//     }
+//     res.status(200).json(client);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getClientByID = async (req, res, next) => {
   try {
     const query = {
@@ -78,7 +99,52 @@ const getClientByID = async (req, res, next) => {
     if (!client) {
       return res.status(404).json({ message: 'client Not Found!' });
     }
-    res.status(200).json(client);
+
+    const aggregate = [
+      {
+        $lookup: {
+          from: 'appointmentinformations',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'Appointment information',
+        },
+      },
+      {
+        $lookup: {
+          from: 'personalhistories',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'Personal and social history',
+        },
+      },
+      {
+        $lookup: {
+          from: 'diethistories',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'Dietary history',
+        },
+      },
+      {
+        $lookup: {
+          from: 'medicalhistories',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'Medical history',
+        },
+      },
+      {
+        $lookup: {
+          from: 'observations',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'observations',
+        },
+      },
+    ];
+
+    const results = await Client.aggregate(aggregate);
+    res.status(200).json(results);
   } catch (error) {
     next(error);
   }
@@ -200,52 +266,32 @@ const updateAppointmentInfo = async (req, res, next) => {
         message: 'Invalid appointment ID',
       });
     }
+
     const userId = req.userId;
+    const newAppointmentInfo = {
+      userId: userId,
+      appointmentReason,
+      expectations,
+      clinicGoals,
+      otherInfo,
+    };
 
-    // Check if the client exists in the database
-    const existingAppointmentInfo = await AppointmentInformation.findOne({
-      clientId: clientId,
+    const updatedAppointmentInfo =
+      await AppointmentInformation.findOneAndUpdate(
+        { clientId: clientId },
+        newAppointmentInfo,
+        { new: true, upsert: true }
+      );
+
+    const message = updatedAppointmentInfo._id
+      ? 'Appointment Information updated successfully'
+      : 'New Appointment Information created';
+
+    return res.status(200).json({
+      success: true,
+      message: message,
+      appointment: updatedAppointmentInfo,
     });
-
-    if (existingAppointmentInfo) {
-      // If the client exists, update the existing document
-      const updatedAppointmentInfo =
-        await AppointmentInformation.findByIdAndUpdate(
-          existingAppointmentInfo._id,
-          {
-            userId: userId,
-            appointmentReason,
-            expectations,
-            clinicGoals,
-            otherInfo,
-          },
-          { new: true }
-        );
-
-      return res.status(200).json({
-        success: true,
-        message: 'Appointment Information updated successfully',
-        appointment: updatedAppointmentInfo,
-      });
-    } else {
-      // If the client does not exist, create a new document
-      const newAppointmentInfo = new AppointmentInformation({
-        userId: userId,
-        clientId: clientId,
-        appointmentReason,
-        expectations,
-        clinicGoals,
-        otherInfo,
-      });
-
-      const savedAppointmentInfo = await newAppointmentInfo.save();
-
-      return res.status(201).json({
-        success: true,
-        message: 'New Appointment Information created',
-        appointment: savedAppointmentInfo,
-      });
-    }
   } catch (error) {
     next(error);
   }
@@ -254,25 +300,61 @@ const updateAppointmentInfo = async (req, res, next) => {
 const updatePersonalHistory = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { personalhistory } = req.body;
+    const {
+      bowelMovements,
+      bowelMovementsInfo,
+      sleepQuality,
+      sleepQualityInfo,
+      smoker,
+      smokerInfo,
+      alcoholConsumption,
+      alcoholConsumptionInfo,
+      maritalStatus,
+      maritalStatusInfo,
+      physicalActivity,
+      race,
+      otherInfo,
+    } = req.body;
 
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
-      { pesonalhistory: personalhistory },
-      { new: true }
-    );
-
-    if (!updatedClient) {
-      return res.status(404).json({
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
         success: false,
-        message: 'Client not found',
+        message: 'Invalid client ID',
       });
     }
 
+    const userId = req.userId;
+    const newPersonalHistory = {
+      userId: userId,
+      bowelMovements,
+      bowelMovementsInfo,
+      sleepQuality,
+      sleepQualityInfo,
+      smoker,
+      smokerInfo,
+      alcoholConsumption,
+      alcoholConsumptionInfo,
+      maritalStatus,
+      maritalStatusInfo,
+      physicalActivity,
+      race,
+      otherInfo,
+    };
+
+    const updatedPersonalHistory = await PersonalHistory.findOneAndUpdate(
+      { clientId: clientId },
+      newPersonalHistory,
+      { new: true, upsert: true }
+    );
+
+    const message = updatedPersonalHistory._id
+      ? 'Personal History updated successfully'
+      : 'New Personal History created';
+
     return res.status(200).json({
       success: true,
-      message: 'Client personal history updated successfully',
-      client: updatedClient,
+      message: message,
+      personalHistory: updatedPersonalHistory,
     });
   } catch (error) {
     next(error);
@@ -282,25 +364,34 @@ const updatePersonalHistory = async (req, res, next) => {
 const updateObservation = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { observationDetail } = req.body;
+    const { registrationDate, observation } = req.body;
 
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
-      { observationDetail: observationDetail },
-      { new: true }
-    );
-
-    if (!updatedClient) {
-      return res.status(404).json({
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
         success: false,
-        message: 'Client not found',
+        message: 'Invalid client ID',
       });
     }
+    const userId = req.userId;
+    const newObservation = {
+      userId: userId,
+      registrationDate,
+      observation,
+    };
+    const updatedObservation = await Observations.findOneAndUpdate(
+      { clientId: clientId },
+      newObservation,
+      { new: true, upsert: true }
+    );
+
+    const message = updatedObservation._id
+      ? 'Observation updated successfully'
+      : 'New Observation created';
 
     return res.status(200).json({
       success: true,
-      message: 'Client Observation updated successfully',
-      client: updatedClient,
+      message: message,
+      observation: updatedObservation,
     });
   } catch (error) {
     next(error);
@@ -309,30 +400,32 @@ const updateObservation = async (req, res, next) => {
 
 const deleteObservation = async (req, res, next) => {
   try {
+    const observationId = req.params.id;
     const clientId = req.params.id;
-    const observationId = req.params.observationId;
 
-    const updatedClient = await Client.findByIdAndUpdate(
+    if (!mongoose.Types.ObjectId.isValid(observationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid observation ID',
+      });
+    }
+
+    const deletedObservation = await Observations.findByIdAndDelete(
       clientId,
-      {
-        $pull: {
-          observationDetail: { _id: observationId },
-        },
-      },
+      { _id: observationId },
       { new: true }
     );
 
-    if (!updatedClient) {
+    if (!deletedObservation) {
       return res.status(404).json({
         success: false,
-        message: 'Client not found',
+        message: 'Observation not found',
       });
     }
 
     return res.status(200).json({
       success: true,
       message: 'Observation deleted successfully',
-      client: updatedClient,
     });
   } catch (error) {
     next(error);
@@ -342,25 +435,99 @@ const deleteObservation = async (req, res, next) => {
 const updateMedicalHistory = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { medicalHistory } = req.body;
+    const {
+      diseases,
+      diseasesDetail,
+      medication,
+      personalHistory,
+      familyHistory,
+      otherInfo,
+    } = req.body;
 
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
-      { medicalHistory: medicalHistory },
-      { new: true }
+    const userId = req.userId;
+    const newMedicalHistory = {
+      userId: userId,
+      diseases,
+      diseasesDetail,
+      medication,
+      personalHistory,
+      familyHistory,
+      otherInfo,
+    };
+
+    const updatedMedicalHistory = await MedicalHistory.findOneAndUpdate(
+      { clientId: clientId },
+      newMedicalHistory,
+      { new: true, upsert: true }
     );
 
-    if (!updatedClient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Client not found',
-      });
-    }
+    const message = updatedMedicalHistory._id
+      ? 'Medical History updated successfully'
+      : 'New Medical History created';
 
     return res.status(200).json({
       success: true,
-      message: 'Medical History updated successfully',
-      client: updatedClient,
+      message: message,
+      medicalHistory: updatedMedicalHistory,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateDietHistory = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    const {
+      wakeupTime,
+      bedTime,
+      typeOfDiet,
+      typeOfDietDetail,
+      favoriteFood,
+      dislikeFood,
+      allergies,
+      allergiesDetail,
+      foodIntolerances,
+      foodIntolerancesDetail,
+      nutritionalDeficiencies,
+      nutritionalDeficienciesDetail,
+      waterTank,
+      otherInfo,
+    } = req.body;
+
+    const userId = req.userId;
+    const newDietHistory = {
+      userId: userId,
+      wakeupTime,
+      bedTime,
+      typeOfDiet,
+      typeOfDietDetail,
+      favoriteFood,
+      dislikeFood,
+      allergies,
+      allergiesDetail,
+      foodIntolerances,
+      foodIntolerancesDetail,
+      nutritionalDeficiencies,
+      nutritionalDeficienciesDetail,
+      waterTank,
+      otherInfo,
+    };
+
+    const updatedDietHistory = await DietHistory.findOneAndUpdate(
+      { clientId: clientId },
+      newDietHistory,
+      { new: true, upsert: true }
+    );
+
+    const message = updatedDietHistory._id
+      ? 'Diet History updated successfully'
+      : 'New Diet History created';
+
+    return res.status(200).json({
+      success: true,
+      message: message,
+      dietHistory: updatedDietHistory,
     });
   } catch (error) {
     next(error);
@@ -378,4 +545,5 @@ module.exports = {
   updateObservation,
   deleteObservation,
   updateMedicalHistory,
+  updateDietHistory,
 };
