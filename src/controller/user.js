@@ -1,17 +1,20 @@
-const bcrypt = require('bcrypt');
-const User = require('../model/User');
-const Workplace = require('../model/Workplace');
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
+const User = require("../model/User");
+const Workplace = require("../model/Workplace");
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
-const fs = require('fs');
-
-const { generateResetToken, sendEmail } = require('../utils/EmailSender');
-const Service = require('../model/Service');
-const Secretaries = require('../model/Secretaries');
+const fs = require("fs");
+const createSubscription = require("./subscription").createSubscription;
+const createBillingInformation = require("./billinginformation").createBillingInformation; 
+const { generateResetToken, sendEmail } = require("../utils/EmailSender");
+const Service = require("../model/Service");
+const Secretaries = require("../model/Secretaries");
 
 const SignUp = async (req, res, next) => {
   try {
+    console.log(createSubscription, "hshhs");
+    console.log("adfasfas");
     const {
       fullName,
       email,
@@ -39,7 +42,7 @@ const SignUp = async (req, res, next) => {
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: 'This email already exists',
+        message: "This email already exists",
       });
     }
 
@@ -72,9 +75,11 @@ const SignUp = async (req, res, next) => {
       });
       await workplaceData.save();
     }
+    await createSubscription(savedUser._id);
+    await createBillingInformation(savedUser._id, req.body);
     return res.status(200).json({
       success: true,
-      message: 'User Signup successfully',
+      message: "User Signup successfully",
       userData: savedUser,
     });
   } catch (error) {
@@ -88,11 +93,11 @@ const SignIn = async (req, res, next) => {
     if (!email || !password) {
       return res
         .status(400)
-        .json({ message: 'Please provide email and password' });
+        .json({ message: "Please provide email and password" });
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
@@ -104,20 +109,20 @@ const SignIn = async (req, res, next) => {
         },
         JWT_SECRET,
         {
-          expiresIn: '1h',
+          expiresIn: "1h",
         }
       );
       const { password, ...userdetails } = user._doc;
       return res.status(200).json({
         token: token,
-        message: 'Login successfully',
+        message: "Login successfully",
         status: 200,
         userdetails,
       });
     } else {
       return res
         .status(400)
-        .send({ message: 'Invalid Credentials', status: 400 });
+        .send({ message: "Invalid Credentials", status: 400 });
     }
   } catch (error) {
     console.log(error);
@@ -132,10 +137,10 @@ const getUserProfile = async (req, res, next) => {
       isActive: 1,
     };
 
-    const user = await User.findOne(query).select('-password');
+    const user = await User.findOne(query).select("-password");
     console.log(query);
     if (!user) {
-      return res.status(404).json({ message: 'User Not Found!' });
+      return res.status(404).json({ message: "User Not Found!" });
     }
     res.status(200).json(user);
   } catch (error) {
@@ -178,7 +183,7 @@ const UpdateProfile = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
     if (user.image && req.file) {
@@ -195,13 +200,13 @@ const UpdateProfile = async (req, res, next) => {
     if (!updatedUser) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'User profile updated successfully',
+      message: "User profile updated successfully",
     });
   } catch (error) {
     next(error);
@@ -214,14 +219,14 @@ const forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     const resetToken = await generateResetToken(user);
 
     await sendEmail(email, resetToken);
 
-    return res.status(200).json({ message: 'Password reset email sent.' });
+    return res.status(200).json({ message: "Password reset email sent." });
   } catch (error) {
     next(error.message);
   }
@@ -237,15 +242,15 @@ const resetPassword = async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'Invalid or expired token.' });
+      return res.status(404).json({ message: "Invalid or expired token." });
     }
 
     if (user.resetToken === null) {
-      return res.status(400).json({ message: 'Token has already been used.' });
+      return res.status(400).json({ message: "Token has already been used." });
     }
 
     if (user.resetTokenExpires <= new Date()) {
-      return res.status(400).json({ message: 'Token has expired.' });
+      return res.status(400).json({ message: "Token has expired." });
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -257,7 +262,7 @@ const resetPassword = async (req, res, next) => {
 
     await user.save();
 
-    return res.status(200).json({ message: 'Password reset successful.' });
+    return res.status(200).json({ message: "Password reset successful." });
   } catch (error) {
     next(error.message);
   }
@@ -275,12 +280,12 @@ const deleteUserProfile = async (req, res, next) => {
     );
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({ message: 'Invalid password' });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     if (user.image) {
@@ -304,7 +309,7 @@ const deleteUserProfile = async (req, res, next) => {
       { $set: { isActive: 0 } }
     );
 
-    res.status(200).json({ message: 'Account deleted successfully' });
+    res.status(200).json({ message: "Account deleted successfully" });
   } catch (error) {
     next(error);
   }

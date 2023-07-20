@@ -1,6 +1,6 @@
 const Subscription = require("../model/Subscription");
 
-const getSubscription = async (res, next) => {
+const getSubscription = async (req,res, next) => {
   try {
     const subscription = await Subscription.findOne();
     res.status(200).json(subscription);
@@ -8,44 +8,37 @@ const getSubscription = async (res, next) => {
     next(error);
   }
 };
+const createSubscription = async (userId) => {
+  const subscriptionData = {
+    userId: userId,
+    trialPeriodEndDate: getFormattedDate(),
+    subscriptionStatus: "In trial",
+    currentPlan: "Follow-up",
+    limitOfActiveClientsPerMonth: 10,
+    subscriptionPeriod: {
+      month: "Monthly",
+      currency: "US$",
+      discount: 0,
+      value: 76.0,
+    },
+    price: { priceCurrency: "US$", priceValue: 76.0 },
+  };
+  function getFormattedDate() {
+    const today = new Date();
+    const trialEndDate = new Date(today);
+    trialEndDate.setDate(trialEndDate.getDate() + 15);
 
-const createSubscription = async (req, res, next) => {
-  const userId = req.userId;
-  const {
-    trialPeriodEndDate,
-    subscriptionStatus,
-    currentPlan,
-    limitOfActiveClientsPerMonth,
-    subscriptionPeriod: { month, currency, discount, value },
-    price: { priceCurrency, priceValue },
-  } = req.body;
-
-  try {
-    const newSubscription = new Subscription({
-      userId,
-      trialPeriodEndDate,
-      subscriptionStatus,
-      currentPlan,
-      limitOfActiveClientsPerMonth,
-      subscriptionPeriod: {
-        month,
-        currency,
-        discount,
-        value,
-      },
-      price: { priceCurrency, priceValue },
-    });
-
-    const savedSubscription = await newSubscription.save();
-    res.status(200).json(savedSubscription);
-  } catch (error) {
-    next(error);
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    const formattedDate = trialEndDate.toLocaleDateString("en-US", options);
+    return formattedDate;
   }
+  const newSubscription = new Subscription(subscriptionData);
+  return newSubscription.save();
 };
-
 const updateSubscription = async (req, res, next) => {
   try {
     const { id } = req.params;
+
     const {
       currentPlan,
       limitOfActiveClientsPerMonth,
@@ -55,26 +48,16 @@ const updateSubscription = async (req, res, next) => {
 
     const subscription = await Subscription.findByIdAndUpdate(
       id,
-      {
-        currentPlan,
-        limitOfActiveClientsPerMonth,
-        subscriptionPeriod,
-        price,
-      },
+      { currentPlan, limitOfActiveClientsPerMonth, subscriptionPeriod, price },
       { new: true }
     );
 
     if (!subscription) {
       return res.status(404).json({ messege: "Subscription not found" });
     }
-
     res.status(200).json(subscription);
   } catch (error) {
     next(error);
   }
 };
-module.exports = {
-  getSubscription,
-  createSubscription,
-  updateSubscription,
-};
+module.exports = { getSubscription, createSubscription, updateSubscription };
