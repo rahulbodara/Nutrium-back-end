@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const dietHistorySchema = mongoose.Schema({
+const dietHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

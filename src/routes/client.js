@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 
 const { isAuthenticated } = require('../middleware/auth');
 const {
@@ -9,17 +8,20 @@ const {
   getClientByID,
   getAllClient,
   updateClient,
-  appointmentInfo,
   updateAppointmentInfo,
   updatePersonalHistory,
   updateObservation,
   deleteObservation,
   updateMedicalHistory,
   updateDietHistory,
-  getAppointmentInfo,
+  deleteFileDetail,
+  updateFileDetail,
+  createFileDetail,
+  getAllFileDetail,
 } = require('../controller/client/client');
+const upload = require('../middleware/imageHandler');
 
-const upload = multer({ dest: 'src/uploads/' });
+// const upload = multer({ dest: 'src/uploads/' });
 
 router.post('/client', isAuthenticated, registerClient);
 router.delete('/client/:id', isAuthenticated, deleteClient);
@@ -51,5 +53,23 @@ router.put(
   updateMedicalHistory
 );
 router.put('/client/diet-history/:id', isAuthenticated, updateDietHistory);
+
+router.post(
+  '/client/file/:id',
+  isAuthenticated,
+  upload.single('file'),
+  createFileDetail
+);
+
+router.put(
+  '/client/file/:id',
+  isAuthenticated,
+  upload.single('file'),
+  updateFileDetail
+);
+
+router.delete('/client/file/:id', isAuthenticated, deleteFileDetail);
+
+router.get('/client/file/:id', isAuthenticated, getAllFileDetail);
 
 module.exports = router;

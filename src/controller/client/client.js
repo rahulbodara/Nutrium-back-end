@@ -1,11 +1,13 @@
 const Client = require('../../model/Client');
 const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const AppointmentInformation = require('../../model/AppointmentInformation');
 const PersonalHistory = require('../../model/PersonalHistory');
 const Observations = require('../../model/Observations');
 const MedicalHistory = require('../../model/MedicalHistory');
 const DietHistory = require('../../model/DietHistory');
+const ClientFile = require('../../model/ClientFile');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -90,9 +92,12 @@ const getAllClient = async (req, res, next) => {
 
 const getClientByID = async (req, res, next) => {
   try {
+    const clientId = req.params.id;
+    const userId = req.userId;
+
     const query = {
-      _id: req.params.id,
-      userId: req.userId,
+      _id: clientId,
+      userId: userId,
       isActive: 1,
     };
     const client = await Client.findOne(query);
@@ -106,7 +111,7 @@ const getClientByID = async (req, res, next) => {
           from: 'appointmentinformations',
           localField: '_id',
           foreignField: 'clientId',
-          as: 'Appointment information',
+          as: 'appointmentInformation',
         },
       },
       {
@@ -114,7 +119,7 @@ const getClientByID = async (req, res, next) => {
           from: 'personalhistories',
           localField: '_id',
           foreignField: 'clientId',
-          as: 'Personal and social history',
+          as: 'personalHistory',
         },
       },
       {
@@ -122,7 +127,7 @@ const getClientByID = async (req, res, next) => {
           from: 'diethistories',
           localField: '_id',
           foreignField: 'clientId',
-          as: 'Dietary history',
+          as: 'dietaryHistory',
         },
       },
       {
@@ -130,7 +135,7 @@ const getClientByID = async (req, res, next) => {
           from: 'medicalhistories',
           localField: '_id',
           foreignField: 'clientId',
-          as: 'Medical history',
+          as: 'medicalHistory',
         },
       },
       {
@@ -139,6 +144,14 @@ const getClientByID = async (req, res, next) => {
           localField: '_id',
           foreignField: 'clientId',
           as: 'observations',
+        },
+      },
+      {
+        $lookup: {
+          from: 'clientfiles',
+          localField: '_id',
+          foreignField: 'clientId',
+          as: 'files',
         },
       },
     ];
@@ -534,6 +547,145 @@ const updateDietHistory = async (req, res, next) => {
   }
 };
 
+const createFileDetail = async (req, res, next) => {
+  try {
+    const { name, description, date, category } = req.body;
+    const userId = req.userId;
+    const clientId = req.params.id;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'You need to choose a file',
+      });
+    }
+
+    const newFile = {
+      userId: userId,
+      clientId: clientId,
+      file: file.filename,
+      name: name,
+      description: description,
+      date: date,
+      category: category,
+    };
+
+    const createdFile = await ClientFile.create(newFile);
+
+    return res.status(201).json({
+      success: true,
+      message: 'File created successfully',
+      file: createdFile,
+    });
+  } catch (error) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    next(error);
+  }
+};
+
+const updateFileDetail = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const fileId = req.params.id;
+    const { name, description, date, category } = req.body;
+    const newFile = {
+      userId: userId,
+      _id: fileId,
+      file: req.file.filename,
+      name: name,
+      description: description,
+      date: date,
+      category: category,
+    };
+
+    const updatedFile = await ClientFile.findOneAndUpdate(
+      { _id: fileId },
+      newFile,
+      { new: true, upsert: true }
+    );
+
+    const message = updatedFile._id
+      ? 'File updated successfully'
+      : 'New File created';
+
+    return res.status(200).json({
+      success: true,
+      message: message,
+      file: updatedFile,
+    });
+  } catch (error) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    next(error);
+  }
+};
+
+const deleteFileDetail = async (req, res, next) => {
+  try {
+    const fileId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file ID',
+      });
+    }
+
+    const deletedFile = await ClientFile.findByIdAndDelete({ _id: fileId });
+
+    if (!deletedFile) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'File deleted successfully',
+    });
+  } catch (error) {
+    console.log('error--------->', error);
+    next(error);
+  }
+};
+
+const getAllFileDetail = async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+    console.log('clientId---------->', clientId);
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const files = await ClientFile.find({ clientId: clientId });
+
+    if (files.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Files not found for the client',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Files retrieved successfully',
+      files: files,
+    });
+  } catch (error) {
+    console.log('error--------->', error);
+    next(error);
+  }
+};
+
 module.exports = {
   registerClient,
   deleteClient,
@@ -546,4 +698,8 @@ module.exports = {
   deleteObservation,
   updateMedicalHistory,
   updateDietHistory,
+  createFileDetail,
+  updateFileDetail,
+  deleteFileDetail,
+  getAllFileDetail,
 };
