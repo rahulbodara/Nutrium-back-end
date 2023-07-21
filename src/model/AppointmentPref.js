@@ -1,7 +1,7 @@
 const { Timestamp } = require('mongodb');
 const mongoose = require('mongoose');
 
-const appointmentPrefSchema = mongoose.Schema(
+const appointmentPrefSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -20,4 +20,4 @@ const appointmentPrefSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('appointmentPrefrence', appointmentPrefSchema);
+module.exports = mongoose.model('AppointmentPrefrence', appointmentPrefSchema);

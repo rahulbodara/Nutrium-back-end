@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const personalHistorySchema = mongoose.Schema({
+const personalHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

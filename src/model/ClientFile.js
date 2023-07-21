@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
-const observationSchema = new mongoose.Schema({
+const fileSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -11,11 +12,22 @@ const observationSchema = new mongoose.Schema({
     required: true,
     ref: 'Clients',
   },
-  registrationDate: {
+  file: {
     type: String,
-    required: function () {
-      return this.observationDetail && this.observationDetail.length > 0;
-    },
+    required: [true, 'You need to choose a file'],
+  },
+  name: {
+    type: String,
+    required: [true, 'This field is required.'],
+    maxLength: [30, 'Name cannot exceed 30 charaters'],
+    minLength: [4, 'Name should have more then 4 charaters'],
+  },
+  description: {
+    type: String,
+  },
+  date: {
+    type: String,
+    required: [true, 'Please enter a date of birth'],
     validate: {
       validator: function (value) {
         const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
@@ -33,12 +45,21 @@ const observationSchema = new mongoose.Schema({
           date.getFullYear() === year
         );
       },
-      message: 'Please enter a valid date in the format DD/MM/YYYY',
+      message: 'Please enter a valid date of birth (DD/MM/YYYY)',
     },
   },
-  observation: {
+  category: {
     type: String,
+    required: [true, 'This field is required.'],
+    enum: [
+      'Photo',
+      'Meal Plan',
+      'Biochemistry',
+      'Privacy/Consent',
+      'Patient Informations',
+      'Others',
+    ],
   },
 });
 
-module.exports = mongoose.model('Observations', observationSchema);
+module.exports = mongoose.model('clientFile', fileSchema);

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const medicalHistorySchema = mongoose.Schema({
+const medicalHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -32,4 +32,4 @@ const medicalHistorySchema = mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('medicalHistory', medicalHistorySchema);
+module.exports = mongoose.model('MedicalHistory', medicalHistorySchema);
