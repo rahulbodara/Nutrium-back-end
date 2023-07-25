@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
   clientName: {
     type: String,
     required: true,
@@ -14,7 +18,7 @@ const appointmentSchema = new mongoose.Schema({
   videoConsultation: {
     type: String,
     enum: ["without_video_call", "google_meet", "zoom", "other_service"],
-    default: "without_video_call",
+    required: true,
   },
   end: {
     type: Date,

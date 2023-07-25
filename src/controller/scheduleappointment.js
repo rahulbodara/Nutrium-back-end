@@ -6,14 +6,22 @@ const videoConsultationValues = {
   zoom: "Generated after saving appointment",
 };
 
-const createAppointment = async (req, res, next) => {
+const updateAppointment = async (req, res, next) => {
   try {
-    const { clientId } = req.params;
-    const { clientName,status, videoConsultation, workplace,schedulingNotes } =
-      req.body;
-    const start = new Date();
-    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    const appointmentId = req.params.id;
+    const {
+      status,
+      videoConsultation,
+      schedulingNotes,
+      newStartTime,
+      newEndTime,
+    } = req.body;
 
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found!" });
+    }
     let updatedVideoLink = "";
 
     if (videoConsultation === "other_service") {
@@ -21,54 +29,25 @@ const createAppointment = async (req, res, next) => {
     } else {
       updatedVideoLink = videoConsultationValues[videoConsultation];
     }
+    appointment.status = status;
+    appointment.videoConsultation = videoConsultation;
+    appointment.schedulingNotes = schedulingNotes;
 
-    const appointment = new Appointment({
-      clientName,
-      start,
-      status,
-      videoConsultation,
-      end,
-      workplace,
-      schedulingNotes,
-      videoLink: updatedVideoLink,
-    });
+    const start = new Date(newStartTime);
+    const end = new Date(newEndTime);
 
-    const savedAppointment = await appointment.save();
-    res.status(201).json(savedAppointment);
+    appointment.start = start;
+    appointment.end = end;
+    appointment.videoLink = updatedVideoLink;
+
+    const updatedAppointment = await appointment.save();
+    res.status(200).json(updatedAppointment);
   } catch (error) {
-    console.error("Error creating appointment:", error);
+    console.error("Error updating appointment:", error);
     next(error);
   }
 };
-const updateAppointment = async (req, res, next) => {
-    try {
-      const { appointmentId, status, videoConsultation, schedulingNotes, newStartTime } = req.body;
-  
-      const appointment = await Appointment.findById(appointmentId);
-  
-      if (!appointment) {
-        return res.status(404).json({ message: "Appointment not found!" });
-      }
-  
-      appointment.status = status;
-      appointment.videoConsultation = videoConsultation;
-      appointment.schedulingNotes = schedulingNotes;
-  
-      const start = new Date(newStartTime);
-      const end = new Date(start.getTime() + 30 * 60 * 1000); 
-  
-      appointment.start = start;
-      appointment.end = end;
-  
-      const updatedAppointment = await appointment.save();
-      res.status(200).json(updatedAppointment);
-    } catch (error) {
-      console.error("Error updating appointment:", error);
-      next(error);
-    }
-  };
-  
+
 module.exports = {
-  createAppointment,
-  updateAppointment
+  updateAppointment,
 };

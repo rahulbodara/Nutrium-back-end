@@ -1,4 +1,3 @@
-// routes/scheduleRoutes.js
 const express = require("express");
 const router = express.Router();
 const scheduleController = require("../controller/schedule");
