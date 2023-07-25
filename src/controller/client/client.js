@@ -1,14 +1,12 @@
-const Client = require('../../model/Client');
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
-const AppointmentInformation = require('../../model/AppointmentInformation');
-const PersonalHistory = require('../../model/PersonalHistory');
-const Observations = require('../../model/Observations');
-const MedicalHistory = require('../../model/MedicalHistory');
-const DietHistory = require('../../model/DietHistory');
-const ClientFile = require('../../model/ClientFile');
-
+const Client = require("../../model/Client");
+const fs = require("fs");
+const mongoose = require("mongoose");
+const AppointmentInformation = require("../../model/AppointmentInformation");
+const PersonalHistory = require("../../model/PersonalHistory");
+const Observations = require("../../model/Observations");
+const MedicalHistory = require("../../model/MedicalHistory");
+const DietHistory = require("../../model/DietHistory");
+const createAppointment = require("../../model/ScheduleApointment");
 const registerClient = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -29,7 +27,7 @@ const registerClient = async (req, res, next) => {
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: 'This email already exists',
+        message: "This email already exists",
       });
     }
     const clientData = await new Client({
@@ -47,7 +45,7 @@ const registerClient = async (req, res, next) => {
     const client = await clientData.save();
     return res.status(200).json({
       success: true,
-      message: 'client added successfully',
+      message: "client added successfully",
       client,
     });
   } catch (error) {
@@ -64,7 +62,7 @@ const getAllClient = async (req, res, next) => {
     };
     const client = await Client.find(query);
     if (!client) {
-      return res.status(404).json({ message: 'client Not Found!' });
+      return res.status(404).json({ message: "client Not Found!" });
     }
     res.status(200).json(client);
   } catch (error) {
@@ -102,48 +100,56 @@ const getClientByID = async (req, res, next) => {
     };
     const client = await Client.findOne(query);
     if (!client) {
-      return res.status(404).json({ message: 'client Not Found!' });
+      return res.status(404).json({ message: "client Not Found!" });
     }
 
     const aggregate = [
       {
         $lookup: {
-          from: 'appointmentinformations',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'appointmentInformation',
+          from: "appointmentinformations",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "appointmentInformation",
         },
       },
       {
         $lookup: {
-          from: 'personalhistories',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'personalHistory',
+          from: "personalhistories",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "Personal and social history",
         },
       },
       {
         $lookup: {
-          from: 'diethistories',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'dietaryHistory',
+          from: "diethistories",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "Dietary history",
         },
       },
       {
         $lookup: {
-          from: 'medicalhistories',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'medicalHistory',
+          from: "medicalhistories",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "Medical history",
         },
       },
       {
         $lookup: {
-          from: 'observations',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'observations',
+          from: "observations",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "observations",
+        },
+      },
+      {
+        $lookup: {
+          from: "createAppointment",
+          localField: "_id",
+          foreignField: "clientId",
+          as: "Create Appointment",
         },
       },
       {
@@ -211,7 +217,7 @@ const updateClient = async (req, res, next) => {
     if (!client) {
       return res.status(404).json({
         success: false,
-        message: 'Client not found',
+        message: "Client not found",
       });
     }
 
@@ -232,17 +238,70 @@ const updateClient = async (req, res, next) => {
     if (!updatedClient) {
       return res.status(404).json({
         success: false,
-        message: 'Client1 not found',
+        message: "Client1 not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Client details updated successfully',
+      message: "Client details updated successfully",
       client: updatedClient,
     });
   } catch (error) {
-    console.log('error', error);
+    console.log("error", error);
+    next(error);
+  }
+};
+
+const getAppointmentInfo = async (req, res, next) => {
+  try {
+    const query = {
+      _id: req.params.id,
+      userId: req.userId,
+      isActive: 1,
+    };
+    const client = await Client.findOne(query);
+    if (!client) {
+      return res.status(404).json({ message: "Client Not Found!" });
+    }
+    const start = new Date();
+    const end = new Date(start.getTime() + 30 * 60 * 1000);
+
+    const videoConsultationValues = {
+      without_video_call: "Not available in this option",
+      google_meet: "Generated after saving appointment",
+      zoom: "Generated after saving appointment",
+    };
+
+    let updatedVideoLink = "";
+
+    if (videoConsultation === "other_service") {
+      updatedVideoLink = "Add here the video call link";
+    } else {
+      updatedVideoLink = videoConsultationValues[videoConsultation];
+    }
+    const clientName = client.fullName;
+    const clientWorkplace = client.workplace;
+
+    const appointmentData = {
+      clientId: client._id,
+      clientName,
+      start,
+      status: "not_confirmed",
+      videoConsultation: "without_video_call",
+      end,
+      workplace: clientWorkplace,
+      schedulingNotes: "Add scheduling notes here if needed",
+      videoLink: updatedVideoLink,
+    };
+
+    const appointment = new createAppointment(appointmentData);
+
+    const savedAppointment = await appointment.save();
+
+    return res.status(201).json(savedAppointment);
+  } catch (error) {
+    console.error("Error creating appointment:", error);
     next(error);
   }
 };
@@ -257,9 +316,9 @@ const deleteClient = async (req, res, next) => {
     );
 
     if (deletedClient) {
-      res.status(200).json({ message: 'Client deleted successfully' });
+      res.status(200).json({ message: "Client deleted successfully" });
     } else {
-      res.status(404).json({ message: 'Client not found' });
+      res.status(404).json({ message: "Client not found" });
     }
   } catch (error) {
     console.log(error);
@@ -276,7 +335,7 @@ const updateAppointmentInfo = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid appointment ID',
+        message: "Invalid appointment ID",
       });
     }
 
@@ -297,8 +356,8 @@ const updateAppointmentInfo = async (req, res, next) => {
       );
 
     const message = updatedAppointmentInfo._id
-      ? 'Appointment Information updated successfully'
-      : 'New Appointment Information created';
+      ? "Appointment Information updated successfully"
+      : "New Appointment Information created";
 
     return res.status(200).json({
       success: true,
@@ -332,7 +391,7 @@ const updatePersonalHistory = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -361,8 +420,8 @@ const updatePersonalHistory = async (req, res, next) => {
     );
 
     const message = updatedPersonalHistory._id
-      ? 'Personal History updated successfully'
-      : 'New Personal History created';
+      ? "Personal History updated successfully"
+      : "New Personal History created";
 
     return res.status(200).json({
       success: true,
@@ -382,7 +441,7 @@ const updateObservation = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
     const userId = req.userId;
@@ -398,8 +457,8 @@ const updateObservation = async (req, res, next) => {
     );
 
     const message = updatedObservation._id
-      ? 'Observation updated successfully'
-      : 'New Observation created';
+      ? "Observation updated successfully"
+      : "New Observation created";
 
     return res.status(200).json({
       success: true,
@@ -419,7 +478,7 @@ const deleteObservation = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(observationId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid observation ID',
+        message: "Invalid observation ID",
       });
     }
 
@@ -432,13 +491,13 @@ const deleteObservation = async (req, res, next) => {
     if (!deletedObservation) {
       return res.status(404).json({
         success: false,
-        message: 'Observation not found',
+        message: "Observation not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Observation deleted successfully',
+      message: "Observation deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -475,8 +534,8 @@ const updateMedicalHistory = async (req, res, next) => {
     );
 
     const message = updatedMedicalHistory._id
-      ? 'Medical History updated successfully'
-      : 'New Medical History created';
+      ? "Medical History updated successfully"
+      : "New Medical History created";
 
     return res.status(200).json({
       success: true,
@@ -534,8 +593,8 @@ const updateDietHistory = async (req, res, next) => {
     );
 
     const message = updatedDietHistory._id
-      ? 'Diet History updated successfully'
-      : 'New Diet History created';
+      ? "Diet History updated successfully"
+      : "New Diet History created";
 
     return res.status(200).json({
       success: true,
@@ -692,6 +751,7 @@ module.exports = {
   getClientByID,
   getAllClient,
   updateClient,
+  getAppointmentInfo,
   updateAppointmentInfo,
   updatePersonalHistory,
   updateObservation,

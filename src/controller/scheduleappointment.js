@@ -8,7 +8,8 @@ const videoConsultationValues = {
 
 const createAppointment = async (req, res, next) => {
   try {
-    const { clientId, clientName,status, videoConsultation, workplace,schedulingNotes } =
+    const { clientId } = req.params;
+    const { clientName,status, videoConsultation, workplace,schedulingNotes } =
       req.body;
     const start = new Date();
     const end = new Date(start.getTime() + 30 * 60 * 1000);
@@ -22,7 +23,6 @@ const createAppointment = async (req, res, next) => {
     }
 
     const appointment = new Appointment({
-      clientId,
       clientName,
       start,
       status,
