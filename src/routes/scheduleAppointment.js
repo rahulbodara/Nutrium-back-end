@@ -4,6 +4,6 @@ const scheduleAppointmentController = require("../controller/scheduleappointment
 const { isAuthenticated } = require("../middleware/auth");
 
 // router.get("/scheduleApointment", isAuthenticated, scheduleAppointmentController);
-router.post("/scheduleApointment", isAuthenticated, scheduleAppointmentController.createAppointment);
+router.post("/scheduleApointment/:id", isAuthenticated, scheduleAppointmentController.createAppointment);
 
 module.exports = router;
