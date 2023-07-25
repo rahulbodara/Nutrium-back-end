@@ -22,7 +22,7 @@ const registerClient = async (req, res, next) => {
       zipcode,
     } = req.body;
 
-    const exist = await Client.findOne({ email });
+    const exist = await Client.findOne({ email, userId: { $ne: userId } });
 
     if (exist) {
       return res.status(400).json({
@@ -30,8 +30,8 @@ const registerClient = async (req, res, next) => {
         message: "This email already exists",
       });
     }
-    const clientData = await new Client({
-      userId: userId,
+    const client = await Client.create({
+      userId,
       fullName,
       gender,
       workplace,
@@ -42,10 +42,12 @@ const registerClient = async (req, res, next) => {
       country,
       zipcode,
     });
-    const client = await clientData.save();
+
+    await getScheduleAppointmentInfo(client._id);
+
     return res.status(200).json({
       success: true,
-      message: "client added successfully",
+      message: "Client added successfully",
       client,
     });
   } catch (error) {
@@ -87,80 +89,84 @@ const getAllClient = async (req, res, next) => {
 //     next(error);
 //   }
 // };
-
 const getClientByID = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const userId = req.userId;
 
     const query = {
       _id: clientId,
-      userId: userId,
       isActive: 1,
     };
     const client = await Client.findOne(query);
     if (!client) {
-      return res.status(404).json({ message: "client Not Found!" });
+      return res.status(404).json({ message: "Client Not Found!" });
     }
 
     const aggregate = [
       {
-        $lookup: {
-          from: "appointmentinformations",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "appointmentInformation",
-        },
-      },
-      {
-        $lookup: {
-          from: "personalhistories",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "Personal and social history",
-        },
-      },
-      {
-        $lookup: {
-          from: "diethistories",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "Dietary history",
-        },
-      },
-      {
-        $lookup: {
-          from: "medicalhistories",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "Medical history",
-        },
-      },
-      {
-        $lookup: {
-          from: "observations",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "observations",
-        },
-      },
-      {
-        $lookup: {
-          from: "createAppointment",
-          localField: "_id",
-          foreignField: "clientId",
-          as: "Create Appointment",
-        },
-      },
-      {
-        $lookup: {
-          from: 'clientfiles',
-          localField: '_id',
-          foreignField: 'clientId',
-          as: 'files',
+        $match: {
+          _id: new mongoose.Types.ObjectId(clientId),
+          isActive: 1,
         },
       },
     ];
+
+    aggregate.push({
+      $lookup: {
+        from: "appointmentinformations",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "appointmentInformation",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "personalhistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Personal and social history",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "diethistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Dietary history",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "medicalhistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Medical history",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "observations",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "observations",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "appointments",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "scheduleappointment",
+      },
+    });
+    aggregate.push({
+      $lookup: {
+        from: "clientfiles",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "files",
+      },
+    });
 
     const results = await Client.aggregate(aggregate);
     res.status(200).json(results);
@@ -253,25 +259,22 @@ const updateClient = async (req, res, next) => {
   }
 };
 
-const getAppointmentInfo = async (req, res, next) => {
+const getScheduleAppointmentInfo = async (clientId) => {
+  const videoConsultationValues = {
+    without_video_call: "Not available in this option",
+    google_meet: "Generated after saving appointment",
+    zoom: "Generated after saving appointment",
+  };
   try {
-    const query = {
-      _id: req.params.id,
-      userId: req.userId,
-      isActive: 1,
-    };
-    const client = await Client.findOne(query);
+    const client = await Client.findById(clientId);
+
     if (!client) {
-      return res.status(404).json({ message: "Client Not Found!" });
+      throw new Error("Client not found");
     }
+
     const start = new Date();
     const end = new Date(start.getTime() + 30 * 60 * 1000);
-
-    const videoConsultationValues = {
-      without_video_call: "Not available in this option",
-      google_meet: "Generated after saving appointment",
-      zoom: "Generated after saving appointment",
-    };
+    const videoConsultation = "without_video_call";
 
     let updatedVideoLink = "";
 
@@ -280,6 +283,7 @@ const getAppointmentInfo = async (req, res, next) => {
     } else {
       updatedVideoLink = videoConsultationValues[videoConsultation];
     }
+
     const clientName = client.fullName;
     const clientWorkplace = client.workplace;
 
@@ -288,7 +292,7 @@ const getAppointmentInfo = async (req, res, next) => {
       clientName,
       start,
       status: "not_confirmed",
-      videoConsultation: "without_video_call",
+      videoConsultation,
       end,
       workplace: clientWorkplace,
       schedulingNotes: "Add scheduling notes here if needed",
@@ -296,13 +300,12 @@ const getAppointmentInfo = async (req, res, next) => {
     };
 
     const appointment = new createAppointment(appointmentData);
-
     const savedAppointment = await appointment.save();
 
-    return res.status(201).json(savedAppointment);
+    return savedAppointment;
   } catch (error) {
     console.error("Error creating appointment:", error);
-    next(error);
+    throw error;
   }
 };
 
@@ -612,11 +615,11 @@ const createFileDetail = async (req, res, next) => {
     const userId = req.userId;
     const clientId = req.params.id;
     const file = req.file;
-
+    f;
     if (!file) {
       return res.status(400).json({
         success: false,
-        message: 'You need to choose a file',
+        message: "You need to choose a file",
       });
     }
 
@@ -634,7 +637,7 @@ const createFileDetail = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'File created successfully',
+      message: "File created successfully",
       file: createdFile,
     });
   } catch (error) {
@@ -667,8 +670,8 @@ const updateFileDetail = async (req, res, next) => {
     );
 
     const message = updatedFile._id
-      ? 'File updated successfully'
-      : 'New File created';
+      ? "File updated successfully"
+      : "New File created";
 
     return res.status(200).json({
       success: true,
@@ -690,7 +693,7 @@ const deleteFileDetail = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(fileId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid file ID',
+        message: "Invalid file ID",
       });
     }
 
@@ -699,16 +702,16 @@ const deleteFileDetail = async (req, res, next) => {
     if (!deletedFile) {
       return res.status(404).json({
         success: false,
-        message: 'File not found',
+        message: "File not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'File deleted successfully',
+      message: "File deleted successfully",
     });
   } catch (error) {
-    console.log('error--------->', error);
+    console.log("error--------->", error);
     next(error);
   }
 };
@@ -716,12 +719,12 @@ const deleteFileDetail = async (req, res, next) => {
 const getAllFileDetail = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    console.log('clientId---------->', clientId);
+    console.log("clientId---------->", clientId);
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -730,17 +733,17 @@ const getAllFileDetail = async (req, res, next) => {
     if (files.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Files not found for the client',
+        message: "Files not found for the client",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Files retrieved successfully',
+      message: "Files retrieved successfully",
       files: files,
     });
   } catch (error) {
-    console.log('error--------->', error);
+    console.log("error--------->", error);
     next(error);
   }
 };
@@ -751,7 +754,7 @@ module.exports = {
   getClientByID,
   getAllClient,
   updateClient,
-  getAppointmentInfo,
+  getScheduleAppointmentInfo,
   updateAppointmentInfo,
   updatePersonalHistory,
   updateObservation,

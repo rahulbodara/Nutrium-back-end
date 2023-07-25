@@ -18,6 +18,7 @@ const clientRouter = require("./routes/client");
 const preferenceRouter = require("./routes/appointmentPreferences");
 const scheduleRoutes = require("./routes/schedule");
 const scheduleApointmentRoutes=require("./routes/scheduleAppointment")
+const eventRoutes=require("./routes/event")
 const app = express();
 
 app.use(bodyParser.json());
@@ -36,6 +37,7 @@ app.use("/api/v1", clientRouter);
 app.use("/api/v1", preferenceRouter);
 app.use("/api/v1", scheduleRoutes);
 app.use("/api/v1", scheduleApointmentRoutes);
+app.use("/api/v1", eventRoutes);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);
