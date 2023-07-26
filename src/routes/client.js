@@ -18,6 +18,8 @@ const {
   updateFileDetail,
   createFileDetail,
   getAllFileDetail,
+  createEatingBehaviour,
+  deleteEatingBehaviour,
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -35,6 +37,7 @@ router.put(
 );
 
 router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
+// router.get('/client/appointment/:id', isAuthenticated, );
 
 router.put(
   '/client/personal-history/:id',
@@ -71,5 +74,9 @@ router.put(
 router.delete('/client/file/:id', isAuthenticated, deleteFileDetail);
 
 router.get('/client/file/:id', isAuthenticated, getAllFileDetail);
+
+router.post('/client/behaviour/:id', isAuthenticated, createEatingBehaviour);
+
+router.delete('/client/behaviour/:id', isAuthenticated, deleteEatingBehaviour);
 
 module.exports = router;
