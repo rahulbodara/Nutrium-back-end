@@ -18,8 +18,11 @@ const {
   updateFileDetail,
   createFileDetail,
   getAllFileDetail,
-  // createEatingBehaviour,
-  // deleteEatingBehaviour,
+  createEatingBehaviour,
+  deleteEatingBehaviour,
+  updateEatingBehaviour,
+  createFoodDiary,
+  deleteFoodDiary,
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -65,18 +68,44 @@ router.post(
 );
 
 router.put(
-  '/client/file/:id',
+  '/client/file/:clientId/:fileId',
   isAuthenticated,
   upload.single('file'),
   updateFileDetail
 );
 
-router.delete('/client/file/:id', isAuthenticated, deleteFileDetail);
+router.delete(
+  '/client/file/:clientId/:fileId',
+  isAuthenticated,
+  deleteFileDetail
+);
 
 router.get('/client/file/:id', isAuthenticated, getAllFileDetail);
 
-// router.post('/client/behaviour/:id', isAuthenticated, createEatingBehaviour);
+router.post(
+  '/client/eating-behaviour/:id',
+  isAuthenticated,
+  createEatingBehaviour
+);
 
-// router.delete('/client/behaviour/:id', isAuthenticated, deleteEatingBehaviour);
+router.put(
+  '/client/eating-behaviour/:clientId/:behaviourId',
+  isAuthenticated,
+  updateEatingBehaviour
+);
+
+router.delete(
+  '/client/eating-behaviour/:clientId/:behaviourId',
+  isAuthenticated,
+  deleteEatingBehaviour
+);
+
+router.post('/client/food-diary/:id', isAuthenticated, createFoodDiary);
+
+router.delete(
+  '/client/food-diary/:clientId/:foodId',
+  isAuthenticated,
+  deleteFoodDiary
+);
 
 module.exports = router;
