@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const scheduleSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'user',
+  },
   day: {
     type: String,
     required: true,
