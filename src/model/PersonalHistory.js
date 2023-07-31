@@ -20,24 +20,37 @@ const personalHistorySchema = new mongoose.Schema({
   },
   sleepQuality: {
     type: String,
+    enum: [
+      'Less than 5 hours/night',
+      'About 5 hours/night',
+      'About 6 hours/night',
+      'About 7 hours/night',
+      'About 8 hours/night',
+      'About 9 hours/night',
+      'About 10 hours/night',
+      'More than 5 hours/night',
+    ],
   },
   sleepQualityInfo: {
     type: String,
   },
   smoker: {
     type: String,
+    enum: ['Yes', 'No'],
   },
   smokerInfo: {
     type: String,
   },
   alcoholConsumption: {
     type: String,
+    enum: ['Yes', 'No'],
   },
   alcoholConsumptionInfo: {
     type: String,
   },
   maritalStatus: {
     type: String,
+    enum: ['Married', 'Single', 'Divorced', 'Widower'],
   },
   maritalStatusInfo: {
     type: String,

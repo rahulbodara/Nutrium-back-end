@@ -13,6 +13,25 @@ const medicalHistorySchema = new mongoose.Schema({
   diseases: [
     {
       type: String,
+      enum: [
+        'Anaemia',
+        'Angina',
+        'Celiac disease',
+        'Dyslipidaemia',
+        'Gastritis',
+        'Heart disease',
+        'High cholesterol',
+        'Hypertension',
+        'IBD',
+        'Kidney disease',
+        'Musculoskeletal problem',
+        'Obesity',
+        'Peripheral artery disease',
+        'Previous MI',
+        'Previous stroke',
+        'Type 1 Diabetes',
+        'Type 2 Diabetes',
+      ],
     },
   ],
   diseasesDetail: {

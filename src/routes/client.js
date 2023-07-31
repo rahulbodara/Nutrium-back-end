@@ -23,10 +23,11 @@ const {
   updateEatingBehaviour,
   createFoodDiary,
   deleteFoodDiary,
+  updateFoodDiary,
+  createGoalType,
+  deleteGoalType,
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
-
-// const upload = multer({ dest: 'src/uploads/' });
 
 router.post('/client', isAuthenticated, registerClient);
 router.delete('/client/:id', isAuthenticated, deleteClient);
@@ -40,7 +41,6 @@ router.put(
 );
 
 router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
-// router.get('/client/appointment/:id', isAuthenticated, );
 
 router.put(
   '/client/personal-history/:id',
@@ -106,6 +106,20 @@ router.delete(
   '/client/food-diary/:clientId/:foodId',
   isAuthenticated,
   deleteFoodDiary
+);
+
+router.put(
+  '/client/food-diary/:clientId/:foodDiaryId',
+  isAuthenticated,
+  updateFoodDiary
+);
+
+router.post('/client/goals/:id', isAuthenticated, createGoalType);
+
+router.delete(
+  '/client/goals/:clientId/:goalId',
+  isAuthenticated,
+  deleteGoalType
 );
 
 module.exports = router;
