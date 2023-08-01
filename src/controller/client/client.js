@@ -11,6 +11,7 @@ const eatingBehaviour = require('../../model/eatingBehaviour');
 const ClientFile = require('../../model/ClientFile');
 const FoodDiares = require('../../model/FoodDiares');
 const Goals = require('../../model/Goals');
+const Measurements = require('../../model/Measurements');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -735,7 +736,6 @@ const deleteFileDetail = async (req, res, next) => {
 const getAllFileDetail = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    console.log('clientId---------->', clientId);
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -987,7 +987,7 @@ const updateFoodDiary = async (req, res, next) => {
   }
 };
 
-const createGoalType = async (req, res, next) => {
+const createGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.id;
@@ -1017,7 +1017,7 @@ const createGoalType = async (req, res, next) => {
   }
 };
 
-const deleteGoalType = async (req, res, next) => {
+const deleteGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.clientId;
@@ -1054,6 +1054,404 @@ const deleteGoalType = async (req, res, next) => {
   }
 };
 
+const registerMeasurement = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.id;
+    const {
+      measurementsDate,
+      weight,
+      height,
+      hipCircumference,
+      waistCircumference,
+      diastolicBloodPressure,
+      hdlCholesterol,
+      ldlCholesterol,
+      systolicBloodPressure,
+      totalCholesterol,
+      triglycerides,
+      bodyFatPercentage,
+      fatMass,
+      muscleMass,
+      muscleMassPercentage,
+    } = req.body;
+
+    const newMeasurement = {
+      userId: userId,
+      clientId: clientId,
+      measurementsDate,
+      weight: [],
+      height: [],
+      hipCircumference: [],
+      waistCircumference: [],
+      diastolicBloodPressure: [],
+      hdlCholesterol: [],
+      ldlCholesterol: [],
+      systolicBloodPressure: [],
+      totalCholesterol: [],
+      triglycerides: [],
+      bodyFatPercentage: [],
+      fatMass: [],
+      muscleMass: [],
+      muscleMassPercentage: [],
+    };
+    if (weight) {
+      weight.forEach((value, index) => {
+        newMeasurement.weight.push({ date: measurementsDate, value });
+      });
+    }
+
+    if (height) {
+      height.forEach((value, index) => {
+        newMeasurement.height.push({ date: measurementsDate, value });
+      });
+    }
+
+    if (hipCircumference) {
+      hipCircumference.forEach((value, index) => {
+        newMeasurement.hipCircumference.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (waistCircumference) {
+      waistCircumference.forEach((value, index) => {
+        newMeasurement.waistCircumference.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (diastolicBloodPressure) {
+      diastolicBloodPressure.forEach((value, index) => {
+        newMeasurement.diastolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (hdlCholesterol) {
+      hdlCholesterol.forEach((value, index) => {
+        newMeasurement.hdlCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (ldlCholesterol) {
+      ldlCholesterol.forEach((value, index) => {
+        newMeasurement.ldlCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (systolicBloodPressure) {
+      systolicBloodPressure.forEach((value, index) => {
+        newMeasurement.systolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (totalCholesterol) {
+      totalCholesterol.forEach((value, index) => {
+        newMeasurement.totalCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (triglycerides) {
+      triglycerides.forEach((value, index) => {
+        newMeasurement.triglycerides.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (bodyFatPercentage) {
+      bodyFatPercentage.forEach((value, index) => {
+        newMeasurement.bodyFatPercentage.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (fatMass) {
+      fatMass.forEach((value, index) => {
+        newMeasurement.fatMass.push({ date: measurementsDate, value });
+      });
+    }
+
+    if (muscleMass) {
+      muscleMass.forEach((value, index) => {
+        newMeasurement.muscleMass.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (muscleMassPercentage) {
+      muscleMassPercentage.forEach((value, index) => {
+        newMeasurement.muscleMassPercentage.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    const createdMeasurement = await Measurements.create(newMeasurement);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Measurement added successfully',
+      measurement: createdMeasurement,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addNewMeasurement = async (req, res, next) => {
+  try {
+    const measurementId = req.params.measurementId;
+    const {
+      measurementsDate,
+      weight,
+      height,
+      hipCircumference,
+      waistCircumference,
+      diastolicBloodPressure,
+      hdlCholesterol,
+      ldlCholesterol,
+      systolicBloodPressure,
+      totalCholesterol,
+      triglycerides,
+      bodyFatPercentage,
+      fatMass,
+      muscleMass,
+      muscleMassPercentage,
+    } = req.body;
+
+    const existingMeasurement = await Measurements.findById(measurementId);
+
+    if (!existingMeasurement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Measurement not found',
+      });
+    }
+
+    if (weight) {
+      weight.forEach((value) => {
+        existingMeasurement.weight.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (height) {
+      height.forEach((value) => {
+        existingMeasurement.height.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (hipCircumference) {
+      hipCircumference.forEach((value) => {
+        existingMeasurement.hipCircumference.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (waistCircumference) {
+      waistCircumference.forEach((value) => {
+        existingMeasurement.waistCircumference.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+
+    if (diastolicBloodPressure) {
+      diastolicBloodPressure.forEach((value) => {
+        existingMeasurement.diastolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (hdlCholesterol) {
+      hdlCholesterol.forEach((value) => {
+        existingMeasurement.hdlCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (ldlCholesterol) {
+      ldlCholesterol.forEach((value) => {
+        existingMeasurement.ldlCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (systolicBloodPressure) {
+      systolicBloodPressure.forEach((value) => {
+        existingMeasurement.systolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (totalCholesterol) {
+      totalCholesterol.forEach((value) => {
+        existingMeasurement.totalCholesterol.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (triglycerides) {
+      triglycerides.forEach((value) => {
+        existingMeasurement.triglycerides.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (bodyFatPercentage) {
+      bodyFatPercentage.forEach((value) => {
+        existingMeasurement.bodyFatPercentage.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (fatMass) {
+      fatMass.forEach((value) => {
+        existingMeasurement.fatMass.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (muscleMass) {
+      muscleMass.forEach((value) => {
+        existingMeasurement.muscleMass.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    if (muscleMassPercentage) {
+      muscleMassPercentage.forEach((value) => {
+        existingMeasurement.muscleMassPercentage.push({
+          date: measurementsDate,
+          value,
+        });
+      });
+    }
+    const updatedMeasurement = await existingMeasurement.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'New measurements added to existing Measurement record',
+      measurement: updatedMeasurement,
+    });
+  } catch (error) {
+    console.log('error------------->', error);
+    next(error);
+  }
+};
+
+const getMeasurementById = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+    const measurementId = req.params.measurementId;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const allMeasurement = await Measurements.findOne({
+      _id: measurementId,
+      clientId: clientId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      Measurement: allMeasurement,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteMeasurementObject = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+    const measurementType = req.body.measurementType;
+    const measurementTypeId = req.body.measurementTypeId;
+    console.log('measurementType', measurementType);
+    console.log('measurementTypeId', measurementTypeId);
+
+    const measurement = await Measurements.findOne({
+      clientId: clientId,
+    });
+
+    if (!measurement) {
+      return res
+        .status(404)
+        .json({ error: 'Measurement data not found for the client' });
+    }
+    const measurementArray = measurement[measurementType];
+
+    if (!measurementArray) {
+      return res.status(404).json({ error: 'Measurement type not found' });
+    }
+
+    const indexToRemove = measurementArray.findIndex(
+      (item) => item._id.toString() === measurementTypeId
+    );
+
+    if (indexToRemove === -1) {
+      return res.status(404).json({ error: 'Measurement data not found' });
+    }
+
+    measurementArray.splice(indexToRemove, 1);
+
+    const data = await measurement.save();
+
+    return res
+      .status(200)
+      .json({ message: 'Measurement data deleted successfully', data: data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerClient,
   deleteClient,
@@ -1077,6 +1475,10 @@ module.exports = {
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
-  createGoalType,
-  deleteGoalType,
+  createGoal,
+  deleteGoal,
+  registerMeasurement,
+  addNewMeasurement,
+  getMeasurementById,
+  deleteMeasurementObject,
 };

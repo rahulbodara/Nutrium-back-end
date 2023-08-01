@@ -24,8 +24,12 @@ const {
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
-  createGoalType,
-  deleteGoalType,
+  createGoal,
+  deleteGoal,
+  registerMeasurement,
+  addNewMeasurement,
+  getMeasurementById,
+  deleteMeasurementObject,
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -114,12 +118,28 @@ router.put(
   updateFoodDiary
 );
 
-router.post('/client/goals/:id', isAuthenticated, createGoalType);
+router.post('/client/goals/:id', isAuthenticated, createGoal);
+
+router.delete('/client/goals/:clientId/:goalId', isAuthenticated, deleteGoal);
+
+router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
+
+router.post(
+  '/client/new-measurements/:measurementId',
+  isAuthenticated,
+  addNewMeasurement
+);
+
+router.get(
+  '/client/measurements/:clientId/:measurementId',
+  isAuthenticated,
+  getMeasurementById
+);
 
 router.delete(
-  '/client/goals/:clientId/:goalId',
+  '/client/measurements/:measurementId',
   isAuthenticated,
-  deleteGoalType
+  deleteMeasurementObject
 );
 
 module.exports = router;
