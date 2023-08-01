@@ -14,7 +14,7 @@ const eatingBehaviourSchema = new mongoose.Schema({
   },
   date: {
     type: String,
-    required: [true, 'Please enter a date of birth'],
+    required: [true, 'Please enter Registration date'],
     validate: {
       validator: function (value) {
         const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
@@ -32,7 +32,7 @@ const eatingBehaviourSchema = new mongoose.Schema({
           date.getFullYear() === year
         );
       },
-      message: 'Please enter a valid date of birth (DD/MM/YYYY)',
+      message: 'Please enter a valid date in the format (DD/MM/YYYY)',
     },
   },
   behaviour: {

@@ -10,6 +10,7 @@ const createAppointment = require('../../model/ScheduleApointment');
 const eatingBehaviour = require('../../model/eatingBehaviour');
 const ClientFile = require('../../model/ClientFile');
 const FoodDiares = require('../../model/FoodDiares');
+const Goals = require('../../model/Goals');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -153,6 +154,15 @@ const getClientByID = async (req, res, next) => {
         localField: '_id',
         foreignField: 'clientId',
         as: 'files',
+      },
+    });
+
+    aggregate.push({
+      $lookup: {
+        from: 'eatingbehaviours',
+        localField: '_id',
+        foreignField: 'clientId',
+        as: 'Eating Behaviours',
       },
     });
 
@@ -892,13 +902,13 @@ const deleteFoodDiary = async (req, res, next) => {
         .json({ success: false, message: 'Invalid userId or clientId' });
     }
 
-    const deletedBehaviour = await FoodDiares.findOneAndDelete({
+    const deletedFoodDiary = await FoodDiares.findOneAndDelete({
       _id: foodId,
       userId: userId,
       clientId: clientId,
     });
 
-    if (!deletedBehaviour) {
+    if (!deletedFoodDiary) {
       return res.status(404).json({
         success: false,
         message: 'Food Diaries not found!',
@@ -908,6 +918,136 @@ const deleteFoodDiary = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Food Diaries deleted successfully!!!',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateFoodDiary = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.clientId;
+    const foodDiaryId = req.params.foodDiaryId;
+
+    // Get the current food diary entry
+    const foodDiary = await FoodDiares.findOne({
+      _id: foodDiaryId,
+      userId: userId,
+      clientId: clientId,
+    });
+
+    if (!foodDiary) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food diary entry not found or not authorized for update.',
+      });
+    }
+
+    // Create a map of existing addMeal objects based on mealType
+    const existingAddMealsMap = new Map();
+    for (const existingMeal of foodDiary.addMeal) {
+      existingAddMealsMap.set(existingMeal.mealType, existingMeal);
+    }
+
+    // Update only selected addMeal objects based on their mealType
+    for (const newAddMeal of req.body.addMeal) {
+      if (existingAddMealsMap.has(newAddMeal.mealType)) {
+        // Update the value for existing addMeal object
+        existingAddMealsMap.get(newAddMeal.mealType).value = newAddMeal.value;
+      } else {
+        // Add new addMeal object to the map if it doesn't exist
+        existingAddMealsMap.set(newAddMeal.mealType, {
+          mealType: newAddMeal.mealType,
+          value: newAddMeal.value,
+        });
+      }
+    }
+
+    // Convert the map values to an array to get the updated addMeal array
+    const updatedAddMeals = Array.from(existingAddMealsMap.values());
+
+    // Update other fields if needed
+    foodDiary.registrationDate = req.body.registrationDate;
+    foodDiary.observation = req.body.observation;
+
+    // Update the addMeal array with the modified values
+    foodDiary.addMeal = updatedAddMeals;
+
+    // Save the updated food diary entry
+    const updatedFoodDiary = await foodDiary.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Food diary entry updated successfully!',
+      EatingBehaviour: updatedFoodDiary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createGoalType = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.id;
+    const { goalType, description, deadline, measurementType, value, unit } =
+      req.body;
+
+    const newGoalData = {
+      userId: userId,
+      clientId: clientId,
+      goalType,
+      description,
+      deadline,
+      measurementType,
+      value,
+      unit,
+    };
+
+    const createGoal = await Goals.create(newGoalData);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Goal created successfully!!!',
+      EatingBehaviour: createGoal,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteGoalType = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.clientId;
+    const goalId = req.params.goalId;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(clientId)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid userId or clientId' });
+    }
+
+    const deletedGoal = await Goals.findOneAndDelete({
+      _id: goalId,
+      userId: userId,
+      clientId: clientId,
+    });
+
+    if (!deletedGoal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food Diaries not found!',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Goal deleted successfully!!!',
     });
   } catch (error) {
     next(error);
@@ -936,4 +1076,7 @@ module.exports = {
   updateEatingBehaviour,
   createFoodDiary,
   deleteFoodDiary,
+  updateFoodDiary,
+  createGoalType,
+  deleteGoalType,
 };
