@@ -109,6 +109,26 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    presentation: {
+      type: String,
+    },
+    aboutMe: {
+      type: String,
+    },
+    url: [
+      {
+        platform: {
+          type: String,
+        },
+        link: {
+          type: String,
+        },
+      },
+    ],
+    privacyStatus: {
+      type: String,
+      default: 'Private',
+    },
     isActive: {
       type: Number,
       default: 1,
