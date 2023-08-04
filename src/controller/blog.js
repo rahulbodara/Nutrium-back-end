@@ -1,4 +1,4 @@
-const { default: mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 const Blog = require('../model/Blog');
 const User = require('../model/User');
 
@@ -112,7 +112,7 @@ const getUserBlogPageDetail = async (req, res, next) => {
       _id: userId,
       isActive: 1,
     };
-    const user = await User.findOne(query);
+    const user = await User.findOne(query).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User Not Found!' });
     }
