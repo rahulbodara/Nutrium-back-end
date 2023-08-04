@@ -18,182 +18,179 @@ const FoodSchema = new mongoose.Schema({
     required: true,
   },
   quantity: {
-    String,
+    type: String,
     required: true,
   },
   macronutrients: {
     energy: {
       value: Number,
-      unit: "kcal",
+      unit: String,
     },
     fat: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     carbohydrate: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     protein: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
   },
   micronutrients: {
     cholesterol: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     fiber: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     sodium: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     water: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     vitaminA: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     vitaminB6: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     vitaminB12: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     vitaminC: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     vitaminD_D2_D3: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     vitaminE: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     vitaminK: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     starch: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     lactose: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     alcohol: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     caffeine: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     sugars: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     calcium: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     iron: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     magnesium: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     phosphorus: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     potassium: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     zinc: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     copper: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     fluorlde: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     manganese: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     selenium: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     thlamin: {
       value: Number,
-      unit: "mg",
-    },
-    zinc: {
-      value: Number,
-      unit: "mg",
+      unit: String,
     },
     riboflavin: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     niacin: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     pantothenicAcid: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
     folateTotal: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     folicAcid: {
       value: Number,
-      unit: "ug",
+      unit: String,
     },
     fattyAcidsTotalTrans: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     fattyAcidsTotalSaturated: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     fattyAcidsTotalMonounsaturated: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     fattyAcidsTotalPolyunsaturated: {
       value: Number,
-      unit: "g",
+      unit: String,
     },
     chloride: {
       value: Number,
-      unit: "mg",
+      unit: String,
     },
   },
 });
+
 const Food = mongoose.model("Food", FoodSchema);
 
 module.exports = Food;
