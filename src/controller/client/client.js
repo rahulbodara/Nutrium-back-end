@@ -11,6 +11,7 @@ const eatingBehaviour = require('../../model/eatingBehaviour');
 const ClientFile = require('../../model/ClientFile');
 const FoodDiares = require('../../model/FoodDiares');
 const Goals = require('../../model/Goals');
+const Measurements = require('../../model/Measurements');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -473,8 +474,9 @@ const updateObservation = async (req, res, next) => {
 
 const deleteObservation = async (req, res, next) => {
   try {
+    const userId = req.userId;
     const observationId = req.params.id;
-    const clientId = req.params.id;
+    const clientId = req.body.clientId;
 
     if (!mongoose.Types.ObjectId.isValid(observationId)) {
       return res.status(400).json({
@@ -483,11 +485,11 @@ const deleteObservation = async (req, res, next) => {
       });
     }
 
-    const deletedObservation = await Observations.findByIdAndDelete(
-      clientId,
-      { _id: observationId },
-      { new: true }
-    );
+    const deletedObservation = await Observations.findOneAndDelete({
+      _id: observationId,
+      userId: userId,
+      clientId: clientId,
+    });
 
     if (!deletedObservation) {
       return res.status(404).json({
@@ -649,7 +651,7 @@ const updateFileDetail = async (req, res, next) => {
   try {
     const userId = req.userId;
     const fileId = req.params.fileId;
-    const clientId = req.params.clientId;
+    const clientId = req.body.clientId;
     const { name, description, date, category } = req.body;
     const newFile = {
       file: req.file.filename,
@@ -695,7 +697,7 @@ const updateFileDetail = async (req, res, next) => {
 const deleteFileDetail = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const clientId = req.params.clientId;
+    const clientId = req.body.clientId;
     const fileId = req.params.fileId;
 
     if (
@@ -735,7 +737,6 @@ const deleteFileDetail = async (req, res, next) => {
 const getAllFileDetail = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    console.log('clientId---------->', clientId);
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -890,7 +891,7 @@ const createFoodDiary = async (req, res, next) => {
 const deleteFoodDiary = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const clientId = req.params.clientId;
+    const clientId = req.body.clientId;
     const foodId = req.params.foodId;
 
     if (
@@ -927,7 +928,7 @@ const deleteFoodDiary = async (req, res, next) => {
 const updateFoodDiary = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const clientId = req.params.clientId;
+    const clientId = req.body.clientId;
     const foodDiaryId = req.params.foodDiaryId;
 
     // Get the current food diary entry
@@ -987,7 +988,7 @@ const updateFoodDiary = async (req, res, next) => {
   }
 };
 
-const createGoalType = async (req, res, next) => {
+const createGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.id;
@@ -1017,10 +1018,10 @@ const createGoalType = async (req, res, next) => {
   }
 };
 
-const deleteGoalType = async (req, res, next) => {
+const deleteGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const clientId = req.params.clientId;
+    const clientId = req.body.clientId;
     const goalId = req.params.goalId;
 
     if (
@@ -1054,6 +1055,515 @@ const deleteGoalType = async (req, res, next) => {
   }
 };
 
+const registerMeasurement = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.id;
+    const {
+      measurementsDate,
+      weight,
+      height,
+      hipCircumference,
+      waistCircumference,
+      diastolicBloodPressure,
+      hdlCholesterol,
+      ldlCholesterol,
+      systolicBloodPressure,
+      totalCholesterol,
+      triglycerides,
+      bodyFatPercentage,
+      fatMass,
+      muscleMass,
+      muscleMassPercentage,
+    } = req.body;
+
+    const newMeasurement = {
+      userId: userId,
+      clientId: clientId,
+      measurementsDate,
+      weight: [],
+      height: [],
+      hipCircumference: [],
+      waistCircumference: [],
+      diastolicBloodPressure: [],
+      hdlCholesterol: [],
+      ldlCholesterol: [],
+      systolicBloodPressure: [],
+      totalCholesterol: [],
+      triglycerides: [],
+      bodyFatPercentage: [],
+      fatMass: [],
+      muscleMass: [],
+      muscleMassPercentage: [],
+    };
+    if (weight) {
+      weight.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.weight.push({ date: measurementsDate, value, unit });
+      });
+    }
+
+    if (height) {
+      height.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.height.push({ date: measurementsDate, value, unit });
+      });
+    }
+
+    if (hipCircumference) {
+      hipCircumference.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.hipCircumference.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (waistCircumference) {
+      waistCircumference.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.waistCircumference.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (diastolicBloodPressure) {
+      diastolicBloodPressure.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.diastolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (hdlCholesterol) {
+      hdlCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.hdlCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (ldlCholesterol) {
+      ldlCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.ldlCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (systolicBloodPressure) {
+      systolicBloodPressure.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.systolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (totalCholesterol) {
+      totalCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.totalCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (triglycerides) {
+      triglycerides.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.triglycerides.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (bodyFatPercentage) {
+      bodyFatPercentage.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.bodyFatPercentage.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (fatMass) {
+      fatMass.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.fatMass.push({ date: measurementsDate, value, unit });
+      });
+    }
+
+    if (muscleMass) {
+      muscleMass.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.muscleMass.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (muscleMassPercentage) {
+      muscleMassPercentage.forEach((measurement) => {
+        const { value, unit } = measurement;
+        newMeasurement.muscleMassPercentage.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    const createdMeasurement = await Measurements.create(newMeasurement);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Measurement added successfully',
+      measurement: createdMeasurement,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addNewMeasurement = async (req, res, next) => {
+  try {
+    const measurementId = req.params.measurementId;
+    const {
+      measurementsDate,
+      weight,
+      height,
+      hipCircumference,
+      waistCircumference,
+      diastolicBloodPressure,
+      hdlCholesterol,
+      ldlCholesterol,
+      systolicBloodPressure,
+      totalCholesterol,
+      triglycerides,
+      bodyFatPercentage,
+      fatMass,
+      muscleMass,
+      muscleMassPercentage,
+    } = req.body;
+
+    const existingMeasurement = await Measurements.findById(measurementId);
+
+    if (!existingMeasurement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Measurement not found',
+      });
+    }
+
+    if (weight) {
+      weight.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.weight.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (height) {
+      height.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.height.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (hipCircumference) {
+      hipCircumference.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.hipCircumference.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (waistCircumference) {
+      waistCircumference.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.waistCircumference.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+
+    if (diastolicBloodPressure) {
+      diastolicBloodPressure.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.diastolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (hdlCholesterol) {
+      hdlCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.hdlCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (ldlCholesterol) {
+      ldlCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.ldlCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (systolicBloodPressure) {
+      systolicBloodPressure.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.systolicBloodPressure.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (totalCholesterol) {
+      totalCholesterol.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.totalCholesterol.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (triglycerides) {
+      triglycerides.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.triglycerides.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (bodyFatPercentage) {
+      bodyFatPercentage.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.bodyFatPercentage.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (fatMass) {
+      fatMass.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.fatMass.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (muscleMass) {
+      muscleMass.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.muscleMass.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    if (muscleMassPercentage) {
+      muscleMassPercentage.forEach((measurement) => {
+        const { value, unit } = measurement;
+        existingMeasurement.muscleMassPercentage.push({
+          date: measurementsDate,
+          value,
+          unit,
+        });
+      });
+    }
+    const updatedMeasurement = await existingMeasurement.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'New measurements added to existing Measurement record',
+      measurement: updatedMeasurement,
+    });
+  } catch (error) {
+    console.log('error------------->', error);
+    next(error);
+  }
+};
+
+const getMeasurementById = async (req, res, next) => {
+  try {
+    const clientId = req.body.clientId;
+    const measurementId = req.params.measurementId;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const allMeasurement = await Measurements.findOne({
+      _id: measurementId,
+      clientId: clientId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      Measurement: allMeasurement,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteMeasurementObject = async (req, res, next) => {
+  try {
+    const clientId = req.body.clientId;
+    const measurementId = req.params.measurementId;
+    const measurementType = req.body.measurementType;
+    const measurementTypeId = req.body.measurementTypeId;
+
+    // Check if the measurement exists and belongs to the specified client
+    const measurement = await Measurements.findOne({
+      _id: measurementId,
+      clientId: clientId,
+    });
+
+    if (!measurement) {
+      return res.status(404).json({ error: 'Measurement not found' });
+    }
+
+    // Find the array corresponding to the specified measurementType (e.g., weight, height)
+    const measurementArray = measurement[measurementType];
+
+    if (!measurementArray) {
+      return res.status(404).json({ error: 'Measurement type not found' });
+    }
+
+    // Find the index of the measurement object with the specified _id
+    const indexToRemove = measurementArray.findIndex(
+      (item) => item._id.toString() === measurementTypeId
+    );
+
+    if (indexToRemove === -1) {
+      return res.status(404).json({ error: 'Measurement data not found' });
+    }
+
+    // Perform the actual deletion by splicing the array
+    measurementArray.splice(indexToRemove, 1);
+
+    // Save the updated measurement object
+    await measurement.save();
+
+    return res
+      .status(200)
+      .json({ message: 'Measurement data deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateMeasurementObject = async (req, res, next) => {
+  try {
+    const clientId = req.body.clientId;
+    const measurementId = req.params.measurementId;
+    const measurementType = req.body.measurementType;
+    const measurementTypeId = req.body.measurementTypeId;
+    const newDate = req.body.newDate;
+    const newValue = req.body.newValue;
+    const newUnit = req.body.newUnit;
+
+    // Find the measurement data for the specified client
+    const measurement = await Measurements.findOne({
+      _id: measurementId,
+      clientId: clientId,
+    });
+
+    if (!measurement) {
+      return res
+        .status(404)
+        .json({ error: 'Measurement data not found for the client' });
+    }
+
+    // Find the array corresponding to the specified measurementType (e.g., weight, height)
+    const measurementArray = measurement[measurementType];
+
+    if (!measurementArray) {
+      return res.status(404).json({ error: 'Measurement type not found' });
+    }
+
+    // Find the index of the measurement object with the specified _id
+    const indexToUpdate = measurementArray.findIndex(
+      (item) => item._id.toString() === measurementTypeId
+    );
+
+    if (indexToUpdate === -1) {
+      return res.status(404).json({ error: 'Measurement data not found' });
+    }
+
+    // Update the value for the measurement object with the specified _id
+    measurementArray[indexToUpdate].date = newDate;
+    measurementArray[indexToUpdate].value = newValue;
+    measurementArray[indexToUpdate].unit = newUnit;
+
+    // Save the updated measurement object
+    await measurement.save();
+
+    return res
+      .status(200)
+      .json({ message: 'Measurement data updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerClient,
   deleteClient,
@@ -1077,6 +1587,11 @@ module.exports = {
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
-  createGoalType,
-  deleteGoalType,
+  createGoal,
+  deleteGoal,
+  registerMeasurement,
+  addNewMeasurement,
+  getMeasurementById,
+  deleteMeasurementObject,
+  updateMeasurementObject,
 };

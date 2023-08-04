@@ -24,11 +24,17 @@ const {
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
-  createGoalType,
-  deleteGoalType,
+  createGoal,
+  deleteGoal,
+  registerMeasurement,
+  addNewMeasurement,
+  getMeasurementById,
+  deleteMeasurementObject,
+  updateMeasurementObject,
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
+//===================client CRUD===================//
 router.post('/client', isAuthenticated, registerClient);
 router.delete('/client/:id', isAuthenticated, deleteClient);
 router.get('/client', isAuthenticated, getAllClient);
@@ -40,26 +46,32 @@ router.put(
   updateClient
 );
 
+//===================Appointment information===================//
 router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
 
+//===================Personal and social history===================//
 router.put(
   '/client/personal-history/:id',
   isAuthenticated,
   updatePersonalHistory
 );
+
+//===================Observations===================//
 router.put('/client/observation/:id', isAuthenticated, updateObservation);
-router.delete(
-  '/client/observation/:clientId/:id',
-  isAuthenticated,
-  deleteObservation
-);
+
+router.delete('/client/observation/:id', isAuthenticated, deleteObservation);
+
+//===================Medical history===================//
 router.put(
   '/client/medical-history/:id',
   isAuthenticated,
   updateMedicalHistory
 );
+
+//===================Dietary history===================//
 router.put('/client/diet-history/:id', isAuthenticated, updateDietHistory);
 
+//===================Files===================//
 router.post(
   '/client/file/:id',
   isAuthenticated,
@@ -68,20 +80,17 @@ router.post(
 );
 
 router.put(
-  '/client/file/:clientId/:fileId',
+  '/client/file/:fileId',
   isAuthenticated,
   upload.single('file'),
   updateFileDetail
 );
 
-router.delete(
-  '/client/file/:clientId/:fileId',
-  isAuthenticated,
-  deleteFileDetail
-);
+router.delete('/client/file/:fileId', isAuthenticated, deleteFileDetail);
 
 router.get('/client/file/:id', isAuthenticated, getAllFileDetail);
 
+//===================Eating behaviour===================//
 router.post(
   '/client/eating-behaviour/:id',
   isAuthenticated,
@@ -100,26 +109,43 @@ router.delete(
   deleteEatingBehaviour
 );
 
+//===================Food Diaries===================//
 router.post('/client/food-diary/:id', isAuthenticated, createFoodDiary);
 
-router.delete(
-  '/client/food-diary/:clientId/:foodId',
+router.delete('/client/food-diary/:foodId', isAuthenticated, deleteFoodDiary);
+
+router.put('/client/food-diary/:foodDiaryId', isAuthenticated, updateFoodDiary);
+
+//===================Goals===================//
+router.post('/client/goals/:id', isAuthenticated, createGoal);
+
+router.delete('/client/goals/:goalId', isAuthenticated, deleteGoal);
+
+//===================Measurements===================//
+router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
+
+router.post(
+  '/client/new-measurements/:measurementId',
   isAuthenticated,
-  deleteFoodDiary
+  addNewMeasurement
+);
+
+router.get(
+  '/client/measurements/:measurementId',
+  isAuthenticated,
+  getMeasurementById
+);
+
+router.delete(
+  '/client/measurements/:measurementId',
+  isAuthenticated,
+  deleteMeasurementObject
 );
 
 router.put(
-  '/client/food-diary/:clientId/:foodDiaryId',
+  '/client/measurements/:measurementId',
   isAuthenticated,
-  updateFoodDiary
-);
-
-router.post('/client/goals/:id', isAuthenticated, createGoalType);
-
-router.delete(
-  '/client/goals/:clientId/:goalId',
-  isAuthenticated,
-  deleteGoalType
+  updateMeasurementObject
 );
 
 module.exports = router;

@@ -3,6 +3,7 @@ const userRoute = express.Router();
 const userController = require('../controller/user');
 const multer = require('multer');
 const { isAuthenticated } = require('../middleware/auth');
+const { createPersonalDetail } = require('../controller/personalPage');
 
 const upload = multer({ dest: 'src/uploads/' });
 
@@ -22,5 +23,6 @@ userRoute.delete(
   isAuthenticated,
   userController.deleteUserProfile
 );
+userRoute.put('/professionals/website', isAuthenticated, createPersonalDetail);
 
 module.exports = userRoute;

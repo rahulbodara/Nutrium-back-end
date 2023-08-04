@@ -21,6 +21,7 @@ const scheduleApointmentRoutes = require('./routes/scheduleAppointment');
 const eventRoutes = require('./routes/event');
 const messegeRoutes = require('./routes/sendmessege');
 const groupRoutes = require('./routes/group');
+const blogRouter = require('./routes/blog');
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/api/v1', scheduleApointmentRoutes);
 app.use('/api/v1', eventRoutes);
 app.use('/api/v1', messegeRoutes);
 app.use('/api/v1', groupRoutes);
+app.use('/api/v1', blogRouter);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);

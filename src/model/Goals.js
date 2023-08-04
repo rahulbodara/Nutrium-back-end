@@ -74,10 +74,6 @@ const goalsSchema = new mongoose.Schema(
         );
       },
     },
-    isActive: {
-      type: Number,
-      default: 1,
-    },
   },
   { timestamps: true }
 );
