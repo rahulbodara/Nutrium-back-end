@@ -23,6 +23,8 @@ const messegeRoutes = require('./routes/sendmessege');
 const groupRoutes = require('./routes/group');
 const blogRouter = require('./routes/blog');
 const foodsRoutes=require("./routes/food")
+const mealPlan = require('./routes/mealplan');
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -47,6 +49,7 @@ app.use('/api/v1', groupRoutes);
 app.use('/api/v1', blogRouter);
 app.use("/api/v1",foodsRoutes)
 
+app.use('/api/v1', mealPlan);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);
