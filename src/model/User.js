@@ -40,15 +40,14 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Please enter a date of birth'],
       validate: {
         validator: function (value) {
-          const dateRegex =
-            /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+          const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-([12][0-9]|0[1-9]|3[01])$/;
           if (!dateRegex.test(value)) {
             return false;
           }
-          const parts = value.split('/');
-          const day = parseInt(parts[0], 10);
+          const parts = value.split('-');
+          const year = parseInt(parts[0], 10);
           const month = parseInt(parts[1], 10);
-          const year = parseInt(parts[2], 10);
+          const day = parseInt(parts[2], 10);
           const date = new Date(year, month - 1, day);
           return (
             date.getDate() === day &&
@@ -56,7 +55,7 @@ const userSchema = new mongoose.Schema(
             date.getFullYear() === year
           );
         },
-        message: 'Please enter a valid date of birth (DD/MM/YYYY)',
+        message: 'Please enter a valid date of birth (YYYY-MM-DD)',
       },
     },
     phoneNumber: {
@@ -97,6 +96,9 @@ const userSchema = new mongoose.Schema(
       required: function () {
         return this.profession !== 'Student';
       },
+    },
+    university: {
+      type: String,
     },
     courseEndDate: {
       type: String,

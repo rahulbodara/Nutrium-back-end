@@ -29,6 +29,7 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
+      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -60,6 +61,7 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
+      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -67,6 +69,15 @@ const SignUp = async (req, res, next) => {
 
     const savedUser = await userData.save();
     savedUser.password = undefined;
+
+    const token = jwt.sign(
+      {
+        userId: savedUser._id,
+        email: savedUser.email,
+      },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     if (workplace) {
       const workplaceData = await new Workplace({
@@ -81,7 +92,7 @@ const SignUp = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
-      userData: savedUser,
+      token: token,
     });
   } catch (error) {
     next(error);
@@ -110,7 +121,7 @@ const SignIn = async (req, res, next) => {
         },
         JWT_SECRET,
         {
-          expiresIn: '1h',
+          expiresIn: '2h',
         }
       );
       const { password, ...userdetails } = user._doc;
@@ -223,9 +234,9 @@ const forgotPassword = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    const resetToken = await generateResetToken(user);
+    const { token, name } = await generateResetToken(user);
 
-    await sendEmail(email, resetToken);
+    await sendEmail(email, token, name);
 
     return res.status(200).json({ message: 'Password reset email sent.' });
   } catch (error) {
