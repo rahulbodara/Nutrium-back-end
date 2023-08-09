@@ -97,9 +97,6 @@ const userSchema = new mongoose.Schema(
         return this.profession !== 'Student';
       },
     },
-    university: {
-      type: String,
-    },
     courseEndDate: {
       type: String,
     },

@@ -29,7 +29,6 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
-      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -61,7 +60,6 @@ const SignUp = async (req, res, next) => {
       workplace,
       expertise,
       clientPerMonth,
-      university,
       courseEndDate,
       professionCardNumber,
       zipcode,
@@ -72,11 +70,10 @@ const SignUp = async (req, res, next) => {
 
     const token = jwt.sign(
       {
-        userId: savedUser._id,
-        email: savedUser.email,
+        id: savedUser._id,
       },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '2h' }
     );
 
     if (workplace) {

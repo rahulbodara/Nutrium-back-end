@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const FoodSchema = new mongoose.Schema({
+const dietarySupplementsSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -11,38 +11,12 @@ const FoodSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    default: 'My foods',
+    default: 'My dietary supplements',
   },
   group: {
     type: String,
     required: true,
-    enum: [
-      'Dairy and Egg Products',
-      'Spices and Herbs',
-      'Baby Foods',
-      'Fats and Oils',
-      'Poultry Products',
-      'Soup,Sauces,and Gravies',
-      'Sausages and Luncheon Meats',
-      'Breakfast Cereals',
-      'Fruits and Fruit Juices',
-      'Pork Products',
-      'Vegetables and Vegetable Products',
-      'Nut and Seed Products',
-      'Beef Products',
-      'Beverages',
-      'Finfish and Shellfish Products',
-      'Legumes and Legume Products',
-      'Lamb,Veal,and Game Products',
-      'Baked Products',
-      'Sweets',
-      'Cereal Grains and Pasta',
-      'Fast Foods',
-      'Meals,Entrees,and Side Dishes',
-      'Snacks',
-      'American Indian/Alaska Native Foods',
-      'Restaurants Food',
-    ],
+    enum: ['Dietary supplements', 'Phytotherapeutic agents'],
   },
   quantity: {
     type: String,
@@ -215,6 +189,144 @@ const FoodSchema = new mongoose.Schema({
       value: Number,
       unit: String,
     },
+    cholineTotal: {
+      value: Number,
+      unit: String,
+    },
+    betaine: {
+      value: Number,
+      unit: String,
+    },
+    DHA: {
+      value: Number,
+      unit: String,
+    },
+    EPA: {
+      value: Number,
+      unit: String,
+    },
+    creatineMonohydrate: {
+      value: Number,
+      unit: String,
+    },
+    biotin: {
+      value: Number,
+      unit: String,
+    },
+    chromium: {
+      value: Number,
+      unit: String,
+    },
+    lodine: {
+      value: Number,
+      unit: String,
+    },
+    CLA: {
+      value: Number,
+      unit: String,
+    },
+    inositol: {
+      value: Number,
+      unit: String,
+    },
+    creatine: {
+      value: Number,
+      unit: String,
+    },
+    glutamine: {
+      value: Number,
+      unit: String,
+    },
+    lecithin: {
+      value: Number,
+      unit: String,
+    },
+    hyaluronicAcid: {
+      value: Number,
+      unit: String,
+    },
+    beta_Alanine: {
+      value: Number,
+      unit: String,
+    },
+    HMB: {
+      value: Number,
+      unit: String,
+    },
+  },
+  aminogram: {
+    tryptophan: {
+      value: Number,
+      unit: String,
+    },
+    threonline: {
+      value: Number,
+      unit: String,
+    },
+    isoleucine: {
+      value: Number,
+      unit: String,
+    },
+    leucine: {
+      value: Number,
+      unit: String,
+    },
+    lysine: {
+      value: Number,
+      unit: String,
+    },
+    methionline: {
+      value: Number,
+      unit: String,
+    },
+    cystine: {
+      value: Number,
+      unit: String,
+    },
+    phenylalanine: {
+      value: Number,
+      unit: String,
+    },
+    tyrosine: {
+      value: Number,
+      unit: String,
+    },
+    valine: {
+      value: Number,
+      unit: String,
+    },
+    arginine: {
+      value: Number,
+      unit: String,
+    },
+    histidine: {
+      value: Number,
+      unit: String,
+    },
+    alanine: {
+      value: Number,
+      unit: String,
+    },
+    asparticAcid: {
+      value: Number,
+      unit: String,
+    },
+    glutamicAcid: {
+      value: Number,
+      unit: String,
+    },
+    glycine: {
+      value: Number,
+      unit: String,
+    },
+    proline: {
+      value: Number,
+      unit: String,
+    },
+    serine: {
+      value: Number,
+      unit: String,
+    },
   },
   commonMeasures: [
     [
@@ -244,6 +356,9 @@ const FoodSchema = new mongoose.Schema({
   ],
 });
 
-const Food = mongoose.model('Food', FoodSchema);
+const DietarySupplements = mongoose.model(
+  'DietarySupplements',
+  dietarySupplementsSchema
+);
 
-module.exports = Food;
+module.exports = DietarySupplements;
