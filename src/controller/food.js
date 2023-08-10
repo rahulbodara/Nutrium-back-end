@@ -1,35 +1,166 @@
-const { default: axios } = require("axios");
-const Foods = require("../model/Food");
+const Food = require('../model/Food');
 
-const addFoods = async (req, res, next) => {
+const addFood = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const { name, source, group,quantity, macronutrients, micronutrients } = req.body;
-    const groupOptionsResponse = await axios.get(
-      "http://localhost:8080/api/v1/group-options"
-    );
-    const groupOptions = groupOptionsResponse.data;
-
-    if (!groupOptions.includes(group)) {
-      return res.status(400).json({ error: "Invalid group option" });
-    }
-
-    const newFood = {
-      userId,
+    const {
       name,
       source,
-      group: req.body.group,
+      group,
       quantity,
       macronutrients,
       micronutrients,
-    };
+      commonMeasures,
+    } = req.body;
+    const newFood = await Food.create({
+      userId,
+      name,
+      source,
+      group,
+      quantity,
+      macronutrients,
+      micronutrients,
+      commonMeasures,
+    });
 
-    const savedFood = await Foods.create(newFood);
-    res.status(201).json(savedFood);
+    return res.status(200).json({
+      success: true,
+      message: 'Food created successfully',
+      newFood,
+    });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
+
+const getAllFood = async (req, res, next) => {
+  try {
+    const foods = await Food.find();
+
+    return res.status(200).json({
+      success: true,
+      foods,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+const getFoodById = async (req, res, next) => {
+  try {
+    const foodId = req.params.foodId;
+    const userId = req.userId;
+
+    const food = await Food.find({ _id: foodId, userId: userId });
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      food,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+const getFoodsByUser = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const foods = await Food.find({ userId });
+
+    return res.status(200).json({
+      success: true,
+      foods,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+const deleteFood = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const foodId = req.params.foodId;
+    const food = await Food.findById(foodId);
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food not found',
+      });
+    }
+
+    if (food.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to delete this food',
+      });
+    }
+
+    await Food.findByIdAndDelete(foodId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Food deleted successfully',
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+const updateFood = async (req, res, next) => {
+  try {
+    const foodId = req.params.foodId;
+    const userId = req.userId;
+    const updateData = req.body;
+
+    const food = await Food.findById(foodId);
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food not found',
+      });
+    }
+
+    if (food.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to update this food',
+      });
+    }
+
+    const updatedFood = await Food.findByIdAndUpdate(foodId, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Food updated successfully',
+      updatedFood,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 module.exports = {
-  addFoods,
+  addFood,
+  getAllFood,
+  getFoodById,
+  getFoodsByUser,
+  deleteFood,
+  updateFood,
 };
