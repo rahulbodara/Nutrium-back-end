@@ -24,9 +24,9 @@ const groupRoutes = require('./routes/group');
 const blogRouter = require('./routes/blog');
 const foodsRoutes = require('./routes/food');
 const mealPlan = require('./routes/mealplan');
-const recipe=require("./routes/recipsInformation")
-const recipeCooking=require("./routes/recipsCookingMethod")
-const recipeMeasure=require("./routes/recipemeasure")
+const recipe = require('./routes/recipsInformation');
+const recipeCooking = require('./routes/recipsCookingMethod');
+const recipeMeasure = require('./routes/recipemeasure');
 const dietarySupplements = require('./routes/dietarySupplements');
 
 const app = express();
@@ -54,8 +54,8 @@ app.use('/api/v1', blogRouter);
 app.use('/api/v1', foodsRoutes);
 app.use('/api/v1', mealPlan);
 app.use('/api/v1', recipe);
-app.use('/api/v1',recipeCooking)
-app.use('/api/v1',recipeMeasure)
+app.use('/api/v1', recipeCooking);
+app.use('/api/v1', recipeMeasure);
 app.use('/api/v1', dietarySupplements);
 
 app.use(HandleError);
