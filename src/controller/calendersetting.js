@@ -44,7 +44,6 @@ const updateCalenderSetting = async (req, res, next) => {
     if (!updatedCalenderSetting) {
       return res.status(404).json({ message: 'Calender setting not found' });
     }
-
     res.status(200).json(updatedCalenderSetting);
   } catch (error) {
     console.error('Error updating calender setting:', error);
