@@ -14,12 +14,15 @@ const upload = multer({
   }),
 
   fileFilter: (req, file, cb) => {
-    if (!file.originalname.match(/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i)) {
-      req.fileValidationError = 'Only JPG OR PNG allowed!';
-      return cb('Only .png and .jpg are allowed! ', false);
-    } else if (file.size >= 1048576) {
-      req.fileValidationError = 'file size should be 10mb';
-      return cb('file size should be 10mb', false);
+    const allowedExtensions =
+      /\.(gif|jpe?g|tiff?|png|webp|bmp|pdf|docx?|xlsx?)$/i;
+
+    if (!file.originalname.match(allowedExtensions)) {
+      req.fileValidationError = 'Only JPG, PNG, PDF, DOC, or Excel allowed!';
+      return cb('Only .jpg, .png, .pdf, .doc, or .xlsx are allowed!', false);
+    } else if (file.size >= 10485760) {
+      req.fileValidationError = 'File size should be 10MB or less.';
+      return cb('File size should be 10MB or less.', false);
     }
     cb(null, true);
   },
