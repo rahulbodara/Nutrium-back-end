@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
 
-const IngrediantSchemna = mongoose.Schema({
+const ingredientSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "user",
   },
-  ingrediant: {
-    required: true,
+  ingredient: [{
     type: String,
-  },
+    ref: "foods",
+    required: true,
+  }],
 });
-const Ingrediant = mongoose.model("Ingrediant", IngrediantSchemna);
 
-module.exports = Ingrediant;
+const Ingredient = mongoose.model("Ingredient", ingredientSchema);
+
+module.exports = Ingredient;
