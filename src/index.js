@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
+var path = require("path");
 const ConnectDB = require("./db/connection");
 const port = 8080 || process.env.PORT;
 const bodyParser = require("body-parser");
@@ -29,13 +30,25 @@ const recipeCooking = require("./routes/recipsCookingMethod");
 const recipeMeasure = require("./routes/recipemeasure");
 const dietarySupplements = require("./routes/dietarySupplements");
 const ingrediant = require("./routes/ingrediants");
+const os = require('os');
+
+// Find the local IP address
+const networkInterfaces = os.networkInterfaces();
+const localIp = networkInterfaces['eno1'][0].address; 
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
 app.use(cors());
+app.use("/uploads", express.static("uploads"));
+
+// Catch-all route
+app.set("view engine", "ejs");
+app.get("/", async (req, res) => {
+  res.sendFile(path.join(__dirname + "/views/index.html"));
+});
+
 app.use("/api/v1", userRouter);
 app.use("/api/v1", workplaceRoutes);
 app.use("/api/v1", serviceRoutes);
@@ -63,7 +76,8 @@ app.use("/api/v1", ingrediant);
 app.use(HandleError);
 app.use(notFoundMiddleware);
 
-app.listen(port, () => {
+
+app.listen(port, localIp, () => {
   ConnectDB();
-  console.log(`server is running on ${port}`);
+  console.log(`Server is running at http://${localIp}:${port}`);
 });
