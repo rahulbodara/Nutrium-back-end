@@ -693,45 +693,45 @@ const updateFileDetail = async (req, res, next) => {
   }
 };
 
-// const deleteFileDetail = async (req, res, next) => {
-//   try {
-//     const userId = req.userId;
-//     const clientId = req.body.clientId;
-//     const fileId = req.params.fileId;
+const deleteFileDetail = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.body.clientId;
+    const fileId = req.params.fileId;
 
-//     if (
-//       !mongoose.Types.ObjectId.isValid(userId) ||
-//       !mongoose.Types.ObjectId.isValid(clientId) ||
-//       !mongoose.Types.ObjectId.isValid(fileId)
-//     ) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Invalid userId or clientId or fileId',
-//       });
-//     }
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(clientId) ||
+      !mongoose.Types.ObjectId.isValid(fileId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid userId or clientId or fileId',
+      });
+    }
 
-//     const deletedFile = await ClientFile.findOneAndDelete({
-//       _id: fileId,
-//       userId: userId,
-//       clientId: clientId,
-//     });
+    const deletedFile = await ClientFile.findOneAndDelete({
+      _id: fileId,
+      userId: userId,
+      clientId: clientId,
+    });
 
-//     if (!deletedFile) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'File not found',
-//       });
-//     }
+    if (!deletedFile) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found',
+      });
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       message: 'File deleted successfully',
-//     });
-//   } catch (error) {
-//     console.log('error--------->', error);
-//     next(error);
-//   }
-// };
+    return res.status(200).json({
+      success: true,
+      message: 'File deleted successfully',
+    });
+  } catch (error) {
+    console.log('error--------->', error);
+    next(error);
+  }
+};
 
 
 const getAllFileDetail = async (req, res, next) => {
