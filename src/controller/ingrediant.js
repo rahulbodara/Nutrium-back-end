@@ -8,6 +8,8 @@ const createIngredient = async (req, res, next) => {
     console.log("userId", userId);
     const { foodId } = req.body;
     console.log(req.body, "body");
+    const idAvailble = Food.find(_id === foodId);
+    console.log(idAvailble, "idididiid");
     const newIngredient = await Ingredient.create({
       userId,
       ingredient: [foodId],
