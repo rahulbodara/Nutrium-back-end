@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const ejs = require('ejs');
 
 const generateResetToken = async (user) => {
   const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
@@ -37,7 +38,44 @@ const sendEmail = async (email, resetToken, name) => {
   await transporter.sendMail(mailOptions);
 };
 
+const sendInvitationEmail = async (
+  inviteEmail,
+  inviteId,
+  username,
+  useremail
+) => {
+  const transporter = nodemailer.createTransport({
+    service: process.env.SERVICE,
+    auth: {
+      user: process.env.GMAIL,
+      pass: process.env.MAIL_PASSWORD,
+    },
+  });
+
+  const acceptLink = `http://localhost:3000/api/v1/invitations?inviteId=${inviteId}`;
+
+  // Render the invitation template with dynamic content
+  const htmlContent = await ejs.renderFile(
+    '/home/ts/JBA/nutrition-backend/src/view/invitation.ejs',
+    {
+      title: `${username} invited you to Nutrium`,
+      acceptLink: acceptLink,
+      useremail: useremail,
+      username: username,
+    }
+  );
+
+  const mailOptions = {
+    from: process.env.GMAIL,
+    to: inviteEmail,
+    subject: `${username} invited you to Nutrium`,
+    html: htmlContent,
+  };
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   generateResetToken,
   sendEmail,
+  sendInvitationEmail,
 };

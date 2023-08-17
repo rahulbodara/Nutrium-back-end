@@ -733,7 +733,6 @@ const deleteFileDetail = async (req, res, next) => {
   }
 };
 
-
 const getAllFileDetail = async (req, res, next) => {
   try {
     const clientId = req.params.id;

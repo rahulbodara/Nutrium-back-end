@@ -1,0 +1,136 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="generator" content="Aspose.Words for .NET 23.8.0" />
+    <title></title>
+    <style type="text/css">
+      body {
+        font-family: 'Times New Roman';
+        font-size: 12pt;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+      p {
+        margin: 0pt;
+      }
+      img {
+        height: 380px;
+        width: 800px;
+      }
+      .button-wrapper {
+        margin-top: 20px;
+      }
+      .accept-button {
+        padding: 10px 20px;
+        background-color: #1ab394;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <img src="./ejs.png" />
+      <p
+        style="
+          margin-top: 20px;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 34.15pt;
+        "
+      >
+        <span style="font-family: open sans; font-size: 28pt; font-weight: bold"
+          ><%= username %> has invited you to Nutrium</span
+        >
+      </p>
+      <p
+        style="
+          margin-top: 3pt;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 24.4pt;
+        "
+      >
+        <span style="font-family: Calibri; font-size: 20px"
+          >Try out for free the nutrition software solution that Hiren uses on
+          his consults and enjoy 20% OFF on your subscription.</span
+        >
+      </p>
+      <p
+        style="
+          margin-top: 14.15pt;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 24.4pt;
+        "
+      >
+        <span style="font-family: Calibri; font-size: 20pt; font-weight: bold"
+          >Get to know Nutrium</span
+        >
+      </p>
+      <p
+        style="
+          margin-top: 3pt;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 24.4pt;
+        "
+      >
+        <span style="font-family: Calibri; font-size: 20px"
+          >Nutrium is the most practical and complete nutrition software which
+          allows Hiren to increase his number of appointments and also offers
+          his clients a mobile app.</span
+        >
+      </p>
+      <p
+        style="
+          margin-top: 14.15pt;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 24.4pt;
+        "
+      >
+        <span style="font-family: Calibri; font-size: 20pt; font-weight: bold"
+          >Try it out for free</span
+        >
+      </p>
+      <p
+        style="
+          margin-top: 3pt;
+          margin-left: 1.1pt;
+          text-align: justify;
+          line-height: 24.4pt;
+        "
+      >
+        <span style="font-family: Calibri; font-size: 20px"
+          ><%= username %> shared with you one of his invitations so you can
+          explore the software for free and subscribe to any plan with 20%
+          OFF.</span
+        >
+      </p>
+      <form action="<%= acceptLink %>" method="post">
+        <button class="accept-button" type="submit">Accept Invitation</button>
+      </form>
+      <p>
+        <span style="font-family: Calibri; font-size: 15pt"
+          ><%= username %></span
+        >
+        <span style="font-family: Calibri; font-size: 15pt"
+          ><%= useremail %></span
+        >
+        <span style="font-family: Calibri; font-size: 20px"
+          >On Nutrium since 2023</span
+        ><span style="font-family: Calibri; font-size: 15pt"></span>
+      </p>
+    </div>
+  </body>
+</html>
