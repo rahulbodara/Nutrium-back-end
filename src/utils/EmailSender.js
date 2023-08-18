@@ -24,7 +24,7 @@ const sendEmail = async (email, resetToken, name) => {
       pass: process.env.MAIL_PASSWORD,
     },
   });
-  const resetUrl = `http://localhost:3000/api/v1/forget-password?token=${resetToken}`;
+  const resetUrl = `http://localhost:3000/api/v1/reset-password?token=${resetToken}`;
   const mailOptions = {
     from: process.env.GMAIL,
     to: email,

@@ -55,11 +55,17 @@ const getWorkplaceById = async (req, res, next) => {
 const updateWorkplace = async (req, res, error) => {
   try {
     const workplaceId = req.params.id;
+    const userId = req.userId;
     const updates = req.body;
+    const query = {
+      _id: workplaceId,
+      userId: userId,
+      isActive: 1,
+    };
 
-    const updatedWorkplace = await Workplace.findByIdAndUpdate(
-      workplaceId,
-      updates,
+    const updatedWorkplace = await Workplace.findOneAndUpdate(
+      query,
+      { $set: updates },
       { new: true }
     );
 
@@ -76,9 +82,13 @@ const updateWorkplace = async (req, res, error) => {
 const deleteWorkplace = async (req, res, next) => {
   try {
     const workplaceId = req.params.id;
-
+    const query = {
+      _id: workplaceId,
+      userId: req.userId,
+      isActive: 1,
+    };
     const deletedWorkplace = await Workplace.findOneAndUpdate(
-      { _id: workplaceId, isActive: 1 },
+      query,
       { $set: { isActive: 0 } },
       { new: true }
     );

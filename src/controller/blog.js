@@ -26,13 +26,18 @@ const createBlog = async (req, res, next) => {
 
 const deleteBlog = async (req, res, next) => {
   try {
-    const userId = req.userId;
     const blogId = req.params.blogId;
-
-    const deletedBlog = await Blog.findOneAndDelete({
+    const query = {
       _id: blogId,
-      userId: userId,
-    });
+      userId: req.userId,
+      isActive: 1,
+    };
+
+    const deletedBlog = await Blog.findOneAndUpdate(
+      query,
+      { $set: { isActive: 0 } },
+      { new: true }
+    );
 
     if (!deletedBlog) {
       return res
@@ -72,33 +77,65 @@ const getBlogsByUser = async (req, res, next) => {
   }
 };
 
+// const updateBlogs = async (req, res, next) => {
+//   try {
+//     const blogId = req.params.blogId;
+//     const userId = req.userId;
+//     const { blogTitle, tags, blogContent } = req.body;
+
+//     const updatedBlog = await Blog.findOneAndUpdate(
+//       { _id: blogId, userId: userId },
+//       {
+//         blogTitle,
+//         tags,
+//         blogContent,
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedBlog) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: 'Blog not found' });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Blog Updated Successfully',
+//       blog: updatedBlog,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const updateBlogs = async (req, res, next) => {
   try {
     const blogId = req.params.blogId;
-    const userId = req.userId;
-    const { blogTitle, tags, blogContent } = req.body;
+    const updates = req.body;
+    const query = {
+      _id: blogId,
+      userId: req.userId,
+    };
 
     const updatedBlog = await Blog.findOneAndUpdate(
-      { _id: blogId, userId: userId },
-      {
-        blogTitle,
-        tags,
-        blogContent,
-      },
+      query,
+      { $set: updates },
       { new: true }
     );
 
-    if (!updatedBlog) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Blog not found' });
+    if (updatedBlog) {
+      res.status(200).json({
+        success: true,
+        message: 'Blog Updated Successfully',
+        blog: updatedBlog,
+      });
+    } else {
+      res.status(200).json({
+        success: false,
+        message: 'Blog not found',
+      });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Blog Updated Successfully',
-      blog: updatedBlog,
-    });
   } catch (error) {
     next(error);
   }

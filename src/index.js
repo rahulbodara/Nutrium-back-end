@@ -30,6 +30,7 @@ const recipeCooking = require('./routes/recipsCookingMethod');
 const recipeMeasure = require('./routes/recipemeasure');
 const dietarySupplements = require('./routes/dietarySupplements');
 const ingrediant = require('./routes/ingrediants');
+const sendInvite = require('./routes/sendInvitaion');
 const os = require('os');
 
 // Find the local IP address
@@ -72,6 +73,7 @@ app.use('/api/v1', recipeCooking);
 app.use('/api/v1', recipeMeasure);
 app.use('/api/v1', dietarySupplements);
 app.use('/api/v1', ingrediant);
+app.use('/api/v1', sendInvite);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);
