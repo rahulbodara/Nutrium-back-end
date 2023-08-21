@@ -243,7 +243,9 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const { token, password } = req.body;
+    const { token } = req.query;
+
+    const password = req.body.password;
 
     const user = await User.findOne({
       resetToken: token,
@@ -273,6 +275,7 @@ const resetPassword = async (req, res, next) => {
 
     return res.status(200).json({ message: 'Password reset successful.' });
   } catch (error) {
+    console.log('error------>', error);
     next(error.message);
   }
 };

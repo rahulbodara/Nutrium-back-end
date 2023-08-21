@@ -64,12 +64,15 @@ const updateSecretaries = async (req, res, next) => {
   try {
     const secretariesId = req.params.id;
     const updates = req.body;
-    const updatedSecretaries = await Secretaries.findByIdAndUpdate(
-      secretariesId,
-      updates,
-      {
-        new: true,
-      }
+    const query = {
+      _id: secretariesId,
+      userId: req.userId,
+      isActive: 1,
+    };
+    const updatedSecretaries = await Secretaries.findOneAndUpdate(
+      query,
+      { $set: updates },
+      { new: true }
     );
     if (updatedSecretaries) {
       res.status(200).json(updatedSecretaries);
@@ -85,9 +88,14 @@ const updateSecretaries = async (req, res, next) => {
 const deleteSecretaries = async (req, res, next) => {
   try {
     const secretariesId = req.params.id;
+    const query = {
+      _id: secretariesId,
+      userId: req.userId,
+      isActive: 1,
+    };
 
     const deletedSecretaries = await Secretaries.findOneAndUpdate(
-      { _id: secretariesId, isActive: 1 },
+      query,
       { $set: { isActive: 0 } },
       { new: true }
     );

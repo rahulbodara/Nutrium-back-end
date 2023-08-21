@@ -18,6 +18,10 @@ const blogSchema = mongoose.Schema(
     blogContent: {
       type: String,
     },
+    isActive: {
+      type: Number,
+      default: 1,
+    },
   },
   { timestamps: true }
 );

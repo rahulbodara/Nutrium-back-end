@@ -1,4 +1,4 @@
-const SystemPreference = require("../model/SystemPreference");
+const SystemPreference = require('../model/SystemPreference');
 
 const createSystemPreference = async (req, res, next) => {
   const userId = req.userId;
@@ -34,7 +34,7 @@ const createSystemPreference = async (req, res, next) => {
   }
 };
 
-const getSystemPreference = async ( res, next) => {
+const getSystemPreference = async (res, next) => {
   try {
     const systemPreference = await SystemPreference.findOne();
     res.status(200).json(systemPreference);
@@ -73,7 +73,7 @@ const updateSystemPreference = async (req, res, next) => {
     );
 
     if (!updatedSystemPreference) {
-      return res.status(404).json({ error: "System preference not found" });
+      return res.status(404).json({ error: 'System preference not found' });
     }
 
     res.json(updatedSystemPreference);

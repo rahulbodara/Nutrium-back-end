@@ -56,10 +56,17 @@ const updateService = async (req, res, next) => {
   try {
     const serviceId = req.params.id;
     const updates = req.body;
+    const query = {
+      _id: serviceId,
+      userId: req.userId,
+      isActive: 1,
+    };
 
-    const updatedService = await Service.findByIdAndUpdate(serviceId, updates, {
-      new: true,
-    });
+    const updatedService = await Service.findOneAndUpdate(
+      query,
+      { $set: updates },
+      { new: true }
+    );
 
     if (updatedService) {
       res.status(200).json(updatedService);
@@ -74,9 +81,14 @@ const updateService = async (req, res, next) => {
 const deleteService = async (req, res, next) => {
   try {
     const serviceId = req.params.id;
+    const query = {
+      _id: serviceId,
+      userId: req.userId,
+      isActive: 1,
+    };
 
     const deletedService = await Service.findOneAndUpdate(
-      { _id: serviceId, isActive: 1 },
+      query,
       { $set: { isActive: 0 } },
       { new: true }
     );
