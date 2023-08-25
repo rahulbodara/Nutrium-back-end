@@ -32,10 +32,29 @@ const dietarySupplements = require('./routes/dietarySupplements');
 const ingrediant = require('./routes/ingrediants');
 const sendInvite = require('./routes/sendInvitaion');
 const os = require('os');
+const https = require('https');
+const fs = require('fs');
 
-// Find the local IP address
-const networkInterfaces = os.networkInterfaces();
-const localIp = networkInterfaces['eno1'][0].address;
+// // Find the local IP address
+const interfaces = os.networkInterfaces();
+let localIp = 'localhost'; // Default to localhost if no IP is found
+
+for (const interfaceName of Object.keys(interfaces)) {
+  const interfaceInfo = interfaces[interfaceName];
+  for (const info of interfaceInfo) {
+    if (info.family === 'IPv4' && !info.internal) {
+      localIp = info.address;
+      break;
+    }
+  }
+}
+
+// Load your SSL/TLS certificates
+const privateKeyPath = path.join(__dirname, 'public', 'key.pem');
+const certificatePath = path.join(__dirname, 'public', 'cert.pem');
+const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+const certificate = fs.readFileSync(certificatePath, 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
 
@@ -78,7 +97,9 @@ app.use('/api/v1', sendInvite);
 app.use(HandleError);
 app.use(notFoundMiddleware);
 
-app.listen(port, localIp, () => {
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, localIp, () => {
   ConnectDB();
-  console.log(`Server is running at http://${localIp}:${port}`);
+  console.log(`Server is running at https://${localIp}:${port}`);
 });
