@@ -8,6 +8,10 @@ const createWorkplace = async (req, res, next) => {
       userId: userId,
     };
 
+    if (req.body.associateAddress == false) {
+      workplaceData.address = '';
+    }
+
     const workplace = new Workplace(workplaceData);
     const savedWorkplace = await workplace.save();
 

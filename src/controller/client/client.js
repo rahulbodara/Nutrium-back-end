@@ -1563,6 +1563,131 @@ const updateMeasurementObject = async (req, res, next) => {
   }
 };
 
+const getWeight = async (req, res, next) => {
+  try {
+    const clientId = req.body.clientId;
+    const clientWeight = await Measurements.find({ clientId: clientId });
+
+    const goals = await Goals.find({ clientId: clientId, measurementType: 'Weight' }, { value: 1, unit: 1, deadline: 1 })
+      .sort({ deadline: 1 });
+
+    console.log(goals);
+
+    let lastWeight = null;
+    let goalWeight = null;
+    let lastHeight = null;
+
+    if (clientWeight.length > 0) {
+      const weightData = clientWeight.map((measurement) => ({
+        weight: measurement.weight,
+      }));
+
+      const heightData = clientWeight.map((measurement) => ({
+        height: measurement.height,
+      }));
+
+      const weight = weightData[0]?.weight;
+      const height = heightData[0]?.height;
+
+      if (weight && weight.length > 0) {
+        lastWeight = weight[weight.length - 1];
+      }
+
+      if (height && height.length > 0) {
+        lastHeight = height[height.length - 1];
+      }
+    }
+
+
+    if (goals.length > 0) {
+      goalWeight = goals[0];
+
+      for (const goal of goals) {
+        if (goal.deadline === lastWeight.date) {
+          goalWeight = goal;
+          break;
+        }
+      }
+    }
+
+      // Convert height from cm to meters
+    const heightInMeters = lastHeight.value / 100;
+
+    // Calculate BMI for last weight
+    const bmiLastWeight = lastWeight.value / (heightInMeters * heightInMeters);
+
+    // Calculate BMI for goal weight
+    const bmiGoalWeight = goalWeight.value / (heightInMeters * heightInMeters);
+
+    // Calculate BMI for ideal weight
+    const heightInInches = lastHeight.value / 2.54;
+    const idealWeight = 52 + 1.9 * (heightInInches - 60);
+    const bmiIdealWeight = idealWeight / (heightInMeters * heightInMeters);
+
+    return res.status(200).json({
+      success: true,
+      weight: lastWeight,
+      goalWeight: goalWeight,
+      height: lastHeight,
+      Reference_value: idealWeight,
+      bmiLastWeight: bmiLastWeight,
+      bmiGoalWeight: bmiGoalWeight,
+      bmiIdealWeight: bmiIdealWeight,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getBodyFatPercentage = async (req, res, next) => {
+  try {
+    const clientId = req.body.clientId;
+    const clientBodyFat = await Measurements.find({ clientId: clientId });
+
+    const goals = await Goals.find({ clientId: clientId, measurementType: 'Body fat percentage' }, { value: 1, unit: 1, deadline: 1 })
+      .sort({ deadline: 1 });
+
+    console.log(goals);
+
+    let lastBodyFat = null;
+    let goalBodyFat = null;
+
+    if (clientBodyFat.length > 0) {
+      const fatData = clientBodyFat.map((measurement) => ({
+        bodyFatPercentage: measurement.bodyFatPercentage,
+      }));
+
+      const bodyFatPercentage = fatData[0]?.bodyFatPercentage;
+
+      if (bodyFatPercentage && bodyFatPercentage.length > 0) {
+        lastBodyFat = bodyFatPercentage[bodyFatPercentage.length - 1];
+      }
+    }
+
+    if (goals.length > 0) {
+      goalBodyFat = goals[0];
+
+      for (const goal of goals) {
+        if (goal.deadline === lastBodyFat.date) {
+          goalBodyFat = goal;
+          break;
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      bodyFat: lastBodyFat,
+      goalBodyFat: goalBodyFat
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+
+
 module.exports = {
   registerClient,
   deleteClient,
@@ -1593,4 +1718,6 @@ module.exports = {
   getMeasurementById,
   deleteMeasurementObject,
   updateMeasurementObject,
+  getWeight,
+  getBodyFatPercentage
 };

@@ -1,9 +1,10 @@
 const express = require("express");
 const secretariesController = require("../controller/secretaries");
 const { isAuthenticated } = require("../middleware/auth");
+const upload = require("../middleware/imageHandler");
 const router = express.Router();
 
-router.post("/secretaries", isAuthenticated, secretariesController.createSecretaries);
+router.post("/secretaries", isAuthenticated,upload.single("image"), secretariesController.createSecretaries);
 router.get(
   "/secretaries",
   isAuthenticated,
@@ -16,7 +17,7 @@ router.get(
 );
 router.put(
   "/secretaries/:id",
-  isAuthenticated,
+  isAuthenticated,upload.single("image"),
   secretariesController.updateSecretaries
 );
 router.delete(
