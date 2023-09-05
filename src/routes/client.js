@@ -31,6 +31,8 @@ const {
   getMeasurementById,
   deleteMeasurementObject,
   updateMeasurementObject,
+  getBodyFatPercentage,
+  getWeight
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -147,5 +149,9 @@ router.put(
   isAuthenticated,
   updateMeasurementObject
 );
+
+router.get('/client-getWeight', isAuthenticated, getWeight);
+
+router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
 
 module.exports = router;

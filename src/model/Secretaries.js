@@ -20,6 +20,9 @@ const secretariesSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  image:{
+    type: String,
+  },
   isActive: {
     type: Number,
     default: 1,
