@@ -115,7 +115,7 @@ const getClientByID = async (req, res, next) => {
         from: 'personalhistories',
         localField: '_id',
         foreignField: 'clientId',
-        as: 'Personal and social history',
+        as: 'Personalandsocialhistory',
       },
     });
     aggregate.push({
@@ -123,7 +123,7 @@ const getClientByID = async (req, res, next) => {
         from: 'diethistories',
         localField: '_id',
         foreignField: 'clientId',
-        as: 'Dietary history',
+        as: 'Dietaryhistory',
       },
     });
     aggregate.push({
@@ -131,7 +131,7 @@ const getClientByID = async (req, res, next) => {
         from: 'medicalhistories',
         localField: '_id',
         foreignField: 'clientId',
-        as: 'Medical history',
+        as: 'Medicalhistory',
       },
     });
     aggregate.push({
@@ -164,7 +164,7 @@ const getClientByID = async (req, res, next) => {
         from: 'eatingbehaviours',
         localField: '_id',
         foreignField: 'clientId',
-        as: 'Eating Behaviours',
+        as: 'EatingBehaviours',
       },
     });
 
