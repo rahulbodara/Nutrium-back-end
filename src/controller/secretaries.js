@@ -37,7 +37,7 @@ const getAllSecretaries = async (req, res, next) => {
       userId: req.userId,
       isActive: 1,
     };
-    const secretaries = await Secretaries.find(query);
+    const secretaries = await Secretaries.find(query).sort('-_id');
     if (!secretaries) {
       return res.status(404).json({ message: 'Secretaries Not Found!' });
     }
