@@ -6,26 +6,18 @@ const mealPlanSchema = mongoose.Schema({
     required: true,
     ref: 'user',
   },
-  days: [
-    {
-      day: {
-        type: String,
-        enum: [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ],
-      },
-      dailyPlan: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'dailyplans',
-      },
-    },
-  ],
+  days: {
+    type: [String],
+    enum: [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ],
+  },
   creationMethod: {
     type: String,
     enum: [
@@ -40,13 +32,10 @@ const mealPlanSchema = mongoose.Schema({
       },
     },
   ],
-  copyMealsPlan: [
-    {
-      copyMeal: {
+  copyMealsPlan: {
         type: String,
-      },
     },
-  ],
+
 });
 
 module.exports = mongoose.model('Mealplan', mealPlanSchema);

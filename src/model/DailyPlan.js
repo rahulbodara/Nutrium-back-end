@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const dailyPlanSchema = mongoose.Schema({
+  mealPlanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Mealplan',
+    required: true,
+  },
   selectedDays: [
     {
       type: String,
@@ -26,7 +31,7 @@ const dailyPlanSchema = mongoose.Schema({
   morningSnack: {
     type: String,
   },
-  lunch: {
+  lunch: {  
     type: String,
   },
 });
