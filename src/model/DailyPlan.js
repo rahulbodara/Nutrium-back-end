@@ -1,39 +1,33 @@
 const mongoose = require('mongoose');
 
-const dailyPlanSchema = mongoose.Schema({
-  mealPlanId: {
+const dailyPlanSchema = new mongoose.Schema({
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Mealplan',
     required: true,
+    ref: 'user',
   },
-  selectedDays: [
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Clients',
+  },
+  mealId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Mealplan',
+  },
+  name: String,
+  note: String,
+  categories: [
     {
-      type: String,
-      enum: [
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-        'Sunday',
+      name: String,
+      subcategories: [
+        {
+          name: String,
+        },
       ],
     },
   ],
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming you have a User model for users
-    required: true,
-  },
-  breakfast: {
-    type: String,
-  },
-  morningSnack: {
-    type: String,
-  },
-  lunch: {  
-    type: String,
-  },
-});
+},{timestamps:true},);
 
 module.exports = mongoose.model('DailyPlan', dailyPlanSchema);

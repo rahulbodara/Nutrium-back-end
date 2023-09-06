@@ -6,6 +6,11 @@ const mealPlanSchema = mongoose.Schema({
     required: true,
     ref: 'user',
   },
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Clients',
+  },
   days: {
     type: [String],
     enum: [
@@ -33,8 +38,8 @@ const mealPlanSchema = mongoose.Schema({
     },
   ],
   copyMealsPlan: {
-        type: String,
-    },
+    type: String,
+  },
 
 });
 
