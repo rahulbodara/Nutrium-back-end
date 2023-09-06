@@ -31,6 +31,8 @@ const recipeMeasure = require('./routes/recipemeasure');
 const dietarySupplements = require('./routes/dietarySupplements');
 const ingrediant = require('./routes/ingrediants');
 const sendInvite = require('./routes/sendInvitaion');
+const client_Recommendation = require('./routes/recommendation')
+const dailyplan = require('./routes/dailyplan');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -93,6 +95,8 @@ app.use('/api/v1', recipeMeasure);
 app.use('/api/v1', dietarySupplements);
 app.use('/api/v1', ingrediant);
 app.use('/api/v1', sendInvite);
+app.use('/api/v1', client_Recommendation);
+app.use('/api/v1', dailyplan);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);

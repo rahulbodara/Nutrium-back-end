@@ -6,6 +6,52 @@ const videoConsultationValues = {
   zoom: "Generated after saving appointment",
 };
 
+const createAppointment = async (req, res, next) => {
+  try {
+    const {
+      status,
+      videoConsultation,
+      schedulingNotes,
+      newStartTime,
+      newEndTime,
+      clientId,
+      workplace,
+      clientName
+    } = req.body;
+    const appointment = new Appointment({
+      status,
+      videoConsultation,
+      schedulingNotes,
+      newStartTime,
+      newEndTime,
+      clientId,
+      workplace,
+      clientName
+    });
+
+    const result = await appointment.save();
+
+    return res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error creating appointment:", error);
+    next(error);
+  }
+};
+
+const getAllAppointments = async (req, res, next) => {
+  try {
+    const getallappointments = await Appointment.find();
+
+    return res.status(200).json({
+      success: true,
+      getallappointments,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 const updateAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
@@ -50,4 +96,6 @@ const updateAppointment = async (req, res, next) => {
 
 module.exports = {
   updateAppointment,
+  createAppointment,
+  getAllAppointments,
 };

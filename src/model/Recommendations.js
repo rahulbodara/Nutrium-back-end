@@ -16,12 +16,24 @@ const recommendation_schema = new mongoose.Schema({
     waterIntake: {
         type: String
     },
-    recommendation : {
+    recommendation: {
         type: String
-    }
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'user',
+    },
+    clientId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Clients',
+    },
+  
+},
+{ timestamps:true }
+);
 
-});
-
-const Recommendation = mongoose.model('Recommendation', recommendation_schema);
+const Recommendation = mongoose.model('client_Recommendation', recommendation_schema);
 
 module.exports = Recommendation;

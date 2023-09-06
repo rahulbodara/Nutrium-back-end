@@ -50,7 +50,7 @@ const registerClient = async (req, res, next) => {
       zipcode,
     });
 
-    await getScheduleAppointmentInfo(client._id);
+    // await getScheduleAppointmentInfo(client._id);
 
     return res.status(200).json({
       success: true,
@@ -515,7 +515,7 @@ const updateMedicalHistory = async (req, res, next) => {
       diseases,
       diseasesDetail,
       medication,
-      personalHistory,
+      pesonalhistory,
       familyHistory,
       otherInfo,
     } = req.body;
@@ -526,7 +526,7 @@ const updateMedicalHistory = async (req, res, next) => {
       diseases,
       diseasesDetail,
       medication,
-      personalHistory,
+      pesonalhistory,
       familyHistory,
       otherInfo,
     };

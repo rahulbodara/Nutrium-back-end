@@ -94,6 +94,7 @@ const Mealplan = require('../model/Mealplan');
 const createMealPlan = async (req, res, next) => {
   try {
     const userId = req.userId;
+    const clientId = req.params.id;
     const { days, creationMethod, copyMealsPlan } = req.body;
 
     if (creationMethod === 'Merge selected days into a single version') {
@@ -102,6 +103,7 @@ const createMealPlan = async (req, res, next) => {
         days: days,
         creationMethod,
         copyMealsPlan,
+        clientId:clientId
       });
 
       const savedMealPlan = await mealPlan.save();
@@ -124,6 +126,7 @@ const createMealPlan = async (req, res, next) => {
           days: remainingDays,
           creationMethod,
           copyMealsPlan,
+          clientId:clientId
         });
 
         const savedRemainingMealPlan = await remainingMealPlan.save();
@@ -141,6 +144,7 @@ const createMealPlan = async (req, res, next) => {
           days: [day], 
           creationMethod,
           copyMealsPlan,
+          clientId:clientId
         });
         mealPlans.push(dailyMealPlan);
       }
@@ -161,6 +165,7 @@ const createMealPlan = async (req, res, next) => {
           days: remainingDays, 
           creationMethod,
           copyMealsPlan,
+          clientId:clientId
         });
         mealPlans.push(dailyMealPlan);
       }
