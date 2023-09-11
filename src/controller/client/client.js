@@ -436,10 +436,9 @@ const updatePersonalHistory = async (req, res, next) => {
   }
 };
 
-const updateObservation = async (req, res, next) => {
+const addObservation = async(req, res, next) => {
   try {
-    const clientId = req.params.id;
-    const { registrationDate, observation } = req.body;
+    const {clientId, registrationDate, observation } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -448,36 +447,63 @@ const updateObservation = async (req, res, next) => {
       });
     }
     const userId = req.userId;
-    const newObservation = {
+
+    const newObservation = new Observations({
       userId: userId,
       registrationDate,
       observation,
-    };
-    const updatedObservation = await Observations.findOneAndUpdate(
-      { clientId: clientId },
-      newObservation,
-      { new: true, upsert: true }
-    );
-
-    const message = updatedObservation._id
-      ? 'Observation updated successfully'
-      : 'New Observation created';
+      clientId
+    });
+   
+    const result = await newObservation.save();
 
     return res.status(200).json({
       success: true,
-      message: message,
+      message: 'Observation added successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+  
+}
+
+const updateObservation = async (req, res, next) => {
+  try {
+    const observId = req.params.id;
+    const { registrationDate, observation } = req.body;
+
+    const observ = await Observations.find({_id: observId});
+    if(!observ || observ.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'observation not found',
+      });
+    }
+    const newObservation = {
+      registrationDate,
+      observation,
+    };
+    const updatedObservation = await Observations.findByIdAndUpdate(
+      { _id:observId },
+      newObservation,
+      { new: true}
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Observation updated successfully',
       observation: updatedObservation,
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
 const deleteObservation = async (req, res, next) => {
   try {
-    const userId = req.userId;
     const observationId = req.params.id;
-    const clientId = req.body.clientId;
 
     if (!mongoose.Types.ObjectId.isValid(observationId)) {
       return res.status(400).json({
@@ -486,10 +512,8 @@ const deleteObservation = async (req, res, next) => {
       });
     }
 
-    const deletedObservation = await Observations.findOneAndDelete({
+    const deletedObservation = await Observations.findByIdAndDelete({
       _id: observationId,
-      userId: userId,
-      clientId: clientId,
     });
 
     if (!deletedObservation) {
@@ -507,6 +531,31 @@ const deleteObservation = async (req, res, next) => {
     next(error);
   }
 };
+
+const getObservation = async(req, res, next)=>{
+  try {
+    const clientId = req.params.clientId;
+
+    const observation = await Observations.find({clientId:clientId});
+
+    if (!observation || observation.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Observation not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Observation found successfully',
+      observation: observation,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
+
 
 const updateMedicalHistory = async (req, res, next) => {
   try {
@@ -1571,8 +1620,6 @@ const getWeight = async (req, res, next) => {
     const goals = await Goals.find({ clientId: clientId, measurementType: 'Weight' }, { value: 1, unit: 1, deadline: 1 })
       .sort({ deadline: 1 });
 
-    console.log(goals);
-
     let lastWeight = null;
     let goalWeight = null;
     let lastHeight = null;
@@ -1598,31 +1645,34 @@ const getWeight = async (req, res, next) => {
       }
     }
 
-
     if (goals.length > 0) {
       goalWeight = goals[0];
 
       for (const goal of goals) {
-        if (goal.deadline === lastWeight.date) {
+        if (lastWeight && goal.deadline === lastWeight.date) {
           goalWeight = goal;
           break;
         }
       }
     }
 
-      // Convert height from cm to meters
-    const heightInMeters = lastHeight.value / 100;
+    const heightInMeters = lastHeight ? lastHeight.value / 100 : null;
 
-    // Calculate BMI for last weight
-    const bmiLastWeight = lastWeight.value / (heightInMeters * heightInMeters);
+    const bmiLastWeight = lastWeight ? lastWeight.value / (heightInMeters * heightInMeters) : null;
+    const heightInInches = lastHeight ? lastHeight.value / 2.54 : null;
+    const idealWeight = lastHeight ? 52 + 1.9 * (heightInInches - 60) : null;
+    const bmiIdealWeight = lastHeight ? idealWeight / (heightInMeters * heightInMeters) : null;
+  
 
-    // Calculate BMI for goal weight
-    const bmiGoalWeight = goalWeight.value / (heightInMeters * heightInMeters);
-
-    // Calculate BMI for ideal weight
-    const heightInInches = lastHeight.value / 2.54;
-    const idealWeight = 52 + 1.9 * (heightInInches - 60);
-    const bmiIdealWeight = idealWeight / (heightInMeters * heightInMeters);
+    const bmi = await Measurements.findOneAndUpdate(
+      { clientId: clientId },
+      {
+        Reference_value: idealWeight,
+        bmiLastWeight: bmiLastWeight,
+        bmiIdealWeight: bmiIdealWeight,
+      },
+      { new: true } 
+    );
 
     return res.status(200).json({
       success: true,
@@ -1631,13 +1681,38 @@ const getWeight = async (req, res, next) => {
       height: lastHeight,
       Reference_value: idealWeight,
       bmiLastWeight: bmiLastWeight,
-      bmiGoalWeight: bmiGoalWeight,
+      bmiGoalWeight: clientWeight[0]?.bmiGoalWeight || null,
       bmiIdealWeight: bmiIdealWeight,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+const updateBmi = async(req,res,next) => {
+  try {
+    const {clientId, Reference_value,bmiLastWeight, bmiGoalWeight, bmiIdealWeight} = req.body;
+    const bmi = await Measurements.findOneAndUpdate(
+      { clientId: clientId },
+      {
+        Reference_value,
+        bmiLastWeight,
+        bmiGoalWeight,
+        bmiIdealWeight,
+      },
+      { new: true } 
+    );
+
+    return res.status(200).json({
+      success: true,
+      bmi: bmi,
     });
   } catch (error) {
     next(error);
   }
-};
+}
 
 const getBodyFatPercentage = async (req, res, next) => {
   try {
@@ -1697,8 +1772,10 @@ module.exports = {
   getScheduleAppointmentInfo,
   updateAppointmentInfo,
   updatePersonalHistory,
+  addObservation,
   updateObservation,
   deleteObservation,
+  getObservation,
   updateMedicalHistory,
   updateDietHistory,
   createFileDetail,
@@ -1719,5 +1796,6 @@ module.exports = {
   deleteMeasurementObject,
   updateMeasurementObject,
   getWeight,
-  getBodyFatPercentage
+  getBodyFatPercentage,
+  updateBmi,
 };
