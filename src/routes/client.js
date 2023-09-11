@@ -23,9 +23,11 @@ const {
   createEatingBehaviour,
   deleteEatingBehaviour,
   updateEatingBehaviour,
+  getAllEatingBehaviour,
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
+  getAllFoodDiary,
   createGoal,
   deleteGoal,
   registerMeasurement,
@@ -119,12 +121,17 @@ router.delete(
   deleteEatingBehaviour
 );
 
+router.get('/client/eating-behaviour/:clientId', isAuthenticated, getAllEatingBehaviour);
+
+
 //===================Food Diaries===================//
 router.post('/client/food-diary/:id', isAuthenticated, createFoodDiary);
 
 router.delete('/client/food-diary/:foodId', isAuthenticated, deleteFoodDiary);
 
 router.put('/client/food-diary/:foodDiaryId', isAuthenticated, updateFoodDiary);
+
+router.get('/client/food-diary/:clientId', isAuthenticated, getAllFoodDiary);
 
 //===================Goals===================//
 router.post('/client/goals/:id', isAuthenticated, createGoal);
@@ -158,6 +165,7 @@ router.put(
   updateMeasurementObject
 );
 
+//===================planning===================//
 router.get('/client-getWeight', isAuthenticated, getWeight);
 
 router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
