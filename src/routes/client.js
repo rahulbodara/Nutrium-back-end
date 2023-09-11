@@ -10,8 +10,10 @@ const {
   updateClient,
   updateAppointmentInfo,
   updatePersonalHistory,
+  addObservation,
   updateObservation,
   deleteObservation,
+  getObservation,
   updateMedicalHistory,
   updateDietHistory,
   deleteFileDetail,
@@ -32,7 +34,8 @@ const {
   deleteMeasurementObject,
   updateMeasurementObject,
   getBodyFatPercentage,
-  getWeight
+  getWeight,
+  updateBmi
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -59,9 +62,14 @@ router.put(
 );
 
 //===================Observations===================//
+router.post('/client/observation', isAuthenticated, addObservation);
+
 router.put('/client/observation/:id', isAuthenticated, updateObservation);
 
 router.delete('/client/observation/:id', isAuthenticated, deleteObservation);
+
+router.get('/client/observation/:clientId', isAuthenticated, getObservation);
+
 
 //===================Medical history===================//
 router.put(
@@ -153,5 +161,7 @@ router.put(
 router.get('/client-getWeight', isAuthenticated, getWeight);
 
 router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
+
+router.put('/client-updateBmi', isAuthenticated, updateBmi);
 
 module.exports = router;

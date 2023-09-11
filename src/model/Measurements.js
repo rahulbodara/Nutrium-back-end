@@ -289,6 +289,19 @@ const measurementSchema = mongoose.Schema({
       },
     },
   ],
+  Reference_value:{
+    type: Number,
+
+  },
+  bmiLastWeight:{
+    type: Number,
+  },
+  bmiGoalWeight:{
+    type: Number,
+  },
+  bmiIdealWeight:{
+    type: Number,
+  }
 });
 
 module.exports = mongoose.model('Measurements', measurementSchema);
