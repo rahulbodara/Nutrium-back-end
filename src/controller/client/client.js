@@ -909,7 +909,36 @@ const updateEatingBehaviour = async (req, res, next) => {
       observation: updatedBehaviour,
     });
   } catch (error) {
-    console.log('error------------>', error);
+    next(error);
+  }
+};
+
+const getAllEatingBehaviour = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const behaviours = await eatingBehaviour.find({ clientId: clientId });
+
+    if (behaviours.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Behaviours not found for the client',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Behaviours retrieved successfully',
+      behaviours: behaviours,
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -1035,6 +1064,36 @@ const updateFoodDiary = async (req, res, next) => {
     next(error);
   }
 };
+
+const getAllFoodDiary = async(req, res, next)=>{
+  try {
+    const clientId = req.params.clientId;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const foodDiaries = await FoodDiares.find({ clientId: clientId });
+
+    if (foodDiaries.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food diaries not found for the client',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Food diaries retrieved successfully',
+      foodDiaries: foodDiaries,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 const createGoal = async (req, res, next) => {
   try {
@@ -1785,9 +1844,11 @@ module.exports = {
   createEatingBehaviour,
   deleteEatingBehaviour,
   updateEatingBehaviour,
+  getAllEatingBehaviour,
   createFoodDiary,
   deleteFoodDiary,
   updateFoodDiary,
+  getAllFoodDiary,
   createGoal,
   deleteGoal,
   registerMeasurement,
