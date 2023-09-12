@@ -436,9 +436,9 @@ const updatePersonalHistory = async (req, res, next) => {
   }
 };
 
-const addObservation = async(req, res, next) => {
+const addObservation = async (req, res, next) => {
   try {
-    const {clientId, registrationDate, observation } = req.body;
+    const { clientId, registrationDate, observation } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -454,7 +454,7 @@ const addObservation = async(req, res, next) => {
       observation,
       clientId
     });
-   
+
     const result = await newObservation.save();
 
     return res.status(200).json({
@@ -465,7 +465,7 @@ const addObservation = async(req, res, next) => {
   } catch (error) {
     next(error);
   }
-  
+
 }
 
 const updateObservation = async (req, res, next) => {
@@ -473,8 +473,8 @@ const updateObservation = async (req, res, next) => {
     const observId = req.params.id;
     const { registrationDate, observation } = req.body;
 
-    const observ = await Observations.find({_id: observId});
-    if(!observ || observ.length === 0) {
+    const observ = await Observations.find({ _id: observId });
+    if (!observ || observ.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'observation not found',
@@ -485,9 +485,9 @@ const updateObservation = async (req, res, next) => {
       observation,
     };
     const updatedObservation = await Observations.findByIdAndUpdate(
-      { _id:observId },
+      { _id: observId },
       newObservation,
-      { new: true}
+      { new: true }
     );
 
     return res.status(200).json({
@@ -532,11 +532,11 @@ const deleteObservation = async (req, res, next) => {
   }
 };
 
-const getObservation = async(req, res, next)=>{
+const getObservation = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
 
-    const observation = await Observations.find({clientId:clientId});
+    const observation = await Observations.find({ clientId: clientId });
 
     if (!observation || observation.length === 0) {
       return res.status(404).json({
@@ -1065,7 +1065,7 @@ const updateFoodDiary = async (req, res, next) => {
   }
 };
 
-const getAllFoodDiary = async(req, res, next)=>{
+const getAllFoodDiary = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
 
@@ -1161,6 +1161,71 @@ const deleteGoal = async (req, res, next) => {
     next(error);
   }
 };
+
+const getGoalByMeasurementType = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+    const measurementType = req.params.measurementType;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const goals = await Goals.find({
+      clientId: clientId,
+      measurementType: measurementType,
+    });
+
+    if (goals.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goals not found for the client',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Goals retrieved successfully',
+      goals: goals,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+const getAllGoals = async(req,res,next) => {
+  try {
+    const clientId = req.params.clientId;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const goals = await Goals.find({ clientId: clientId });
+
+    if (goals.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: 'Goals not found for the client',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Goals retrieved successfully',
+      goals: goals,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
 
 const registerMeasurement = async (req, res, next) => {
   try {
@@ -1679,6 +1744,11 @@ const getWeight = async (req, res, next) => {
     const goals = await Goals.find({ clientId: clientId, measurementType: 'Weight' }, { value: 1, unit: 1, deadline: 1 })
       .sort({ deadline: 1 });
 
+    if (!goals) {
+      return res.status(404).json({ message: 'weight not found' });
+    }
+
+
     let lastWeight = null;
     let goalWeight = null;
     let lastHeight = null;
@@ -1714,6 +1784,9 @@ const getWeight = async (req, res, next) => {
         }
       }
     }
+    else{
+      return res.status(404).json({ message: 'weight not found' });
+    }
 
     const heightInMeters = lastHeight ? lastHeight.value / 100 : null;
 
@@ -1721,7 +1794,7 @@ const getWeight = async (req, res, next) => {
     const heightInInches = lastHeight ? lastHeight.value / 2.54 : null;
     const idealWeight = lastHeight ? 52 + 1.9 * (heightInInches - 60) : null;
     const bmiIdealWeight = lastHeight ? idealWeight / (heightInMeters * heightInMeters) : null;
-  
+
 
     const bmi = await Measurements.findOneAndUpdate(
       { clientId: clientId },
@@ -1730,7 +1803,7 @@ const getWeight = async (req, res, next) => {
         bmiLastWeight: bmiLastWeight,
         bmiIdealWeight: bmiIdealWeight,
       },
-      { new: true } 
+      { new: true }
     );
 
     return res.status(200).json({
@@ -1750,9 +1823,9 @@ const getWeight = async (req, res, next) => {
 };
 
 
-const updateBmi = async(req,res,next) => {
+const updateBmi = async (req, res, next) => {
   try {
-    const {clientId, Reference_value,bmiLastWeight, bmiGoalWeight, bmiIdealWeight} = req.body;
+    const { clientId, Reference_value, bmiLastWeight, bmiGoalWeight, bmiIdealWeight } = req.body;
     const bmi = await Measurements.findOneAndUpdate(
       { clientId: clientId },
       {
@@ -1761,8 +1834,12 @@ const updateBmi = async(req,res,next) => {
         bmiGoalWeight,
         bmiIdealWeight,
       },
-      { new: true } 
+      { new: true }
     );
+
+    if (!bmi) {
+      return res.status(404).json({ message: 'BMI not found' });
+    }
 
     return res.status(200).json({
       success: true,
@@ -1773,6 +1850,30 @@ const updateBmi = async(req,res,next) => {
   }
 }
 
+const updateGoal = async (req, res, next) => {
+  try {
+
+    const goalId = req.params.goalId;
+    const clientId = req.body.clientId;
+
+    const goal = await Goals.findOneAndUpdate({ _id: goalId, clientId: clientId },req.body,{ new: true });
+
+    if (!goal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      goal: goal,
+    });
+    
+  }
+  catch (error) {
+    next(error);
+  }
+}
+
+
 const getBodyFatPercentage = async (req, res, next) => {
   try {
     const clientId = req.body.clientId;
@@ -1780,8 +1881,6 @@ const getBodyFatPercentage = async (req, res, next) => {
 
     const goals = await Goals.find({ clientId: clientId, measurementType: 'Body fat percentage' }, { value: 1, unit: 1, deadline: 1 })
       .sort({ deadline: 1 });
-
-    console.log(goals);
 
     let lastBodyFat = null;
     let goalBodyFat = null;
@@ -1807,6 +1906,11 @@ const getBodyFatPercentage = async (req, res, next) => {
           break;
         }
       }
+    }
+    else{
+      return res.status(200).json({
+        message: 'Body fat percentage not found',
+      });
     }
 
     return res.status(200).json({
@@ -1851,6 +1955,8 @@ module.exports = {
   getAllFoodDiary,
   createGoal,
   deleteGoal,
+  getGoalByMeasurementType,
+  getAllGoals,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,
@@ -1859,4 +1965,5 @@ module.exports = {
   getWeight,
   getBodyFatPercentage,
   updateBmi,
+  updateGoal
 };
