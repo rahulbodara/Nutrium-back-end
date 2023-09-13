@@ -1,3 +1,4 @@
+const { findByIdAndUpdate } = require('../model/DailyPlan');
 const client_Recommendation = require('../model/Recommendations');
 
 const createRecommendation = async (req, res, next) => {
@@ -40,16 +41,42 @@ const deletePhysicalActivity = async (req, res, next) => {
         return res.status(200).json({ message: 'Activity removed successfully', data: result });
     }
     catch (err) {
-        console.log(err);
         next(err);
     }
 
 }
 
+const updateRecommendation = async (req, res, next) => {
+
+    try {
+        const { foodAvoids, waterIntake, recommendation } = req.body;
+
+        const activity = await client_Recommendation.findOne({ _id: req.params.id });
+
+        if (!activity) {
+            return res.status(404).json({ error: 'Activity not found' });
+        }
+
+        const updateData = {
+            foodAvoids,
+            waterIntake,
+            recommendation,
+        }
+
+        const recommendations = await client_Recommendation.findByIdAndUpdate({ _id: req.params.id }, updateData, { new: true });
+
+        return res.status(200).json({ message: 'Activity updated successfully', data: recommendations });
+    }
+    catch (err) {
+        console.log(err);
+        next(err);
+    }
+}
 
 
 
 module.exports = {
     createRecommendation,
-    deletePhysicalActivity
+    deletePhysicalActivity,
+    updateRecommendation,
 }

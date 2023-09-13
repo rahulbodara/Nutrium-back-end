@@ -30,6 +30,8 @@ const {
   getAllFoodDiary,
   createGoal,
   deleteGoal,
+  getGoalByMeasurementType,
+  getAllGoals,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,
@@ -37,7 +39,8 @@ const {
   updateMeasurementObject,
   getBodyFatPercentage,
   getWeight,
-  updateBmi
+  updateBmi,
+  updateGoal
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -138,6 +141,10 @@ router.post('/client/goals/:id', isAuthenticated, createGoal);
 
 router.delete('/client/goals/:goalId', isAuthenticated, deleteGoal);
 
+router.get('/client/goals/:clientId/:measurementType',isAuthenticated, getGoalByMeasurementType);
+
+router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
+
 //===================Measurements===================//
 router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
 
@@ -171,5 +178,7 @@ router.get('/client-getWeight', isAuthenticated, getWeight);
 router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
 
 router.put('/client-updateBmi', isAuthenticated, updateBmi);
+
+router.put('/client-updateGoal/:goalId', isAuthenticated, updateGoal);
 
 module.exports = router;
