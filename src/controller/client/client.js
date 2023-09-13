@@ -12,6 +12,7 @@ const ClientFile = require('../../model/ClientFile');
 const FoodDiares = require('../../model/FoodDiares');
 const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
+const pregnancyHistory = require('../../model/pregnancyHistory');
 const path = require('path');
 
 const registerClient = async (req, res, next) => {
@@ -332,7 +333,7 @@ const deleteClient = async (req, res, next) => {
 const updateAppointmentInfo = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { appointmentReason, expectations, clinicGoals, otherInfo } =
+    const { appointmentReason, expectations, clinicGoals,clinicGoalsInfo, otherInfo } =
       req.body;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
@@ -348,6 +349,7 @@ const updateAppointmentInfo = async (req, res, next) => {
       appointmentReason,
       expectations,
       clinicGoals,
+      clinicGoalsInfo,
       otherInfo,
     };
 
@@ -371,6 +373,51 @@ const updateAppointmentInfo = async (req, res, next) => {
     next(error);
   }
 };
+
+const updatePregnancyHistory = async(req, res, next) => {
+  try{
+    const clientId = req.params.clientId;
+    const{
+      typeOfRecord,
+      gestationType,
+      lastMenstrualPeriod,
+      beginningOfLactation,
+      durationOfLactationInMonths,
+      observations,
+    } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+
+    const userId = req.userId;
+
+    const newPregnancyHistory = new pregnancyHistory ({
+      userId: userId,
+      clientId,
+      typeOfRecord,
+      gestationType,
+      lastMenstrualPeriod,
+      beginningOfLactation,
+      durationOfLactationInMonths,
+      observations,
+    });
+
+    const data = await newPregnancyHistory.save();
+
+    return res.status(200).json({success:true,
+      message:'Pregnancy History updated successfully',
+      data:data});
+
+  }
+  catch(error){
+    next(error);
+  }
+
+}
 
 const updatePersonalHistory = async (req, res, next) => {
   try {
@@ -1939,6 +1986,7 @@ module.exports = {
   updateObservation,
   deleteObservation,
   getObservation,
+  updatePregnancyHistory,
   updateMedicalHistory,
   updateDietHistory,
   createFileDetail,

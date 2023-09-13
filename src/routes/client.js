@@ -11,6 +11,7 @@ const {
   updateAppointmentInfo,
   updatePersonalHistory,
   addObservation,
+  updatePregnancyHistory,
   updateObservation,
   deleteObservation,
   getObservation,
@@ -65,6 +66,15 @@ router.put(
   isAuthenticated,
   updatePersonalHistory
 );
+
+//===================Pregnancy history===================//
+
+
+router.post(
+  '/client/pregnancy-history',
+  isAuthenticated,
+  updatePregnancyHistory);
+
 
 //===================Observations===================//
 router.post('/client/observation', isAuthenticated, addObservation);

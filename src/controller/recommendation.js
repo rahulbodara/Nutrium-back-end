@@ -7,17 +7,24 @@ const createRecommendation = async (req, res, next) => {
         const clientId = req.params.clientId;
         const { physicalActivity, foodAvoids, waterIntake, recommendation } = req.body;
 
-        const recommendations = await client_Recommendation.create({
+        const filter = {
             userId: userId,
+            clientId: clientId
+        };
+
+        const update = {
             physicalActivity,
             foodAvoids,
             waterIntake,
-            recommendation,
-            clientId: clientId
-        });
-        const result = await recommendations.save();
+            recommendation
+        };
 
-        res.status(201).json({ success: true, data: result });
+        const result = await client_Recommendation.findOneAndUpdate(filter, update, {
+            upsert: true, 
+            new: true, 
+        });
+
+        res.status(200).json({ success: true, data: result });
     } catch (err) {
         next(err);
     }
@@ -31,7 +38,7 @@ const deletePhysicalActivity = async (req, res, next) => {
         const activity = await client_Recommendation.findOne({ _id: req.params.id });
 
         if (!activity) {
-            return res.status(404).json({ error: 'Activity not found' });
+            return res.status(404).json({ message: 'Activity not found' });
         }
 
         activity.physicalActivity[subArrayIndex].splice(elementIndex, 1);
@@ -46,37 +53,24 @@ const deletePhysicalActivity = async (req, res, next) => {
 
 }
 
-const updateRecommendation = async (req, res, next) => {
 
-    try {
-        const { foodAvoids, waterIntake, recommendation } = req.body;
-
-        const activity = await client_Recommendation.findOne({ _id: req.params.id });
-
-        if (!activity) {
-            return res.status(404).json({ error: 'Activity not found' });
+const getRecommendations = async(req,res,next)=>{
+    try{
+        const clientId = req.params.clientId;
+        const recommendations = await client_Recommendation.find({clientId: clientId});
+        if(!recommendations){
+            return res.status(404).json({message:'Recommendations not found'});
         }
-
-        const updateData = {
-            foodAvoids,
-            waterIntake,
-            recommendation,
-        }
-
-        const recommendations = await client_Recommendation.findByIdAndUpdate({ _id: req.params.id }, updateData, { new: true });
-
-        return res.status(200).json({ message: 'Activity updated successfully', data: recommendations });
+       return res.status(200).json({success:true,data:recommendations});
     }
-    catch (err) {
-        console.log(err);
+    catch(err){
         next(err);
     }
 }
 
 
-
 module.exports = {
     createRecommendation,
     deletePhysicalActivity,
-    updateRecommendation,
+    getRecommendations
 }
