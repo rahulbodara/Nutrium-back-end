@@ -23,15 +23,27 @@ const pregnancyHistorySchema = new mongoose.Schema({
     ],
   },
   lastMenstrualPeriod: {
-    type: Date,
+    type: String,
   },
   beginningOfLactation: {
-    type: Date,
+    type: String,
   },
   durationOfLactationInMonths: {
     type: Number,
   },
   observations: {
+    type: String,
+  },
+  status:{
+    type: String,
+  },
+  currentPregnancyTrimester:{
+    type: String,
+  },
+  currentPregnancyWeek:{
+    type: String,
+  },
+  lactating:{
     type: String,
   }
 },

@@ -374,17 +374,472 @@ const updateAppointmentInfo = async (req, res, next) => {
   }
 };
 
-const updatePregnancyHistory = async(req, res, next) => {
-  try{
-    const clientId = req.params.clientId;
-    const{
+// const createPregnancyHistory = async (req, res, next) => {
+//   try {
+//     const {
+//       typeOfRecord,
+//       gestationType,
+//       lastMenstrualPeriod,
+//       beginningOfLactation,
+//       observations,
+//       clientId,
+//       durationOfLactationInMonths,
+//     } = req.body;
+
+//     const userId = req.userId;
+
+//     const lmpDate = new Date(lastMenstrualPeriod);
+//     const currentDate = new Date();
+
+//     const gestationalAgeInWeeks =
+//       (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+
+//     let trimester;
+//     let currentPregnancyTrimester = null;
+//     let currentPregnancyWeek = null;
+
+//     if (gestationalAgeInWeeks <= 13) {
+//       trimester = 'First Trimester';
+//     } else if (gestationalAgeInWeeks <= 26) {
+//       trimester = 'Second Trimester';
+//     } else {
+//       trimester = 'Third Trimester';
+//     }
+
+//     if (gestationalAgeInWeeks < 40) {
+//       currentPregnancyTrimester = trimester;
+//       currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+//     } else if (
+//       beginningOfLactation &&
+//       new Date(beginningOfLactation) > lmpDate
+//     ) {
+//       currentPregnancyTrimester = null;
+//       currentPregnancyWeek = null;
+//     }
+
+//     let lactationMonthsRemaining = null;
+//     let lactationDaysRemaining = null;
+
+//     if (gestationalAgeInWeeks >= 40) {
+//       if (beginningOfLactation) {
+//         const lactationStartDate = new Date(beginningOfLactation);
+//         if (!isNaN(lactationStartDate.getTime())) {
+//           const diffInMonths =
+//             (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+//             (currentDate.getMonth() - lactationStartDate.getMonth());
+
+//           lactationMonthsRemaining =
+//             durationOfLactationInMonths - diffInMonths;
+
+//           const lastLactationMonthEndDate = new Date(
+//             lactationStartDate.getFullYear(),
+//             lactationStartDate.getMonth() + durationOfLactationInMonths,
+//             lactationStartDate.getDate()
+//           );
+//           const remainingDays = Math.floor(
+//             (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
+//           );
+
+//           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
+//             lactationMonthsRemaining = null;
+//             lactationDaysRemaining = null;
+//           } else {
+//             if (remainingDays > 0) {
+//               lactationMonthsRemaining += 1;
+//               lactationDaysRemaining = null;
+//             }
+//           }
+//         }
+//       }
+//     }
+
+//     let status = null;
+
+//     if (
+//       currentPregnancyTrimester == null &&
+//       currentPregnancyWeek == null &&
+//       lactationMonthsRemaining == null
+//     ) {
+//       status = 'completed';
+//     }
+
+//     const newPregnancyHistory = new pregnancyHistory({
+//       userId: userId,
+//       clientId,
+//       typeOfRecord,
+//       gestationType,
+//       lastMenstrualPeriod,
+//       beginningOfLactation,
+//       durationOfLactationInMonths,
+//       observations,
+//       status
+//     });
+
+//     const data = await newPregnancyHistory.save();
+
+//     let lactating = null;
+//     if (lactationMonthsRemaining !== null) {
+//       lactating = `month ${lactationMonthsRemaining}`;
+//       if (lactationDaysRemaining !== null) {
+//         lactating += ` day(s)`;
+//       }
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Pregnancy History updated successfully',
+//       data: data,
+//       currentPregnancyTrimester,
+//       currentPregnancyWeek,
+//       lactating,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+
+const createPregnancyHistory = async (req, res, next) => {
+  try {
+    const {
+      typeOfRecord,
+      gestationType,
+      lastMenstrualPeriod,
+      beginningOfLactation,
+      observations,
+      clientId,
+      durationOfLactationInMonths,
+    } = req.body;
+
+    const userId = req.userId;
+
+    const lmpDate = new Date(lastMenstrualPeriod);
+    const currentDate = new Date();
+
+    const gestationalAgeInWeeks =
+      (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+
+    let currentPregnancyTrimester = null;
+    let currentPregnancyWeek = null;
+    let lactating = null;
+    let status = null;
+
+    if (typeOfRecord === 'Pregnancy and lactation') {
+      let trimester;
+      let lactationMonthsRemaining = null
+
+      if (gestationalAgeInWeeks <= 13) {
+        trimester = 'First Trimester 1';
+      } else if (gestationalAgeInWeeks <= 26) {
+        trimester = 'Second Trimester 2';
+      } else {
+        trimester = 'Third Trimester 3';
+      }
+
+      if (gestationalAgeInWeeks < 40) {
+        currentPregnancyTrimester = trimester;
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+      } else if (
+        beginningOfLactation &&
+        new Date(beginningOfLactation) > lmpDate
+      ) {
+        currentPregnancyTrimester = null;
+        currentPregnancyWeek = null;
+      }
+
+
+      if (gestationalAgeInWeeks >= 40) {
+        if (beginningOfLactation) {
+          const lactationStartDate = new Date(beginningOfLactation);
+          if (!isNaN(lactationStartDate.getTime())) {
+            const diffInMonths =
+              (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+              (currentDate.getMonth() - lactationStartDate.getMonth());
+
+            const lactationMonthsRemaining =
+              durationOfLactationInMonths - diffInMonths;
+              console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
+
+            const lastLactationMonthEndDate = new Date(
+              lactationStartDate.getFullYear(),
+              lactationStartDate.getMonth() + durationOfLactationInMonths,
+              lactationStartDate.getDate()
+            );
+            const remainingDays = Math.floor(
+              (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
+            );
+
+            if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
+              lactating = null;
+              status = 'completed';
+            } else {
+              if (remainingDays > 0) {
+                const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+                lactating = `month ${currentLactatingMonth}`;
+              } else {
+                lactating = `month ${lactationMonthsRemaining}`;
+              }
+            }
+          }
+        }
+      }
+    } else if (typeOfRecord === 'Pregnancy') {
+      let trimester;
+
+      if (gestationalAgeInWeeks <= 13) {
+        trimester = 'First Trimester 1';
+      } else if (gestationalAgeInWeeks <= 26) {
+        trimester = 'Second Trimester 2';
+      } else {
+        trimester = 'Third Trimester 3';
+      }
+
+      if (gestationalAgeInWeeks < 40) {
+        currentPregnancyTrimester = trimester;
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+      }
+      if (gestationalAgeInWeeks >= 40) {
+        status = 'completed';
+      }
+    } else if (typeOfRecord === 'Lactation') {
+      if (beginningOfLactation) {
+        const lactationStartDate = new Date(beginningOfLactation);
+        if (!isNaN(lactationStartDate.getTime())) {
+          const diffInMonths =
+            (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+            (currentDate.getMonth() - lactationStartDate.getMonth());
+
+          const lactationMonthsRemaining =
+            durationOfLactationInMonths - diffInMonths;
+
+          const lastLactationMonthEndDate = new Date(
+            lactationStartDate.getFullYear(),
+            lactationStartDate.getMonth() + durationOfLactationInMonths,
+            lactationStartDate.getDate()
+          );
+          const remainingDays = Math.floor(
+            (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
+          );
+
+          console.log('remainingDays -->>', remainingDays);
+
+          if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
+            status = 'completed';
+          } else {
+            if (remainingDays > 0) {
+              const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+              lactating = `month ${currentLactatingMonth}`;
+            } else {
+              lactating = `month ${lactationMonthsRemaining}`;
+            }
+          }
+        }
+      }
+    }
+
+
+    const newPregnancyHistory = new pregnancyHistory({
+      userId: userId,
+      clientId,
       typeOfRecord,
       gestationType,
       lastMenstrualPeriod,
       beginningOfLactation,
       durationOfLactationInMonths,
       observations,
+      status,
+      currentPregnancyTrimester,
+      currentPregnancyWeek,
+      lactating,
+    });
+
+    const data = await newPregnancyHistory.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Pregnancy History added successfully',
+      data: data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updatePregnancyHistory = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const pregnancy = await pregnancyHistory.findOne({_id: id});
+    if (!pregnancy) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pregnancy History not found',
+      });
+    }
+    const {
+      typeOfRecord,
+      gestationType,
+      lastMenstrualPeriod,
+      beginningOfLactation,
+      observations,
+      durationOfLactationInMonths,
     } = req.body;
+
+
+    const lmpDate = new Date(lastMenstrualPeriod);
+    const currentDate = new Date();
+
+    const gestationalAgeInWeeks =
+      (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+
+    let currentPregnancyTrimester = null;
+    let currentPregnancyWeek = null;
+    let lactating = null;
+    let status = null;
+
+    if (typeOfRecord === 'Pregnancy and lactation') {
+      let trimester;
+      let lactationMonthsRemaining = null
+
+      if (gestationalAgeInWeeks <= 13) {
+        trimester = 'First Trimester 1';
+      } else if (gestationalAgeInWeeks <= 26) {
+        trimester = 'Second Trimester 2';
+      } else {
+        trimester = 'Third Trimester 3';
+      }
+
+      if (gestationalAgeInWeeks < 40) {
+        currentPregnancyTrimester = trimester;
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+      } else if (
+        beginningOfLactation &&
+        new Date(beginningOfLactation) > lmpDate
+      ) {
+        currentPregnancyTrimester = null;
+        currentPregnancyWeek = null;
+      }
+
+
+      if (gestationalAgeInWeeks >= 40) {
+        if (beginningOfLactation) {
+          const lactationStartDate = new Date(beginningOfLactation);
+          if (!isNaN(lactationStartDate.getTime())) {
+            const diffInMonths =
+              (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+              (currentDate.getMonth() - lactationStartDate.getMonth());
+
+            const lactationMonthsRemaining =
+              durationOfLactationInMonths - diffInMonths;
+              console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
+
+            const lastLactationMonthEndDate = new Date(
+              lactationStartDate.getFullYear(),
+              lactationStartDate.getMonth() + durationOfLactationInMonths,
+              lactationStartDate.getDate()
+            );
+            const remainingDays = Math.floor(
+              (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
+            );
+
+            if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
+              lactating = null;
+              status = 'completed';
+            } else {
+              if (remainingDays > 0) {
+                const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+                lactating = `month ${currentLactatingMonth}`;
+              } else {
+                lactating = `month ${lactationMonthsRemaining}`;
+              }
+            }
+          }
+        }
+      }
+    } else if (typeOfRecord === 'Pregnancy') {
+      let trimester;
+
+      if (gestationalAgeInWeeks <= 13) {
+        trimester = 'First Trimester 1';
+      } else if (gestationalAgeInWeeks <= 26) {
+        trimester = 'Second Trimester 2';
+      } else {
+        trimester = 'Third Trimester 3';
+      }
+
+      if (gestationalAgeInWeeks < 40) {
+        currentPregnancyTrimester = trimester;
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+      }
+      if (gestationalAgeInWeeks >= 40) {
+        status = 'completed';
+      }
+    } else if (typeOfRecord === 'Lactation') {
+      if (beginningOfLactation) {
+        const lactationStartDate = new Date(beginningOfLactation);
+        if (!isNaN(lactationStartDate.getTime())) {
+          const diffInMonths =
+            (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+            (currentDate.getMonth() - lactationStartDate.getMonth());
+
+          const lactationMonthsRemaining =
+            durationOfLactationInMonths - diffInMonths;
+
+          const lastLactationMonthEndDate = new Date(
+            lactationStartDate.getFullYear(),
+            lactationStartDate.getMonth() + durationOfLactationInMonths,
+            lactationStartDate.getDate()
+          );
+          const remainingDays = Math.floor(
+            (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
+          );
+
+          console.log('remainingDays -->>', remainingDays);
+
+          if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
+            status = 'completed';
+          } else {
+            if (remainingDays > 0) {
+              const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+              lactating = `month ${currentLactatingMonth}`;
+            } else {
+              lactating = `month ${lactationMonthsRemaining}`;
+            }
+          }
+        }
+      }
+    }
+
+
+    const updatePregnancyHistory = {
+      typeOfRecord,
+      gestationType,
+      lastMenstrualPeriod,
+      beginningOfLactation,
+      durationOfLactationInMonths,
+      observations,
+      status,
+      currentPregnancyTrimester,
+      currentPregnancyWeek,
+      lactating,
+    };
+
+    const data = await pregnancyHistory.findByIdAndUpdate({_id:id},updatePregnancyHistory,{new:true});
+
+    return res.status(200).json({
+      success: true,
+      message: 'Pregnancy History updated successfully',
+      data: data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+const getPregnancyHistory = async(req,res,next) => {
+  try {
+    const clientId = req.params.clientId;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -395,25 +850,25 @@ const updatePregnancyHistory = async(req, res, next) => {
 
     const userId = req.userId;
 
-    const newPregnancyHistory = new pregnancyHistory ({
+    const pregnancyhistory = await pregnancyHistory.find({
+      clientId: clientId,
       userId: userId,
-      clientId,
-      typeOfRecord,
-      gestationType,
-      lastMenstrualPeriod,
-      beginningOfLactation,
-      durationOfLactationInMonths,
-      observations,
     });
 
-    const data = await newPregnancyHistory.save();
+    if (!pregnancyhistory) {
+      return res.status(404).json({
+        success: false,
+        message: 'No pregnancy history found',
+      });
+    }
 
-    return res.status(200).json({success:true,
-      message:'Pregnancy History updated successfully',
-      data:data});
-
-  }
-  catch(error){
+    return res.status(200).json({
+      success: true,
+      message: 'pregnancy history retrieved successfully',
+      data: pregnancyhistory,
+    });
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 
@@ -1986,6 +2441,8 @@ module.exports = {
   updateObservation,
   deleteObservation,
   getObservation,
+  createPregnancyHistory,
+  getPregnancyHistory,
   updatePregnancyHistory,
   updateMedicalHistory,
   updateDietHistory,
