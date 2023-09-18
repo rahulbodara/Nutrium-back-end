@@ -11,6 +11,10 @@ const {
   updateAppointmentInfo,
   updatePersonalHistory,
   addObservation,
+  createPregnancyHistory,
+  updatePregnancyHistory,
+  deletePregnancyHistory,
+  getPregnancyHistory,
   updateObservation,
   deleteObservation,
   getObservation,
@@ -65,6 +69,30 @@ router.put(
   isAuthenticated,
   updatePersonalHistory
 );
+
+//===================Pregnancy history===================//
+
+router.post(
+  '/client/pregnancy-history',
+  isAuthenticated,
+  createPregnancyHistory);
+
+router.get(
+  '/client/get-pregnancy-history/:clientId',
+  isAuthenticated,
+  getPregnancyHistory);
+
+
+router.put(
+  '/client/update-pregnancy-history/:id',
+  isAuthenticated,
+  updatePregnancyHistory);
+
+router.delete(
+  '/client/delete-pregnancy-history/:pregnancyId',
+  isAuthenticated,
+  deletePregnancyHistory);
+
 
 //===================Observations===================//
 router.post('/client/observation', isAuthenticated, addObservation);

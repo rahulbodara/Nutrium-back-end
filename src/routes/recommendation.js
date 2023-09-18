@@ -5,13 +5,13 @@ const { isAuthenticated } = require("../middleware/auth");
 const {
   createRecommendation,
   deletePhysicalActivity,
-  updateRecommendation,
+  getRecommendations
 } = require("../controller/recommendation");
 
-router.post('/recommendations/:clientId',isAuthenticated,createRecommendation);
+router.put('/recommendations/:clientId',isAuthenticated,createRecommendation);
 
 router.delete('/deleteActivity/:id/:subArrayIndex/:elementIndex',isAuthenticated,deletePhysicalActivity);
 
-router.put('/updateRecommendations/:id',isAuthenticated,updateRecommendation);
+router.get('/recommendations/:clientId',isAuthenticated,getRecommendations);
 
 module.exports = router;
