@@ -333,7 +333,7 @@ const deleteClient = async (req, res, next) => {
 const updateAppointmentInfo = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { appointmentReason, expectations, clinicGoals,clinicGoalsInfo, otherInfo } =
+    const { appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfo } =
       req.body;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
@@ -525,6 +525,9 @@ const createPregnancyHistory = async (req, res, next) => {
     let status = null;
 
     if (typeOfRecord === 'Pregnancy and lactation') {
+      if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
+        return res.status(400).send({ message: 'lastMenstrualPeriod,beginningOfLactation,durationOfLactationInMonths are required fields.' });
+      }
       let trimester;
       let lactationMonthsRemaining = null
 
@@ -558,7 +561,7 @@ const createPregnancyHistory = async (req, res, next) => {
 
             const lactationMonthsRemaining =
               durationOfLactationInMonths - diffInMonths;
-              console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
+            console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
 
             const lastLactationMonthEndDate = new Date(
               lactationStartDate.getFullYear(),
@@ -584,6 +587,10 @@ const createPregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
+      if(!lastMenstrualPeriod)
+      {
+        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      }
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
@@ -602,6 +609,10 @@ const createPregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
+      if(!beginningOfLactation || !durationOfLactationInMonths)
+      {
+        return res.status(400).json({message:'beginningOfLactation,durationOfLactationInMonths are required'});
+      }
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
@@ -669,7 +680,7 @@ const updatePregnancyHistory = async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    const pregnancy = await pregnancyHistory.findOne({_id: id});
+    const pregnancy = await pregnancyHistory.findOne({ _id: id });
     if (!pregnancy) {
       return res.status(404).json({
         success: false,
@@ -698,6 +709,9 @@ const updatePregnancyHistory = async (req, res, next) => {
     let status = null;
 
     if (typeOfRecord === 'Pregnancy and lactation') {
+      if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
+        return res.status(400).send({ message: 'lastMenstrualPeriod,beginningOfLactation,durationOfLactationInMonths are required fields.' });
+      }
       let trimester;
       let lactationMonthsRemaining = null
 
@@ -731,7 +745,6 @@ const updatePregnancyHistory = async (req, res, next) => {
 
             const lactationMonthsRemaining =
               durationOfLactationInMonths - diffInMonths;
-              console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
 
             const lastLactationMonthEndDate = new Date(
               lactationStartDate.getFullYear(),
@@ -757,6 +770,10 @@ const updatePregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
+      if(!lastMenstrualPeriod)
+      {
+        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      }
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
@@ -775,6 +792,7 @@ const updatePregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
+      
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
@@ -824,7 +842,7 @@ const updatePregnancyHistory = async (req, res, next) => {
       lactating,
     };
 
-    const data = await pregnancyHistory.findByIdAndUpdate({_id:id},updatePregnancyHistory,{new:true});
+    const data = await pregnancyHistory.findByIdAndUpdate({ _id: id }, updatePregnancyHistory, { new: true });
 
     return res.status(200).json({
       success: true,
@@ -837,7 +855,7 @@ const updatePregnancyHistory = async (req, res, next) => {
 };
 
 
-const getPregnancyHistory = async(req,res,next) => {
+const getPregnancyHistory = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
 
@@ -869,6 +887,34 @@ const getPregnancyHistory = async(req,res,next) => {
     });
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+
+}
+
+const deletePregnancyHistory = async (req, res, next)=>{
+
+  try{
+    const pregnancyId = req.params.pregnancyId;
+
+    const pregnancyhistory = await pregnancyHistory.findOne({_id:pregnancyId});
+
+    if (!pregnancyhistory) {
+      return res.status(404).json({
+        success: false,
+        message: 'No pregnancy history found',
+      });
+    }
+
+    await pregnancyHistory.findByIdAndDelete({ _id: pregnancyId});
+
+    return res.status(200).json({
+      success: true,
+      message: 'pregnancy history deleted successfully',
+    });
+
+  }
+  catch(error){
     next(error);
   }
 
@@ -1698,7 +1744,7 @@ const getGoalByMeasurementType = async (req, res, next) => {
   }
 }
 
-const getAllGoals = async(req,res,next) => {
+const getAllGoals = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
 
@@ -2286,7 +2332,7 @@ const getWeight = async (req, res, next) => {
         }
       }
     }
-    else{
+    else {
       return res.status(404).json({ message: 'weight not found' });
     }
 
@@ -2358,7 +2404,7 @@ const updateGoal = async (req, res, next) => {
     const goalId = req.params.goalId;
     const clientId = req.body.clientId;
 
-    const goal = await Goals.findOneAndUpdate({ _id: goalId, clientId: clientId },req.body,{ new: true });
+    const goal = await Goals.findOneAndUpdate({ _id: goalId, clientId: clientId }, req.body, { new: true });
 
     if (!goal) {
       return res.status(404).json({ message: 'Goal not found' });
@@ -2368,7 +2414,7 @@ const updateGoal = async (req, res, next) => {
       success: true,
       goal: goal,
     });
-    
+
   }
   catch (error) {
     next(error);
@@ -2409,7 +2455,7 @@ const getBodyFatPercentage = async (req, res, next) => {
         }
       }
     }
-    else{
+    else {
       return res.status(200).json({
         message: 'Body fat percentage not found',
       });
@@ -2444,6 +2490,7 @@ module.exports = {
   createPregnancyHistory,
   getPregnancyHistory,
   updatePregnancyHistory,
+  deletePregnancyHistory,
   updateMedicalHistory,
   updateDietHistory,
   createFileDetail,

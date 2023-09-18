@@ -13,6 +13,7 @@ const {
   addObservation,
   createPregnancyHistory,
   updatePregnancyHistory,
+  deletePregnancyHistory,
   getPregnancyHistory,
   updateObservation,
   deleteObservation,
@@ -86,6 +87,12 @@ router.put(
   '/client/update-pregnancy-history/:id',
   isAuthenticated,
   updatePregnancyHistory);
+
+router.delete(
+  '/client/delete-pregnancy-history/:pregnancyId',
+  isAuthenticated,
+  deletePregnancyHistory);
+
 
 //===================Observations===================//
 router.post('/client/observation', isAuthenticated, addObservation);
