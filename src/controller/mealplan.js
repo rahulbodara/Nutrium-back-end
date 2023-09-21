@@ -2,6 +2,7 @@ const DailyPlan = require('../model/DailyPlan');
 const MealPlan = require('../model/Mealplan');
 
 // const createMealPlan = async (req, res, next) => {
+
 //   try {
 //     const userId = req.userId;
 //     const { days, creationMethod, associatePlanning, copyMealsPlan } = req.body;
@@ -92,17 +93,18 @@ const MealPlan = require('../model/Mealplan');
 // };
 
 // createMealPlan
+
+
 const createMealPlan = async (req, res, next) => {
   try {
     const mealPlanData = req.body;
     const clientId = req.params.clientId;
 
     if (mealPlanData.days && mealPlanData.days.length > 0) {
-      // Check if all days are selected
+      console.log("condition start ---------------->")
       const allDaysSelected = mealPlanData.days.length === 7;
 
       if (mealPlanData.creationMethod === 'Merge selected days into a single version') {
-        // Remove any days that are part of the new plan from the existing plans
         for (const day of mealPlanData.days) {
           await MealPlan.updateOne(
             { clientId, days: { $in: [day] } },
@@ -110,22 +112,28 @@ const createMealPlan = async (req, res, next) => {
           );
         }
 
-        // Create or update the meal plan for the selected days
+        // Use upsert to update the existing record if found, or create a new one if not found.
         await MealPlan.updateOne(
-          { clientId, days: mealPlanData.days },
+          { clientId, days: allDaysSelected ? ['Every Day'] : mealPlanData.days },
           { $set: { ...mealPlanData, clientId } },
           { upsert: true }
         );
 
-        // Get the current list of days for this client
         const existingPlan = await MealPlan.findOne({ clientId });
         const currentDays = existingPlan ? existingPlan.days : [];
 
-        // Calculate the remaining days
         const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const remainingDays = allDays.filter(day => !currentDays.includes(day));
 
-        // Create or update the meal plan for the remaining days
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
+        console.log("everyDayPlan---------------------->", everyDayPlan)
+
+        if (everyDayPlan) {
+          mealPlanData.foods = everyDayPlan.foods;
+          mealPlanData.name = everyDayPlan.name;
+          mealPlanData.notes = everyDayPlan.notes;
+        }
+
         await MealPlan.updateOne(
           { clientId, days: { $in: remainingDays } },
           { $set: { ...mealPlanData, clientId, days: remainingDays } },
@@ -134,20 +142,36 @@ const createMealPlan = async (req, res, next) => {
 
         res.status(201).json({ data: mealPlanData, message: 'Meal plan created or updated successfully' });
       } else if (mealPlanData.creationMethod === 'Create a version for each day') {
-        // Create or update separate meal plans for each selected day
-        const createdMealPlans = [];
-        for (const day of mealPlanData.days) {
-          await MealPlan.updateOne(
-            { clientId, days: [day] },
-            { $set: { ...mealPlanData, clientId, days: [day] } },
-            { upsert: true }
-          );
-          createdMealPlans.push(day);
-        }
+        const selectedDays = mealPlanData.days;
 
-        // Create or update the meal plan for the remaining days
+        const existingPlan = await MealPlan.findOne({ clientId });
+        const currentDays = existingPlan ? existingPlan.days : [];
+
         const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const remainingDays = allDays.filter(day => !mealPlanData.days.includes(day));
+        const remainingDays = allDays.filter(day => !selectedDays.includes(day));
+
+
+          const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+          console.log("everyDayPlan---------------------->", everyDayPlan)
+
+          if (everyDayPlan) {
+            mealPlanData.foods = everyDayPlan.foods;
+            mealPlanData.name = everyDayPlan.name;
+            mealPlanData.notes = everyDayPlan.notes;
+          }
+
+        for (const day of selectedDays) {
+          const existingPlanForDay = await MealPlan.findOne({ clientId, days: [day] });
+
+          if (existingPlanForDay) {
+            await MealPlan.updateOne(
+              { clientId, days: [day] },
+              { $set: { ...mealPlanData, clientId, days: [day] } }
+            );
+          } else {
+            await MealPlan.create({ ...mealPlanData, clientId, days: [day] });
+          }
+        }
 
         await MealPlan.updateOne(
           { clientId, days: { $in: remainingDays } },
@@ -155,47 +179,127 @@ const createMealPlan = async (req, res, next) => {
           { upsert: true }
         );
 
-        res.status(201).json({ data: createdMealPlans, message: 'Meal plan created or updated successfully' });
+        res.status(201).json({ data: selectedDays, message: 'Meal plan created or updated successfully' });
       } else {
-        res.status(400).json({ error: 'Invalid creationMethod' });
+        
+        const selectedDays = mealPlanData.days;
+        const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const remainingDays = allDays.filter(day => !selectedDays.includes(day));
+
+        // Check if copyMealPlan is specified and set to 'Copy from Every Day'
+          const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+          console.log("everyDayPlan---------------------->", everyDayPlan)
+
+          if (everyDayPlan) {
+            mealPlanData.foods = everyDayPlan.foods;
+            mealPlanData.name = everyDayPlan.name;
+            mealPlanData.notes = everyDayPlan.notes;
+          }
+
+        for (const day of mealPlanData.days) {
+          const existingPlanForDay = await MealPlan.findOne({ clientId, days: [day] });
+
+          if (existingPlanForDay) {
+            await MealPlan.updateOne(
+              { clientId, days: [day] },
+              { $set: { ...mealPlanData, clientId, days: [day] } }
+            );
+          } else {
+            await MealPlan.create({ ...mealPlanData, clientId, days: [day] });
+          }
+        }
+        await MealPlan.updateOne(
+          { clientId, days: { $in: remainingDays } },
+          { $set: { ...mealPlanData, clientId, days: remainingDays } },
+          { upsert: true }
+        );
+
+        res.status(201).json({ data: mealPlanData, message: 'Meal plan created or updated successfully' });
       }
     } else {
-      // If no specific "days" are provided, add the meal plan to 'Every Day' by default
+      console.log("start");
+      console.log(mealPlanData.copyMealPlan);
+
+      const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+
+      if (everyDayPlan) {
+        mealPlanData.foods = everyDayPlan.foods;
+        mealPlanData.name = everyDayPlan.name;
+        mealPlanData.notes = everyDayPlan.notes;
+      }
+
       mealPlanData.days = ['Every Day'];
       mealPlanData.clientId = clientId;
 
-      // Create or update the "Every Day" meal plan
       await MealPlan.updateOne(
         { clientId, days: ['Every Day'] },
         { $set: { ...mealPlanData, clientId } },
         { upsert: true }
       );
 
+      // Update the "Every Day" plan to include the remaining days.
+      const existingPlan = await MealPlan.findOne({ clientId });
+      const currentDays = existingPlan ? existingPlan.days : [];
+      const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const remainingDays = allDays.filter(day => !currentDays.includes(day));
+
+      await MealPlan.updateOne(
+        { clientId, days: ['Every Day'] },
+        { $set: { ...mealPlanData, clientId, days: ['Every Day', ...remainingDays] } },
+        { upsert: true }
+      );
+
       res.status(201).json({ data: mealPlanData, message: 'Meal plan created or updated successfully' });
     }
   } catch (error) {
-      next(error);
-      }
+    next(error);
+  }
 };
+
+module.exports = { createMealPlan };
+
+
 
 //get meal plan
 
-const getMealPlan = async(req,res,next) => {
-  try{
+const getMealPlan = async (req, res, next) => {
+  try {
     clientId = req.params.clientId;
-    const mealPlan = await MealPlan.find({clientId: clientId});
-    if(mealPlan.length === 0){
-      return res.status(404).json({message: 'Meal plan not found'});
+    const mealPlan = await MealPlan.find({ clientId: clientId });
+    if (mealPlan.length === 0) {
+      return res.status(404).json({ message: 'Meal plan not found' });
     }
-    return res.status(200).json({message:"Meal plan retrieved successfully",mealPlan});
+    return res.status(200).json({ message: "Meal plan retrieved successfully", mealPlan });
   }
-  catch(error){
+  catch (error) {
+    next(error);
+  }
+}
+
+//update meal plan
+
+const updateMealPlan = async (req, res, next) => {
+  try {
+    const mealId = req.params.mealId;
+
+    const mealPlan = await MealPlan.findOneAndUpdate(
+      { _id:mealId },
+      req.body,
+      { new: true }
+    );
+    if (!mealPlan) {
+      return res.status(404).json({ message: 'Meal plan not found' });
+    }
+    return res.status(200).json({ message: "Meal plan updated successfully", mealPlan });
+  }
+  catch (error) {
     next(error);
   }
 }
 
 
-module.exports = { 
+module.exports = {
   createMealPlan,
-  getMealPlan
+  getMealPlan,
+  updateMealPlan
 };
