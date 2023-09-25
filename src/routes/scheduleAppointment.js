@@ -9,4 +9,6 @@ router.post("/scheduleApointment",isAuthenticated,scheduleAppointmentController.
 
 router.get("/scheduleApointment",isAuthenticated,scheduleAppointmentController.getAllAppointments)
 
+router.delete("/scheduleApointment/:id",isAuthenticated,scheduleAppointmentController.deleteAppointment)
+
 module.exports = router;
