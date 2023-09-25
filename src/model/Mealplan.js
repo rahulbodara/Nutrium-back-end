@@ -34,8 +34,8 @@ const mealPlanSchema = mongoose.Schema({
     default: 'Merge selected days into a single version',
   },
   copyMealPlan: {
-    type:String,
-    default: 'Do not copy'
+    type: [String],
+    default: 'Do not copy',
   },
 });
 
