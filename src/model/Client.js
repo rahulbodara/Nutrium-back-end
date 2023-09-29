@@ -17,7 +17,7 @@ const clientSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Please enter an email'],
-      unique: true,
+      // unique: true,
       validate: [validator.isEmail, 'Please enter a valid email'],
     },
     gender: {
@@ -92,6 +92,10 @@ const clientSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    isImported:{
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

@@ -15,54 +15,154 @@ const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
 const path = require('path');
 
+// const registerClient = async (req, res, next) => {
+//   try {
+//     const userId = req.userId;
+//     const {
+//       fullName,
+//       gender,
+//       workplace,
+//       dateOfBirth,
+//       phoneNumber,
+//       email,
+//       occupation,
+//       country,
+//       zipcode,
+//     } = req.body;
+
+//     const exist = await Client.findOne({ email, userId: { $ne: userId } });
+
+//     if (exist) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'This email already exists',
+//       });
+//     }
+//     const client = await Client.create({
+//       userId,
+//       fullName,
+//       gender,
+//       workplace,
+//       dateOfBirth,
+//       phoneNumber,
+//       email,
+//       occupation,
+//       country,
+//       zipcode,
+//     });
+
+//     // await getScheduleAppointmentInfo(client._id);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Client added successfully',
+//       client,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
+
 const registerClient = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const {
-      fullName,
-      gender,
-      workplace,
-      dateOfBirth,
-      phoneNumber,
-      email,
-      occupation,
-      country,
-      zipcode,
-    } = req.body;
+    const clientsData = req.body;
 
-    const exist = await Client.findOne({ email, userId: { $ne: userId } });
+    const addedClients = [];
+    const updatedClients = [];
 
-    if (exist) {
-      return res.status(400).json({
-        success: false,
-        message: 'This email already exists',
-      });
+    for (const clientData of clientsData) {
+      const {
+        fullName,
+        gender,
+        workplace,
+        dateOfBirth,
+        phoneNumber,
+        email,
+        occupation,
+        country,
+        zipcode,
+        address,
+        tags,
+        processNumber,
+        nationalNumber,
+        healthNumber,
+        vatNumber,
+        isImported,
+      } = clientData;
+
+      if (isImported === true) {
+        await Client.updateMany({ email, userId, isImported: true }, {
+          fullName,
+          gender,
+          workplace,
+          dateOfBirth,
+          phoneNumber,
+          email,
+          occupation,
+          country,
+          zipcode,
+          address,
+          tags,
+          processNumber,
+          nationalNumber,
+          healthNumber,
+          vatNumber,
+          isImported,
+        },
+        {upsert: true});
+
+        const updatedData = await Client.find({ email, userId });
+        updatedClients.push(...updatedData);
+      } else {
+        const exist = await Client.find({ email, userId });
+        const existEmails = exist.map(client => client.email);
+
+        if (exist.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `${existEmails.join(', ')} email already exists`,
+          });
+        } else {
+          // Create a new client
+          const client = await Client.create({
+            userId,
+            fullName,
+            gender,
+            workplace,
+            dateOfBirth,
+            phoneNumber,
+            email,
+            occupation,
+            country,
+            zipcode,
+            address,
+            tags,
+            processNumber,
+            nationalNumber,
+            healthNumber,
+            vatNumber,
+            isImported,
+          });
+          addedClients.push(client);
+        }
+      }
     }
-    const client = await Client.create({
-      userId,
-      fullName,
-      gender,
-      workplace,
-      dateOfBirth,
-      phoneNumber,
-      email,
-      occupation,
-      country,
-      zipcode,
-    });
-
-    // await getScheduleAppointmentInfo(client._id);
 
     return res.status(200).json({
       success: true,
-      message: 'Client added successfully',
-      client,
+      message: 'Clients processed successfully',
+      addedClients,
+      updatedClients,
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
+
+
 
 const getAllClient = async (req, res, next) => {
   try {
@@ -587,9 +687,8 @@ const createPregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
-      if(!lastMenstrualPeriod)
-      {
-        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      if (!lastMenstrualPeriod) {
+        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
       }
       let trimester;
 
@@ -609,9 +708,8 @@ const createPregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
-      if(!beginningOfLactation || !durationOfLactationInMonths)
-      {
-        return res.status(400).json({message:'beginningOfLactation,durationOfLactationInMonths are required'});
+      if (!beginningOfLactation || !durationOfLactationInMonths) {
+        return res.status(400).json({ message: 'beginningOfLactation,durationOfLactationInMonths are required' });
       }
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
@@ -770,9 +868,8 @@ const updatePregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
-      if(!lastMenstrualPeriod)
-      {
-        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      if (!lastMenstrualPeriod) {
+        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
       }
       let trimester;
 
@@ -792,7 +889,7 @@ const updatePregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
-      
+
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
@@ -892,12 +989,12 @@ const getPregnancyHistory = async (req, res, next) => {
 
 }
 
-const deletePregnancyHistory = async (req, res, next)=>{
+const deletePregnancyHistory = async (req, res, next) => {
 
-  try{
+  try {
     const pregnancyId = req.params.pregnancyId;
 
-    const pregnancyhistory = await pregnancyHistory.findOne({_id:pregnancyId});
+    const pregnancyhistory = await pregnancyHistory.findOne({ _id: pregnancyId });
 
     if (!pregnancyhistory) {
       return res.status(404).json({
@@ -906,7 +1003,7 @@ const deletePregnancyHistory = async (req, res, next)=>{
       });
     }
 
-    await pregnancyHistory.findByIdAndDelete({ _id: pregnancyId});
+    await pregnancyHistory.findByIdAndDelete({ _id: pregnancyId });
 
     return res.status(200).json({
       success: true,
@@ -914,7 +1011,7 @@ const deletePregnancyHistory = async (req, res, next)=>{
     });
 
   }
-  catch(error){
+  catch (error) {
     next(error);
   }
 
