@@ -4,6 +4,7 @@ const router = express.Router();
 const { isAuthenticated } = require('../middleware/auth');
 const {
   registerClient,
+  addImportHistory,
   deleteClient,
   getClientByID,
   getAllClient,
@@ -59,6 +60,12 @@ router.put(
   isAuthenticated,
   updateClient
 );
+
+//===================import History===================//
+
+
+router.post('/client/import-history',isAuthenticated,addImportHistory);
+
 
 //===================Appointment information===================//
 router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
@@ -183,13 +190,13 @@ router.post(
 );
 
 router.get(
-  '/client/measurements/:measurementId',
+  '/client/measurements/:clientId',
   isAuthenticated,
   getMeasurementById
 );
 
 router.delete(
-  '/client/measurements/:measurementId',
+  '/client/measurements/:clientId/entries/:entryId',
   isAuthenticated,
   deleteMeasurementObject
 );
