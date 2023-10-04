@@ -136,30 +136,14 @@ const registerClient = async (req, res, next) => {
 
         const updatedData = await Client.find({ email, userId });
         updatedClients.push(...updatedData);
-        console.log('updateddata-->>',updatedClients);
-        const dataEmails = updatedData.map(item => item.email);
-        console.log(dataEmails);
 
         if (!importHistoryCreated) {
           const { status, importedIn, clients, new_client, updated, success } = req.body;
           const totalClientsAdded = clientsData.length;
           let countClients;
-          console.log('emailsNotInExistingClients-->>',emailsNotInExistingClients);
-          const emails = emailsNotInExistingClients.include(dataEmails);
-          console.log('emails: ', emails);
-          if (emails.length > 0) {
-           countClients = emails.length;
-           console.log('countClients: ', countClients);
-          }
-          else
-          {
-            countClients = 0;
-          }
           
           const successPercentage = ((countClients + existingClients.length) / totalClientsAdded) * 100;
           console.log('successPercentage-->>', successPercentage);
-
-
 
           const History = new importHistory({
             status,
@@ -1973,18 +1957,18 @@ const registerMeasurement = async (req, res, next) => {
     const userId = req.userId;
     const clientId = req.params.id;
     const {
-      measurementsDate,
+      measurementsdate,
       measurements,
     } = req.body;
 
     const existingMeasurement = await Measurements.findOne({
       userId: userId,
       clientId: clientId,
-      measurementsDate: measurementsDate,
     });
 
     if (existingMeasurement) {
       existingMeasurement.measurements = measurements;
+      existingMeasurement.measurementsdate = measurementsdate;
       await existingMeasurement.save();
       return res.status(200).json({
         success: true,
@@ -1995,7 +1979,7 @@ const registerMeasurement = async (req, res, next) => {
       const newMeasurement = {
         userId: userId,
         clientId: clientId,
-        measurementsDate,
+        measurementsdate,
         measurements,
       };
       const createdMeasurement = await Measurements.create(newMeasurement);
