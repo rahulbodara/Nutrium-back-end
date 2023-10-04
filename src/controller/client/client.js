@@ -13,56 +13,252 @@ const FoodDiares = require('../../model/FoodDiares');
 const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
+const importHistory = require('../../model/importHistory');
 const path = require('path');
+const { log } = require('mojito-cli/lib/log');
+
+// const registerClient = async (req, res, next) => {
+//   try {
+//     const userId = req.userId;
+//     const {
+//       fullName,
+//       gender,
+//       workplace,
+//       dateOfBirth,
+//       phoneNumber,
+//       email,
+//       occupation,
+//       country,
+//       zipcode,
+//     } = req.body;
+
+//     const exist = await Client.findOne({ email, userId: { $ne: userId } });
+
+//     if (exist) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'This email already exists',
+//       });
+//     }
+//     const client = await Client.create({
+//       userId,
+//       fullName,
+//       gender,
+//       workplace,
+//       dateOfBirth,
+//       phoneNumber,
+//       email,
+//       occupation,
+//       country,
+//       zipcode,
+//     });
+
+//     // await getScheduleAppointmentInfo(client._id);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Client added successfully',
+//       client,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 
 const registerClient = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const {
-      fullName,
-      gender,
-      workplace,
-      dateOfBirth,
-      phoneNumber,
-      email,
-      occupation,
-      country,
-      zipcode,
-    } = req.body;
+    const clientsData = req.body;
 
-    const exist = await Client.findOne({ email, userId: { $ne: userId } });
+    const emails = clientsData.map(client => client.email);
 
-    if (exist) {
-      return res.status(400).json({
-        success: false,
-        message: 'This email already exists',
-      });
+    const existingClients = await Client.find({ email: { $in: emails }, userId });
+
+    const emailsNotInExistingClients = emails.filter(email => !existingClients.some(client => client.email === email));
+    console.log(emailsNotInExistingClients);
+
+    const addedClients = [];
+    const updatedClients = [];
+    const invalidEmails = [];
+    const importedHistory = [];
+    let importHistoryCreated = false;
+
+
+    for (const clientData of clientsData) {
+      const {
+        fullName,
+        gender,
+        workplace,
+        dateOfBirth,
+        phoneNumber,
+        email,
+        occupation,
+        country,
+        zipcode,
+        address,
+        tags,
+        processNumber,
+        nationalNumber,
+        healthNumber,
+        vatNumber,
+        isImported,
+      } = clientData;
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        invalidEmails.push(email);
+        continue;
+      }
+      if (isImported === true) {
+
+
+        await Client.updateMany({ email, userId, isImported: true }, {
+          fullName,
+          gender,
+          workplace,
+          dateOfBirth,
+          phoneNumber,
+          email,
+          occupation,
+          country,
+          zipcode,
+          address,
+          tags,
+          processNumber,
+          nationalNumber,
+          healthNumber,
+          vatNumber,
+          isImported,
+        },
+          { upsert: true });
+
+
+        const updatedData = await Client.find({ email, userId });
+        updatedClients.push(...updatedData);
+        console.log('updateddata-->>',updatedClients);
+        const dataEmails = updatedData.map(item => item.email);
+        console.log(dataEmails);
+
+        if (!importHistoryCreated) {
+          const { status, importedIn, clients, new_client, updated, success } = req.body;
+          const totalClientsAdded = clientsData.length;
+          let countClients;
+          console.log('emailsNotInExistingClients-->>',emailsNotInExistingClients);
+          const emails = emailsNotInExistingClients.include(dataEmails);
+          console.log('emails: ', emails);
+          if (emails.length > 0) {
+           countClients = emails.length;
+           console.log('countClients: ', countClients);
+          }
+          else
+          {
+            countClients = 0;
+          }
+          
+          const successPercentage = ((countClients + existingClients.length) / totalClientsAdded) * 100;
+          console.log('successPercentage-->>', successPercentage);
+
+
+
+          const History = new importHistory({
+            status,
+            importedIn,
+            clients: totalClientsAdded,
+            new_client: countClients,
+            updated: existingClients.length,
+            success: `${successPercentage}%`
+          });
+          console.log('History-->>', History);
+
+          // await History.save();
+          importedHistory.push(History);
+
+          importHistoryCreated = true;
+        }
+
+      } else {
+        const exist = await Client.find({ email, userId });
+        const existEmails = exist.map(client => client.email);
+
+        if (exist.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `${existEmails.join(', ')} email already exists`,
+          });
+        } else {
+          // Create a new client
+          const client = await Client.create({
+            userId,
+            fullName,
+            gender,
+            workplace,
+            dateOfBirth,
+            phoneNumber,
+            email,
+            occupation,
+            country,
+            zipcode,
+            address,
+            tags,
+            processNumber,
+            nationalNumber,
+            healthNumber,
+            vatNumber,
+            isImported,
+          });
+          addedClients.push(client);
+        }
+      }
     }
-    const client = await Client.create({
-      userId,
-      fullName,
-      gender,
-      workplace,
-      dateOfBirth,
-      phoneNumber,
-      email,
-      occupation,
-      country,
-      zipcode,
-    });
-
-    // await getScheduleAppointmentInfo(client._id);
 
     return res.status(200).json({
       success: true,
-      message: 'Client added successfully',
-      client,
+      message: 'Clients processed successfully',
+      addedClients,
+      updatedClients,
+      invalidEmails,
+      importedHistory
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
+
+const addImportHistory = async (req, res, next) => {
+
+  try {
+    const { status, importedIn, file, clients, new_client, updated, success, errors, line, value, associatedField, typeOfError } = req.body;
+    const history = await importHistory.findByIdAndUpdate({ _id: req.params.id }, {
+      status,
+      importedIn,
+      file,
+      clients,
+      new_client,
+      updated,
+      success,
+      errors,
+      line,
+      value,
+      associatedField,
+      typeOfError
+    }, { new: true }, { upsert: true });
+    return res.status(200).json({
+      success: true,
+      message: 'Import history added successfully',
+      history,
+    });
+
+  }
+  catch (error) {
+    console.log(error);
+    next(error);
+  }
+
+}
+
+
 
 const getAllClient = async (req, res, next) => {
   try {
@@ -587,9 +783,8 @@ const createPregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
-      if(!lastMenstrualPeriod)
-      {
-        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      if (!lastMenstrualPeriod) {
+        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
       }
       let trimester;
 
@@ -609,9 +804,8 @@ const createPregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
-      if(!beginningOfLactation || !durationOfLactationInMonths)
-      {
-        return res.status(400).json({message:'beginningOfLactation,durationOfLactationInMonths are required'});
+      if (!beginningOfLactation || !durationOfLactationInMonths) {
+        return res.status(400).json({ message: 'beginningOfLactation,durationOfLactationInMonths are required' });
       }
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
@@ -770,9 +964,8 @@ const updatePregnancyHistory = async (req, res, next) => {
         }
       }
     } else if (typeOfRecord === 'Pregnancy') {
-      if(!lastMenstrualPeriod)
-      {
-        return res.status(400).json({message:'lastMenstrualPeriod is required'});
+      if (!lastMenstrualPeriod) {
+        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
       }
       let trimester;
 
@@ -792,7 +985,7 @@ const updatePregnancyHistory = async (req, res, next) => {
         status = 'completed';
       }
     } else if (typeOfRecord === 'Lactation') {
-      
+
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
@@ -892,12 +1085,12 @@ const getPregnancyHistory = async (req, res, next) => {
 
 }
 
-const deletePregnancyHistory = async (req, res, next)=>{
+const deletePregnancyHistory = async (req, res, next) => {
 
-  try{
+  try {
     const pregnancyId = req.params.pregnancyId;
 
-    const pregnancyhistory = await pregnancyHistory.findOne({_id:pregnancyId});
+    const pregnancyhistory = await pregnancyHistory.findOne({ _id: pregnancyId });
 
     if (!pregnancyhistory) {
       return res.status(404).json({
@@ -906,7 +1099,7 @@ const deletePregnancyHistory = async (req, res, next)=>{
       });
     }
 
-    await pregnancyHistory.findByIdAndDelete({ _id: pregnancyId});
+    await pregnancyHistory.findByIdAndDelete({ _id: pregnancyId });
 
     return res.status(200).json({
       success: true,
@@ -914,7 +1107,7 @@ const deletePregnancyHistory = async (req, res, next)=>{
     });
 
   }
-  catch(error){
+  catch (error) {
     next(error);
   }
 
@@ -1781,215 +1974,48 @@ const registerMeasurement = async (req, res, next) => {
     const clientId = req.params.id;
     const {
       measurementsDate,
-      weight,
-      height,
-      hipCircumference,
-      waistCircumference,
-      diastolicBloodPressure,
-      hdlCholesterol,
-      ldlCholesterol,
-      systolicBloodPressure,
-      totalCholesterol,
-      triglycerides,
-      bodyFatPercentage,
-      fatMass,
-      muscleMass,
-      muscleMassPercentage,
+      measurements,
     } = req.body;
 
-    const newMeasurement = {
+    const existingMeasurement = await Measurements.findOne({
       userId: userId,
       clientId: clientId,
-      measurementsDate,
-      weight: [],
-      height: [],
-      hipCircumference: [],
-      waistCircumference: [],
-      diastolicBloodPressure: [],
-      hdlCholesterol: [],
-      ldlCholesterol: [],
-      systolicBloodPressure: [],
-      totalCholesterol: [],
-      triglycerides: [],
-      bodyFatPercentage: [],
-      fatMass: [],
-      muscleMass: [],
-      muscleMassPercentage: [],
-    };
-    if (weight) {
-      weight.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.weight.push({ date: measurementsDate, value, unit });
-      });
-    }
-
-    if (height) {
-      height.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.height.push({ date: measurementsDate, value, unit });
-      });
-    }
-
-    if (hipCircumference) {
-      hipCircumference.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.hipCircumference.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (waistCircumference) {
-      waistCircumference.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.waistCircumference.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (diastolicBloodPressure) {
-      diastolicBloodPressure.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.diastolicBloodPressure.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (hdlCholesterol) {
-      hdlCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.hdlCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (ldlCholesterol) {
-      ldlCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.ldlCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (systolicBloodPressure) {
-      systolicBloodPressure.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.systolicBloodPressure.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (totalCholesterol) {
-      totalCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.totalCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (triglycerides) {
-      triglycerides.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.triglycerides.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (bodyFatPercentage) {
-      bodyFatPercentage.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.bodyFatPercentage.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (fatMass) {
-      fatMass.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.fatMass.push({ date: measurementsDate, value, unit });
-      });
-    }
-
-    if (muscleMass) {
-      muscleMass.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.muscleMass.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (muscleMassPercentage) {
-      muscleMassPercentage.forEach((measurement) => {
-        const { value, unit } = measurement;
-        newMeasurement.muscleMassPercentage.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    const createdMeasurement = await Measurements.create(newMeasurement);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Measurement added successfully',
-      measurement: createdMeasurement,
+      measurementsDate: measurementsDate,
     });
+
+    if (existingMeasurement) {
+      existingMeasurement.measurements = measurements;
+      await existingMeasurement.save();
+      return res.status(200).json({
+        success: true,
+        message: 'Measurement updated successfully',
+        measurement: existingMeasurement,
+      });
+    } else {
+      const newMeasurement = {
+        userId: userId,
+        clientId: clientId,
+        measurementsDate,
+        measurements,
+      };
+      const createdMeasurement = await Measurements.create(newMeasurement);
+      return res.status(200).json({
+        success: true,
+        message: 'Measurement added successfully',
+        measurement: createdMeasurement,
+      });
+    }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
+
 const addNewMeasurement = async (req, res, next) => {
   try {
     const measurementId = req.params.measurementId;
-    const {
-      measurementsDate,
-      weight,
-      height,
-      hipCircumference,
-      waistCircumference,
-      diastolicBloodPressure,
-      hdlCholesterol,
-      ldlCholesterol,
-      systolicBloodPressure,
-      totalCholesterol,
-      triglycerides,
-      bodyFatPercentage,
-      fatMass,
-      muscleMass,
-      muscleMassPercentage,
-    } = req.body;
+    const { measurements } = req.body;
 
     const existingMeasurement = await Measurements.findById(measurementId);
 
@@ -2000,151 +2026,7 @@ const addNewMeasurement = async (req, res, next) => {
       });
     }
 
-    if (weight) {
-      weight.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.weight.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (height) {
-      height.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.height.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (hipCircumference) {
-      hipCircumference.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.hipCircumference.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (waistCircumference) {
-      waistCircumference.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.waistCircumference.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-
-    if (diastolicBloodPressure) {
-      diastolicBloodPressure.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.diastolicBloodPressure.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (hdlCholesterol) {
-      hdlCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.hdlCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (ldlCholesterol) {
-      ldlCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.ldlCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (systolicBloodPressure) {
-      systolicBloodPressure.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.systolicBloodPressure.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (totalCholesterol) {
-      totalCholesterol.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.totalCholesterol.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (triglycerides) {
-      triglycerides.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.triglycerides.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (bodyFatPercentage) {
-      bodyFatPercentage.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.bodyFatPercentage.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (fatMass) {
-      fatMass.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.fatMass.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (muscleMass) {
-      muscleMass.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.muscleMass.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    if (muscleMassPercentage) {
-      muscleMassPercentage.forEach((measurement) => {
-        const { value, unit } = measurement;
-        existingMeasurement.muscleMassPercentage.push({
-          date: measurementsDate,
-          value,
-          unit,
-        });
-      });
-    }
-    const updatedMeasurement = await existingMeasurement.save();
+    const updatedMeasurement = await Measurements.findByIdAndUpdate({ _id: measurementId }, { measurements }, { new: true });
 
     return res.status(200).json({
       success: true,
@@ -2159,18 +2041,16 @@ const addNewMeasurement = async (req, res, next) => {
 
 const getMeasurementById = async (req, res, next) => {
   try {
-    const clientId = req.body.clientId;
-    const measurementId = req.params.measurementId;
+    const clientId = req.params.clientId;
 
-    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+    const measurement = await Measurements.findOne({ clientId: clientId });
+    if (!measurement) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: 'measurement not found',
       });
     }
-
     const allMeasurement = await Measurements.findOne({
-      _id: measurementId,
       clientId: clientId,
     });
 
@@ -2185,47 +2065,35 @@ const getMeasurementById = async (req, res, next) => {
 
 const deleteMeasurementObject = async (req, res, next) => {
   try {
-    const clientId = req.body.clientId;
-    const measurementId = req.params.measurementId;
-    const measurementType = req.body.measurementType;
-    const measurementTypeId = req.body.measurementTypeId;
+    const clientId = req.params.clientId;
+    const entryId = req.params.entryId;
 
-    // Check if the measurement exists and belongs to the specified client
-    const measurement = await Measurements.findOne({
-      _id: measurementId,
-      clientId: clientId,
-    });
-
+    const measurement = await Measurements.findOne({ clientId: clientId });
+    console.log(measurement);
     if (!measurement) {
-      return res.status(404).json({ error: 'Measurement not found' });
+      return res.status(404).json({ message: 'Measurement not found' });
+    }
+    let entryDeleted = false;
+
+    for (const measurementEntry of measurement.measurements) {
+      measurementEntry.entries = measurementEntry.entries.filter((entry) => {
+        if (entry._id.toString() === entryId) {
+          entryDeleted = true;
+          return false;
+        }
+        return true;
+      });
     }
 
-    // Find the array corresponding to the specified measurementType (e.g., weight, height)
-    const measurementArray = measurement[measurementType];
-
-    if (!measurementArray) {
-      return res.status(404).json({ error: 'Measurement type not found' });
+    if (!entryDeleted) {
+      return res.status(404).json({ message: 'Entry not found within the measurement' });
     }
 
-    // Find the index of the measurement object with the specified _id
-    const indexToRemove = measurementArray.findIndex(
-      (item) => item._id.toString() === measurementTypeId
-    );
-
-    if (indexToRemove === -1) {
-      return res.status(404).json({ error: 'Measurement data not found' });
-    }
-
-    // Perform the actual deletion by splicing the array
-    measurementArray.splice(indexToRemove, 1);
-
-    // Save the updated measurement object
     await measurement.save();
 
-    return res
-      .status(200)
-      .json({ message: 'Measurement data deleted successfully' });
+    return res.status(200).json({ message: 'Entry deleted successfully', measurement: measurement });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -2476,6 +2344,7 @@ const getBodyFatPercentage = async (req, res, next) => {
 
 module.exports = {
   registerClient,
+  addImportHistory,
   deleteClient,
   getClientByID,
   getAllClient,
