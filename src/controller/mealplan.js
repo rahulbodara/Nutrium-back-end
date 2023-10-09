@@ -108,11 +108,31 @@ const createMealPlan = async (req, res, next) => {
 
       if (mealPlanData.creationMethod === 'Merge selected days into a single version') {
 
-        const existingDays = await MealPlan.find({ clientId, days: mealPlanData.days });
-        if (existingDays.length !== 0) {
-          const del_obj = await MealPlan.deleteMany({ clientId, _id: existingDays[0]._id });
+        const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
+        console.log('existingDays-->>', existingDays);
+
+        for (const existingRecord of existingDays) {
+          const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
+          console.log('allDaysMatch-->>', allDaysMatch);
+
+          if (allDaysMatch) {
+            const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
+            console.log('del_obj:-->> ', del_obj);
+          } else {
+            const updateResult = await MealPlan.updateOne(
+              { _id: existingRecord._id },
+              { $pull: { days: { $in: mealPlanData.days } } }
+            );
+            console.log('updateResult:-->> ', updateResult);
+          }
         }
 
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan  });
+        console.log("everyDayPlan---------------------->", everyDayPlan)
+
+        if (everyDayPlan) {
+          mealPlanData.mealPlans = everyDayPlan.mealPlans;
+        }
 
         for (const day of mealPlanData.days) {
           await MealPlan.updateOne(
@@ -123,7 +143,7 @@ const createMealPlan = async (req, res, next) => {
 
         // Use upsert to update the existing record if found, or create a new one if not found.
         const result = await MealPlan.updateOne(
-          { clientId, userId, days: allDaysSelected ? ['Every Day'] : mealPlanData.days },
+          { clientId, userId, days: mealPlanData.days },
           { $set: { ...mealPlanData, clientId } },
           { upsert: true }
         );
@@ -135,20 +155,11 @@ const createMealPlan = async (req, res, next) => {
         const allDays = ['Every Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const remainingDays = allDays.filter(day => !currentDays.includes(day));
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
-        console.log("everyDayPlan---------------------->", everyDayPlan)
-
-        if (everyDayPlan) {
-          mealPlanData.foods = everyDayPlan.foods;
-          mealPlanData.name = everyDayPlan.name;
-          mealPlanData.notes = everyDayPlan.notes;
-        }
-
-        await MealPlan.updateOne(
-          { clientId, userId, days: { $in: remainingDays } },
-          { $set: { ...mealPlanData, clientId, days: remainingDays } },
-          { upsert: true }
-        );
+       
+        const filter = { clientId, userId, days:{$in:mealPlanData.copyMealPlan} };
+        const update = { $pull: { days: { $in: mealPlanData.days } } };
+        const data = await MealPlan.findOneAndUpdate(filter, update);
+        console.log('data-->>',data);
 
 
 
@@ -156,10 +167,24 @@ const createMealPlan = async (req, res, next) => {
       } else if (mealPlanData.creationMethod === 'Create a version for each day') {
 
         const selectedDays = mealPlanData.days;
-        await MealPlan.deleteMany({ clientId, days: { $in: selectedDays } });
-        const existingPlan = await MealPlan.find({ clientId }, { upsert: true });
-        console.log('existing', existingPlan);
-        const currentDays = existingPlan ? existingPlan.days : [];
+        const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
+        console.log('existingDays-->>', existingDays);
+
+        for (const existingRecord of existingDays) {
+          const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
+          console.log('allDaysMatch-->>', allDaysMatch);
+
+          if (allDaysMatch) {
+            const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
+            console.log('del_obj:-->> ', del_obj);
+          } else {
+            const updateResult = await MealPlan.updateOne(
+              { _id: existingRecord._id },
+              { $pull: { days: { $in: mealPlanData.days } } }
+            );
+            console.log('updateResult:-->> ', updateResult);
+          }
+        }
 
         const allDays = ['Every Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
@@ -169,9 +194,7 @@ const createMealPlan = async (req, res, next) => {
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
-          mealPlanData.foods = everyDayPlan.foods;
-          mealPlanData.name = everyDayPlan.name;
-          mealPlanData.notes = everyDayPlan.notes;
+          mealPlanData.mealPlans = everyDayPlan.mealPlans;
         }
 
         for (const day of selectedDays) {
@@ -187,11 +210,9 @@ const createMealPlan = async (req, res, next) => {
           }
         }
 
-        await MealPlan.updateOne(
-          { clientId, userId, days: 'Every Day' },
-          { $set: { ...mealPlanData, clientId, days: [...remainingDays] } },
-          { upsert: true }
-        );
+        const filter = { clientId, userId, days: {$in:mealPlanData.copyMealPlan} };
+        const update = { $pull: { days: { $in: mealPlanData.days } } };
+        const result = await MealPlan.findOneAndUpdate(filter, update);
 
         const updatedMealPlan = await MealPlan.findOne({ clientId });
 
@@ -199,7 +220,26 @@ const createMealPlan = async (req, res, next) => {
         res.status(201).json({ data: updatedMealPlan, message: 'Meal plan created or updated successfully' });
       } else {
 
-        await MealPlan.deleteMany({ clientId, days: { $in: mealPlanData.days } });
+
+        const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
+        console.log('existingDays-->>', existingDays);
+
+        for (const existingRecord of existingDays) {
+          const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
+          console.log('allDaysMatch-->>', allDaysMatch);
+
+          if (allDaysMatch) {
+            const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
+            console.log('del_obj:-->> ', del_obj);
+          } else {
+            const updateResult = await MealPlan.updateOne(
+              { _id: existingRecord._id },
+              { $pull: { days: { $in: mealPlanData.days } } }
+            );
+            console.log('updateResult:-->> ', updateResult);
+          }
+        }
+
         const selectedDays = mealPlanData.days;
         const allDays = ['Every Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
@@ -209,28 +249,27 @@ const createMealPlan = async (req, res, next) => {
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
-          mealPlanData.foods = everyDayPlan.foods;
-          mealPlanData.name = everyDayPlan.name;
-          mealPlanData.notes = everyDayPlan.notes;
+          mealPlanData.mealPlans = everyDayPlan.mealPlans;
         }
 
         for (const day of mealPlanData.days) {
           const existingPlanForDay = await MealPlan.findOne({ clientId, days: [day] });
 
           if (existingPlanForDay) {
-            await MealPlan.updateOne(
+            const result = await MealPlan.updateOne(
               { clientId, userId, days: [day] },
               { $set: { ...mealPlanData, clientId, days: [day] } }
             );
+
           } else {
             await MealPlan.create({ ...mealPlanData, clientId, days: [day] });
           }
         }
-        await MealPlan.updateOne(
-          { clientId, userId, days: { $in: remainingDays } },
-          { $set: { ...mealPlanData, clientId, days: remainingDays } },
-          { upsert: true }
-        );
+        const filter = { clientId, userId, days: 'Every Day' };
+        const update = { $pull: { days: { $in: mealPlanData.days } } };
+        const result = await MealPlan.findOneAndUpdate(filter, update);
+        console.log('result--->>', result);
+        console.log('mealPlanData.days-->>', mealPlanData.days);
         const updatedMealPlan = await MealPlan.findOne({ clientId });
 
         res.status(201).json({ data: updatedMealPlan, message: 'Meal plan created or updated successfully' });
@@ -239,12 +278,10 @@ const createMealPlan = async (req, res, next) => {
       console.log("start");
       console.log(mealPlanData.copyMealPlan);
 
-      const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+      const everyDayPlan = await MealPlan.findOne({ clientId, days:{$in:mealPlanData.copyMealPlan} });
 
       if (everyDayPlan) {
-        mealPlanData.foods = everyDayPlan.foods;
-        mealPlanData.name = everyDayPlan.name;
-        mealPlanData.notes = everyDayPlan.notes;
+        mealPlanData.mealPlans = everyDayPlan.mealPlans;
       }
 
       mealPlanData.days = ['Every Day'];
@@ -314,15 +351,44 @@ const updateMealPlan = async (req, res, next) => {
   }
 }
 
+//delete perticular meal plan object
+
+const deleteMealPlanObject = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const mealId = req.params.mealId;
+    const ObjectId = req.params.objectId;
+
+    const result = await MealPlan.updateOne(
+      { _id: mealId, userId },
+      { $pull: { mealPlans: { _id: ObjectId } } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: 'No matching meal found' });
+    }
+
+    res.status(200).json({ message: 'Meal deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+
+}
+
 const deleteMealPlan = async (req, res, next) => {
   try {
     const mealId = req.params.mealId;
     const clientId = req.body.clientId;
 
-    await MealPlan.findByIdAndRemove(mealId);
+    const deletedRecord = await MealPlan.findByIdAndRemove(mealId);
+    const deletedDays = deletedRecord? deletedRecord.days : [];
 
+    const everyDayRecord = await MealPlan.findOne({clientId,days:{$in:'Every Day'}});
+    if(everyDayRecord){
+      everyDayRecord.days = [...everyDayRecord.days,...deletedDays];
+      await everyDayRecord.save();
+    }
 
-    // Check if there's only one meal plan record left for the client
     const remainingPlans = await MealPlan.find({ clientId: clientId });
 
     if (remainingPlans.length === 1) {
@@ -334,9 +400,6 @@ const deleteMealPlan = async (req, res, next) => {
         { new: true }
       );
     }
-
-
-
     res.status(200).json({ message: 'Meal plan deleted successfully' });
   } catch (error) {
     next(error);
@@ -348,5 +411,6 @@ module.exports = {
   createMealPlan,
   getMealPlan,
   updateMealPlan,
-  deleteMealPlan
+  deleteMealPlan,
+  deleteMealPlanObject
 };

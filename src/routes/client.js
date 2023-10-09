@@ -202,10 +202,10 @@ router.delete(
 );
 
 router.put(
-  '/client/measurements/:measurementId',
+  '/client/measurements/:clientId/entries/:entryId',
   isAuthenticated,
-  updateMeasurementObject
-);
+  updateMeasurementObject);
+
 
 //===================planning===================//
 router.get('/client-getWeight', isAuthenticated, getWeight);

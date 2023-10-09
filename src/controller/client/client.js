@@ -2084,53 +2084,36 @@ const deleteMeasurementObject = async (req, res, next) => {
 
 const updateMeasurementObject = async (req, res, next) => {
   try {
-    const clientId = req.body.clientId;
-    const measurementId = req.params.measurementId;
-    const measurementType = req.body.measurementType;
-    const measurementTypeId = req.body.measurementTypeId;
-    const newDate = req.body.newDate;
-    const newValue = req.body.newValue;
-    const newUnit = req.body.newUnit;
+    const clientId = req.params.clientId;
+    const entryId = req.params.entryId;
+    const updatedData = req.body; // Assuming you send the updated data in the request body
 
-    // Find the measurement data for the specified client
-    const measurement = await Measurements.findOne({
-      _id: measurementId,
-      clientId: clientId,
-    });
+    const measurement = await Measurements.findOne({ clientId: clientId });
 
     if (!measurement) {
-      return res
-        .status(404)
-        .json({ error: 'Measurement data not found for the client' });
+      return res.status(404).json({ message: 'Measurement not found' });
     }
 
-    // Find the array corresponding to the specified measurementType (e.g., weight, height)
-    const measurementArray = measurement[measurementType];
+    let entryUpdated = false;
 
-    if (!measurementArray) {
-      return res.status(404).json({ error: 'Measurement type not found' });
+    for (const measurementEntry of measurement.measurements) {
+      measurementEntry.entries = measurementEntry.entries.map((entry) => {
+        if (entry._id.toString() === entryId) {
+          entryUpdated = true;
+          // Update the entry with the new data
+          return { ...entry, ...updatedData };
+        }
+        return entry;
+      });
     }
 
-    // Find the index of the measurement object with the specified _id
-    const indexToUpdate = measurementArray.findIndex(
-      (item) => item._id.toString() === measurementTypeId
-    );
-
-    if (indexToUpdate === -1) {
-      return res.status(404).json({ error: 'Measurement data not found' });
+    if (!entryUpdated) {
+      return res.status(404).json({ message: 'Entry not found within the measurement' });
     }
 
-    // Update the value for the measurement object with the specified _id
-    measurementArray[indexToUpdate].date = newDate;
-    measurementArray[indexToUpdate].value = newValue;
-    measurementArray[indexToUpdate].unit = newUnit;
-
-    // Save the updated measurement object
     await measurement.save();
 
-    return res
-      .status(200)
-      .json({ message: 'Measurement data updated successfully' });
+    return res.status(200).json({ message: 'Entry updated successfully', measurement: measurement });
   } catch (error) {
     next(error);
   }
