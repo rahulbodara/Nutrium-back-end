@@ -14,8 +14,6 @@ const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
-const path = require('path');
-const { log } = require('mojito-cli/lib/log');
 
 // const registerClient = async (req, res, next) => {
 //   try {
@@ -141,7 +139,7 @@ const registerClient = async (req, res, next) => {
           const { status, importedIn, clients, new_client, updated, success } = req.body;
           const totalClientsAdded = clientsData.length;
           let countClients;
-          
+
           const successPercentage = ((countClients + existingClients.length) / totalClientsAdded) * 100;
           console.log('successPercentage-->>', successPercentage);
 
@@ -1824,27 +1822,38 @@ const createGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.id;
-    const { goalType, description, deadline, measurementType, value, unit } =
+    const { goals, description, deadline } =
       req.body;
 
-    const newGoalData = {
-      userId: userId,
-      clientId: clientId,
-      goalType,
-      description,
-      deadline,
-      measurementType,
-      value,
-      unit,
-    };
+    const existingGoal = await Goals.findOne({ userId: userId, clientId: clientId });
+    if (existingGoal) {
+      existingGoal.goals = goals;
+      existingGoal.description = description;
+      existingGoal.deadline = deadline;
+      const updatedGoal = await existingGoal.save();
+      return res.status(400).json({
+        success: true,
+        message: 'Goal updated successfully!!!',
+        EatingBehaviour: updatedGoal,
+      });
+    }
+    else {
+      const newGoalData = {
+        userId: userId,
+        clientId: clientId,
+        goals,
+        description,
+        deadline
+      };
+      const createGoal = await Goals.create(newGoalData);
 
-    const createGoal = await Goals.create(newGoalData);
+      return res.status(201).json({
+        success: true,
+        message: 'Goal created successfully!!!',
+        EatingBehaviour: createGoal,
+      });
+    }
 
-    return res.status(201).json({
-      success: true,
-      message: 'Goal created successfully!!!',
-      EatingBehaviour: createGoal,
-    });
   } catch (error) {
     next(error);
   }
@@ -1852,44 +1861,109 @@ const createGoal = async (req, res, next) => {
 
 const deleteGoal = async (req, res, next) => {
   try {
-    const userId = req.userId;
-    const clientId = req.body.clientId;
-    const goalId = req.params.goalId;
+    const clientId = req.params.clientId;
+    const idToDelete = req.params.id;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(userId) ||
-      !mongoose.Types.ObjectId.isValid(clientId)
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid userId or clientId' });
-    }
-
-    const deletedGoal = await Goals.findOneAndDelete({
-      _id: goalId,
-      userId: userId,
-      clientId: clientId,
-    });
-
-    if (!deletedGoal) {
-      return res.status(404).json({
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
         success: false,
-        message: 'Food Diaries not found!',
+        message: 'Invalid client ID',
       });
     }
 
+    const goalsData = await Goals.findOne({
+      clientId: clientId,
+    });
+
+    if (!goalsData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goals not found for the client',
+      });
+    }
+
+    goalsData.goals.forEach((goal) => {
+      goal.measurements.forEach((measurement) => {
+        measurement.entries = measurement.entries.filter(
+          (entry) => entry._id.toString() !== idToDelete
+        );
+      });
+
+      if (
+        goal._id.toString() === idToDelete &&
+        goal.goalType === 'Generic (Sports and food routines, among others)'
+      ) {
+        goalsData.goals = goalsData.goals.filter(
+          (goal) => goal._id.toString() !== idToDelete
+        );
+      }
+    });
+    9
+    await goalsData.save();
+
     return res.status(200).json({
       success: true,
-      message: 'Goal deleted successfully!!!',
+      message: 'Goal deleted successfully',
     });
   } catch (error) {
     next(error);
   }
 };
 
+const updateGoal = async (req, res, next) => {
+
+  try {
+
+    const clientId = req.params.clientId;
+    const idToUpdate = req.params.entryId;
+    const newValue = req.body.value;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+    const goalsData = await Goals.findOne({
+      clientId: clientId,
+    });
+
+    if (!goalsData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Goals not found for the client',
+      });
+    }  
+
+    for (const goal of goalsData.goals) {
+      for (const measurement of goal.measurements) {
+        const entryToUpdate = measurement.entries.find(
+          (entry) => entry._id.toString() === idToUpdate
+        );
+        
+        if (entryToUpdate) {
+          entryToUpdate.value = newValue;
+          await goalsData.save();
+          return res.status(200).json({
+            success: true,
+            message: 'Entry value updated successfully',
+          });
+        }
+      }
+    }
+
+
+  }catch (error) {
+    next(error);
+  }
+
+
+}
+
 const getGoalByMeasurementType = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
+    console.log('clientId: ' + clientId);
     const measurementType = req.params.measurementType;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
@@ -1899,27 +1973,40 @@ const getGoalByMeasurementType = async (req, res, next) => {
       });
     }
 
-    const goals = await Goals.find({
+    const goal = await Goals.find({
       clientId: clientId,
-      measurementType: measurementType,
     });
+    console.log('goal-->>', goal);
 
-    if (goals.length === 0) {
+    if (goal.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Goals not found for the client',
       });
     }
 
+    const measurements = [];
+
+    const measurement = goal.forEach((item) => {
+      item.goals?.forEach((goal) => {
+        goal.measurements?.forEach((measurement) => {
+          if (measurement.measurementtype === measurementType) {
+            measurements.push(measurement);
+          }
+        });
+      });
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Goals retrieved successfully',
-      goals: goals,
+      goals: measurements,
     });
   } catch (error) {
     next(error);
   }
 }
+
 
 const getAllGoals = async (req, res, next) => {
   try {
@@ -1932,19 +2019,45 @@ const getAllGoals = async (req, res, next) => {
       });
     }
 
-    const goals = await Goals.find({ clientId: clientId });
+    const goalsData = await Goals.find({
+      clientId: clientId,
+    });
 
-    if (goals.length === 0) {
+    if (goalsData.length === 0) {
       return res.status(404).json({
-        success: true,
+        success: false,
         message: 'Goals not found for the client',
       });
     }
 
+    // Extract entries array
+    let entries = [];
+    goalsData.forEach((userData) => {
+      if (userData.goals && Array.isArray(userData.goals)) {
+        userData.goals.forEach((goal) => {
+          if (goal.measurements && Array.isArray(goal.measurements)) {
+            goal.measurements.forEach((measurement) => {
+              if (measurement.entries && Array.isArray(measurement.entries)) {
+                entries.push(...measurement.entries);
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Extract Generic goals
+    const genericGoals = goalsData[0].goals.filter(
+      (goal) =>
+        goal.goalType === 'Generic (Sports and food routines, among others)'
+    );
+
+    const allGoals = [...entries, ...genericGoals];
+
     return res.status(200).json({
       success: true,
       message: 'Goals retrieved successfully',
-      goals: goals,
+      allGoals: allGoals,
     });
   } catch (error) {
     console.log(error);
@@ -2038,6 +2151,36 @@ const getMeasurementById = async (req, res, next) => {
       clientId: clientId,
     });
 
+    allMeasurement.measurements.forEach((measurementType) => {
+      measurementType.entries.sort((a, b) => {
+        const datePartsA = a.date.split('-');
+        const datePartsB = b.date.split('-');
+    
+        const dayA = parseInt(datePartsA[0]);
+        const monthA = parseInt(datePartsA[1]);
+        const yearA = parseInt(datePartsA[2]);
+    
+        const dayB = parseInt(datePartsB[0]);
+        const monthB = parseInt(datePartsB[1]);
+        const yearB = parseInt(datePartsB[2]);
+    
+        // First, compare years
+        if (yearA !== yearB) {
+          return yearB - yearA;
+        }
+    
+        // If years are the same, compare months
+        if (monthA !== monthB) {
+          return monthB - monthA;
+        }
+    
+        // If years and months are the same, compare days
+        return dayB - dayA;
+      });
+    });
+    
+    
+
     return res.status(200).json({
       success: true,
       Measurement: allMeasurement,
@@ -2100,7 +2243,7 @@ const updateMeasurementObject = async (req, res, next) => {
       measurementEntry.entries = measurementEntry.entries.map((entry) => {
         if (entry._id.toString() === entryId) {
           entryUpdated = true;
-          // Update the entry with the new data
+  
           return { ...entry, ...updatedData };
         }
         return entry;
@@ -2121,13 +2264,82 @@ const updateMeasurementObject = async (req, res, next) => {
 
 const getWeight = async (req, res, next) => {
   try {
-    const clientId = req.body.clientId;
+    const clientId = req.params.clientId;
     const clientWeight = await Measurements.find({ clientId: clientId });
+    const goal = await Goals.find({ clientId: clientId });
+    console.log('goal-->>', goal);
 
-    const goals = await Goals.find({ clientId: clientId, measurementType: 'Weight' }, { value: 1, unit: 1, deadline: 1 })
-      .sort({ deadline: 1 });
+    if (clientWeight.length > 0) {
+      clientWeight.forEach((measurement) => {
+        measurement.measurements.forEach((measurementType) => {
+          measurementType.entries.sort((a, b) => {
+            const datePartsA = a.date.split('-');
+            const datePartsB = b.date.split('-');
+    
+            const dayA = parseInt(datePartsA[0]);
+            const monthA = parseInt(datePartsA[1]) - 1; 
+            const yearA = parseInt(datePartsA[2]);
+    
+            const dayB = parseInt(datePartsB[0]);
+            const monthB = parseInt(datePartsB[1]) - 1; 
+            const yearB = parseInt(datePartsB[2]);
+    
+            const dateA = new Date(yearA, monthA, dayA);
+            const dateB = new Date(yearB, monthB, dayB);
+    
+            return dateB - dateA;
+          });
+        });
+      });
+    }
+    
+    const measurements = [];
 
-    if (!goals) {
+    const measurement = goal.forEach((item) => {
+      item.goals?.forEach((goal) => {
+        goal.measurements?.forEach((measurement) => {
+          if (measurement.measurementtype === 'Weight') {
+            measurement.entries?.forEach((entry) => {
+              measurements.push(entry)
+            });
+          }
+        });
+      });
+    });
+
+
+    const goalFatMeasurements = [];
+
+    const goalFat = goal.forEach((item) => {
+      item.goals?.forEach((goal) => {
+        goal.measurements?.forEach((measurement) => {
+          if (measurement.measurementtype === 'Body fat percentage') {
+            measurement.entries?.forEach((entry) => {
+              goalFatMeasurements.push(entry)
+            });
+          }
+        });
+      });
+    });
+
+    console.log('goalFatMeasurements-->>', goalFatMeasurements)
+
+
+    measurements.forEach((measurement) => {
+      const deadlineParts = measurement.deadline.split('-');
+      const year = parseInt(deadlineParts[2]);
+      const month = parseInt(deadlineParts[1]) - 1; // Months are zero-based
+      const day = parseInt(deadlineParts[0]);
+      const deadlineDate = new Date(year, month, day);
+      measurement.deadlineDate = deadlineDate;
+    });
+
+    measurements.sort((a, b) => a.deadlineDate - b.deadlineDate);
+
+    console.log('measurements-->>', measurements);
+
+
+    if (!goal) {
       return res.status(404).json({ message: 'weight not found' });
     }
 
@@ -2135,40 +2347,52 @@ const getWeight = async (req, res, next) => {
     let lastWeight = null;
     let goalWeight = null;
     let lastHeight = null;
+    let lastBodyFat = null;
+    let goalBodyFat = null;
 
     if (clientWeight.length > 0) {
-      const weightData = clientWeight.map((measurement) => ({
-        weight: measurement.weight,
+      const weightData = clientWeight.map((measurement) => ({  
+        weight: measurement.measurements.filter((entry) => entry.measurementtype === 'Weight')[0]?.entries
       }));
 
+
       const heightData = clientWeight.map((measurement) => ({
-        height: measurement.height,
+        height: measurement.measurements.filter((entry) => entry.measurementtype === "Height")[0]?.entries,
+      }));
+
+      const lastBodyFatData = clientWeight.map((measurement) => ({  
+        BodyFat: measurement.measurements.filter((entry) => entry.measurementtype === 'Body fat percentage')[0]?.entries
       }));
 
       const weight = weightData[0]?.weight;
       const height = heightData[0]?.height;
+      const BodyFat = lastBodyFatData[0]?.BodyFat;
 
       if (weight && weight.length > 0) {
-        lastWeight = weight[weight.length - 1];
+        lastWeight = weight[0];
       }
 
       if (height && height.length > 0) {
-        lastHeight = height[height.length - 1];
+        lastHeight = height[0];
+      }
+
+      if (BodyFat && BodyFat.length > 0) {
+        lastBodyFat = BodyFat[0];
       }
     }
 
-    if (goals.length > 0) {
-      goalWeight = goals[0];
-
-      for (const goal of goals) {
-        if (lastWeight && goal.deadline === lastWeight.date) {
-          goalWeight = goal;
-          break;
-        }
-      }
+    if (measurements.length > 0) {
+      goalWeight = measurements[0];
     }
+    if(goalFatMeasurements.length > 0){
+      goalBodyFat = goalFatMeasurements[0];
+    }
+
+
+
+
     else {
-      return res.status(404).json({ message: 'weight not found' });
+      return res.status(404).json({ message: 'weight or BodyFat not found' });
     }
 
     const heightInMeters = lastHeight ? lastHeight.value / 100 : null;
@@ -2177,6 +2401,12 @@ const getWeight = async (req, res, next) => {
     const heightInInches = lastHeight ? lastHeight.value / 2.54 : null;
     const idealWeight = lastHeight ? 52 + 1.9 * (heightInInches - 60) : null;
     const bmiIdealWeight = lastHeight ? idealWeight / (heightInMeters * heightInMeters) : null;
+    const bmiGoalWeight = goalWeight ? goalWeight.value / (heightInMeters * heightInMeters) : null;
+
+    if(goalWeight === null)
+    {
+      goalWeight = idealWeight;
+    }
 
 
     const bmi = await Measurements.findOneAndUpdate(
@@ -2193,10 +2423,12 @@ const getWeight = async (req, res, next) => {
       success: true,
       weight: lastWeight,
       goalWeight: goalWeight,
+      goalBodyFat:goalBodyFat,
       height: lastHeight,
+      bodyFat:lastBodyFat,
       Reference_value: idealWeight,
       bmiLastWeight: bmiLastWeight,
-      bmiGoalWeight: clientWeight[0]?.bmiGoalWeight || null,
+      bmiGoalWeight: bmiGoalWeight,
       bmiIdealWeight: bmiIdealWeight,
     });
   } catch (error) {
@@ -2233,28 +2465,6 @@ const updateBmi = async (req, res, next) => {
   }
 }
 
-const updateGoal = async (req, res, next) => {
-  try {
-
-    const goalId = req.params.goalId;
-    const clientId = req.body.clientId;
-
-    const goal = await Goals.findOneAndUpdate({ _id: goalId, clientId: clientId }, req.body, { new: true });
-
-    if (!goal) {
-      return res.status(404).json({ message: 'Goal not found' });
-    }
-
-    return res.status(200).json({
-      success: true,
-      goal: goal,
-    });
-
-  }
-  catch (error) {
-    next(error);
-  }
-}
 
 
 const getBodyFatPercentage = async (req, res, next) => {
