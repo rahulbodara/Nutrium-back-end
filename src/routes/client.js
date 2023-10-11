@@ -174,11 +174,13 @@ router.get('/client/food-diary/:clientId', isAuthenticated, getAllFoodDiary);
 //===================Goals===================//
 router.post('/client/goals/:id', isAuthenticated, createGoal);
 
-router.delete('/client/goals/:goalId', isAuthenticated, deleteGoal);
+router.delete('/client/goals/:clientId/:id', isAuthenticated, deleteGoal);
 
 router.get('/client/goals/:clientId/:measurementType',isAuthenticated, getGoalByMeasurementType);
 
 router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
+
+router.put('/client-updateGoal/:clientId/entries/:entryId', isAuthenticated, updateGoal);
 
 //===================Measurements===================//
 router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
@@ -208,12 +210,11 @@ router.put(
 
 
 //===================planning===================//
-router.get('/client-getWeight', isAuthenticated, getWeight);
+router.get('/client-getWeight/:clientId', isAuthenticated, getWeight);
 
 router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
 
 router.put('/client-updateBmi', isAuthenticated, updateBmi);
 
-router.put('/client-updateGoal/:goalId', isAuthenticated, updateGoal);
 
 module.exports = router;
