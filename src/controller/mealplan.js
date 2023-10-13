@@ -1,5 +1,7 @@
 const DailyPlan = require('../model/DailyPlan');
 const MealPlan = require('../model/Mealplan');
+const mongoose = require('mongoose');
+const Food = require('../model/Food');
 
 // const createMealPlan = async (req, res, next) => {
 
@@ -127,7 +129,7 @@ const createMealPlan = async (req, res, next) => {
           }
         }
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan  });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
@@ -155,11 +157,11 @@ const createMealPlan = async (req, res, next) => {
         const allDays = ['Every Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const remainingDays = allDays.filter(day => !currentDays.includes(day));
 
-       
-        const filter = { clientId, userId, days:{$in:mealPlanData.copyMealPlan} };
+
+        const filter = { clientId, userId, days: { $in: mealPlanData.copyMealPlan } };
         const update = { $pull: { days: { $in: mealPlanData.days } } };
         const data = await MealPlan.findOneAndUpdate(filter, update);
-        console.log('data-->>',data);
+        console.log('data-->>', data);
 
 
 
@@ -210,7 +212,7 @@ const createMealPlan = async (req, res, next) => {
           }
         }
 
-        const filter = { clientId, userId, days: {$in:mealPlanData.copyMealPlan} };
+        const filter = { clientId, userId, days: { $in: mealPlanData.copyMealPlan } };
         const update = { $pull: { days: { $in: mealPlanData.days } } };
         const result = await MealPlan.findOneAndUpdate(filter, update);
 
@@ -278,7 +280,7 @@ const createMealPlan = async (req, res, next) => {
       console.log("start");
       console.log(mealPlanData.copyMealPlan);
 
-      const everyDayPlan = await MealPlan.findOne({ clientId, days:{$in:mealPlanData.copyMealPlan} });
+      const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
 
       if (everyDayPlan) {
         mealPlanData.mealPlans = everyDayPlan.mealPlans;
@@ -332,6 +334,36 @@ const getMealPlan = async (req, res, next) => {
 
 //update meal plan
 
+// const updateMealPlan = async (req, res, next) => {
+//   try {
+//     const mealId = req.params.mealId;
+
+//     const mealPlan = await MealPlan.findOneAndUpdate(
+//       { _id: mealId },
+//       req.body,
+//       { new: true }
+//     )
+
+
+//     const pop = await MealPlan
+//       .findOne({ _id: mealId })
+//       .populate({
+//         path: 'mealPlans.foods.name mealPlans.foods.subfoods.name mealPlans.Appetizer.name mealPlans.Appetizer.subfoods.name',
+//         model: 'Food',
+//       })
+
+//     console.log('pop-->>', pop);
+
+//     if (!mealPlan) {
+//       return res.status(404).json({ message: 'Meal plan not found' });
+//     }
+//     return res.status(200).json({ message: "Meal plan updated successfully", pop });
+//   }
+//   catch (error) {
+//     next(error);
+//   }
+// }
+
 const updateMealPlan = async (req, res, next) => {
   try {
     const mealId = req.params.mealId;
@@ -341,15 +373,280 @@ const updateMealPlan = async (req, res, next) => {
       req.body,
       { new: true }
     );
+
+    const pop = await MealPlan
+      .findOne({ _id: mealId })
+      .populate({
+        path: 'mealPlans.foods.name mealPlans.Appetizer.name mealPlans.Dish.name mealPlans.Dessert.name mealPlans.Beverage.name ' +
+          'mealPlans.foods.subfoods.name mealPlans.Appetizer.subfoods.name mealPlans.Dish.subfoods.name mealPlans.Dessert.subfoods.name mealPlans.Beverage.subfoods.name',
+        model: 'Food',
+      });
+
+
+    const sumNutrients = (mealPlan) => {
+      const nutrientTotals = {
+        _id:0,
+        energy: 0,
+        fat: 0,
+        carbohydrate: 0,
+        protein: 0,
+        fiber: 0,
+      };
+
+      ["foods", "Appetizer", "Dessert", "Dish", "Beverage"].forEach((nutrientType) => {
+        mealPlan[nutrientType].forEach((food) => {
+          nutrientTotals._id = mealPlan._id;
+          nutrientTotals.energy += food.name.macronutrients.energy.value;
+          // nutrientTotals.energy += food.subfoods.map((item)=>item.name.macronutrients.energy.value);
+          nutrientTotals.fat += food.name.macronutrients.fat.value;
+          nutrientTotals.carbohydrate += food.name.macronutrients.carbohydrate.value;
+          nutrientTotals.protein += food.name.macronutrients.protein.value;
+          nutrientTotals.fiber += food.name.micronutrients.fiber.value;
+        });
+      });
+
+      return nutrientTotals;
+    };
+
+
+    const nutrientSumsForMealPlans = pop.mealPlans.map((mealPlan) => ({
+      
+      nutrientSums: sumNutrients(mealPlan),
+    }));
+
+    console.log('nutrientSumsForMealPlans-->>',nutrientSumsForMealPlans);
+
+
+    
+  
+
+
+    const modifiedPop = {
+      _id: pop._id,
+      clientId: pop.clientId,
+      userId: pop.userId,
+      days: pop.days,
+      copyMealPlan: pop.copyMealPlan,
+      creationMethod: pop.creationMethod,
+      mealPlans: pop.mealPlans.map(plan => ({
+        meal: plan.meal,
+        time: plan.time,
+        _id: plan._id,
+        foods: plan.foods.map(food => (
+        {
+
+            name: {
+              macronutrients: {
+                energy: food.name.macronutrients.energy,
+                fat: food.name.macronutrients.fat,
+                carbohydrate: food.name.macronutrients.carbohydrate,
+                protein: food.name.macronutrients.protein,
+              },
+              micronutrients: {
+                fiber: food.name.micronutrients.fiber,
+              },
+              name: food.name.name,
+              source: food.name.source,
+              group: food.name.group,
+              quantity: food.name.quantity,
+              userId: food.name.userId,
+              _id: food.name._id,
+            },
+            subfoods: food.subfoods.map(subfood => ({
+              name: {
+                macronutrients: {
+                  energy: subfood.name.macronutrients.energy,
+                  fat: subfood.name.macronutrients.fat,
+                  carbohydrate: subfood.name.macronutrients.carbohydrate,
+                  protein: subfood.name.macronutrients.protein,
+                },
+                micronutrients: {
+                  fiber: subfood.name.micronutrients.fiber,
+                },
+                name: subfood.name.name,
+                source: subfood.name.source,
+                group: subfood.name.group,
+                quantity: subfood.name.quantity,
+                userId: subfood.name.userId,
+                _id: subfood.name._id,
+              },
+            })),
+          })),
+        Appetizer: plan.Appetizer.map(appetizer => ({
+          name: {
+            macronutrients: {
+              energy: appetizer.name.macronutrients.energy,
+              fat: appetizer.name.macronutrients.fat,
+              carbohydrate: appetizer.name.macronutrients.carbohydrate,
+              protein: appetizer.name.macronutrients.protein,
+            },
+            micronutrients: {
+              fiber: appetizer.name.micronutrients.fiber,
+            },
+            name: appetizer.name.name,
+            source: appetizer.name.source,
+            group: appetizer.name.group,
+            quantity: appetizer.name.quantity,
+            userId: appetizer.name.userId,
+            _id: appetizer.name._id,
+          },
+          subfoods: appetizer.subfoods.map(subfood => ({
+            name: {
+              macronutrients: {
+                energy: subfood.name.macronutrients.energy,
+                fat: subfood.name.macronutrients.fat,
+                carbohydrate: subfood.name.macronutrients.carbohydrate,
+                protein: subfood.name.macronutrients.protein,
+              },
+              micronutrients: {
+                fiber: subfood.name.micronutrients.fiber,
+              },
+              name: subfood.name.name,
+              source: subfood.name.source,
+              group: subfood.name.group,
+              quantity: subfood.name.quantity,
+              userId: subfood.name.userId,
+              _id: subfood.name._id,
+            },
+          })),
+        })),
+        Dish: plan.Dish.map(dish => ({
+          name: {
+            macronutrients: {
+              energy: dish.name.macronutrients.energy,
+              fat: dish.name.macronutrients.fat,
+              carbohydrate: dish.name.macronutrients.carbohydrate,
+              protein: dish.name.macronutrients.protein,
+            },
+            micronutrients: {
+              fiber: dish.name.micronutrients.fiber,
+            },
+            name: dish.name.name,
+            source: dish.name.source,
+            group: dish.name.group,
+            quantity: dish.name.quantity,
+            userId: dish.name.userId,
+            _id: dish.name._id,
+          },
+          subfoods: dish.subfoods.map(subfood => ({
+            name: {
+              macronutrients: {
+                energy: subfood.name.macronutrients.energy,
+                fat: subfood.name.macronutrients.fat,
+                carbohydrate: subfood.name.macronutrients.carbohydrate,
+                protein: subfood.name.macronutrients.protein,
+              },
+              micronutrients: {
+                fiber: subfood.name.micronutrients.fiber,
+              },
+              name: subfood.name.name,
+              source: subfood.name.source,
+              group: subfood.name.group,
+              quantity: subfood.name.quantity,
+              userId: subfood.name.userId,
+              _id: subfood.name._id,
+            },
+          })),
+        })),
+        Dessert: plan.Dessert.map(dessert => ({
+          name: {
+            macronutrients: {
+              energy: dessert.name.macronutrients.energy,
+              fat: dessert.name.macronutrients.fat,
+              carbohydrate: dessert.name.macronutrients.carbohydrate,
+              protein: dessert.name.macronutrients.protein,
+            },
+            micronutrients: {
+              fiber: dessert.name.micronutrients.fiber,
+            },
+            name: dessert.name.name,
+            source: dessert.name.source,
+            group: dessert.name.group,
+            quantity: dessert.name.quantity,
+            userId: dessert.name.userId,
+            _id: dessert.name._id,
+          },
+          subfoods: dessert.subfoods.map(subfood => ({
+            name: {
+              macronutrients: {
+                energy: subfood.name.macronutrients.energy,
+                fat: subfood.name.macronutrients.fat,
+                carbohydrate: subfood.name.macronutrients.carbohydrate,
+                protein: subfood.name.macronutrients.protein,
+              },
+              micronutrients: {
+                fiber: subfood.name.micronutrients.fiber,
+              },
+              name: subfood.name.name,
+              source: subfood.name.source,
+              group: subfood.name.group,
+              quantity: subfood.name.quantity,
+              userId: subfood.name.userId,
+              _id: subfood.name._id,
+            },
+          })),
+        })),
+        Beverage: plan.Beverage.map(beverage => ({
+          name: {
+            macronutrients: {
+              energy: beverage.name.macronutrients.energy,
+              fat: beverage.name.macronutrients.fat,
+              carbohydrate: beverage.name.macronutrients.carbohydrate,
+              protein: beverage.name.macronutrients.protein,
+            },
+            micronutrients: {
+              fiber: beverage.name.micronutrients.fiber,
+            },
+            name: beverage.name.name,
+            source: beverage.name.source,
+            group: beverage.name.group,
+            quantity: beverage.name.quantity,
+            userId: beverage.name.userId,
+            _id: beverage.name._id,
+          },
+          subfoods: beverage.subfoods.map(subfood => ({
+            name: {
+              macronutrients: {
+                energy: subfood.name.macronutrients.energy,
+                fat: subfood.name.macronutrients.fat,
+                carbohydrate: subfood.name.macronutrients.carbohydrate,
+                protein: subfood.name.macronutrients.protein,
+              },
+              micronutrients: {
+                fiber: subfood.name.micronutrients.fiber,
+              },
+              name: subfood.name.name,
+              source: subfood.name.source,
+              group: subfood.name.group,
+              quantity: subfood.name.quantity,
+              userId: subfood.name.userId,
+              _id: subfood.name._id,
+            },
+          })),
+        })),
+        notes: plan.notes,
+        nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item)=> item.nutrientSums._id === plan._id)
+      })),
+    };
+
+
+
+
     if (!mealPlan) {
       return res.status(404).json({ message: 'Meal plan not found' });
     }
-    return res.status(200).json({ message: "Meal plan updated successfully", mealPlan });
-  }
-  catch (error) {
+
+    return res.status(200).json({ message: "Meal plan updated successfully", pop: modifiedPop });
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 }
+
+
+
+
+
 
 //delete perticular meal plan object
 
@@ -381,11 +678,11 @@ const deleteMealPlan = async (req, res, next) => {
     const clientId = req.body.clientId;
 
     const deletedRecord = await MealPlan.findByIdAndRemove(mealId);
-    const deletedDays = deletedRecord? deletedRecord.days : [];
+    const deletedDays = deletedRecord ? deletedRecord.days : [];
 
-    const everyDayRecord = await MealPlan.findOne({clientId,days:{$in:'Every Day'}});
-    if(everyDayRecord){
-      everyDayRecord.days = [...everyDayRecord.days,...deletedDays];
+    const everyDayRecord = await MealPlan.findOne({ clientId, days: { $in: 'Every Day' } });
+    if (everyDayRecord) {
+      everyDayRecord.days = [...everyDayRecord.days, ...deletedDays];
       await everyDayRecord.save();
     }
 

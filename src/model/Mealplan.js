@@ -11,54 +11,164 @@ const mealPlanSchema = mongoose.Schema({
   },
   mealPlans: [
     {
-      name: String,
+      meal: String,
       time: String,
       foods: [
         {
-          name: String,
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
           subfoods: [
             {
-              name: String,
+              name:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref : 'Food'
+              } 
             },
           ],
         },
       ],
       Appetizer: [
         {
-          name: String,
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
           subfoods: [
             {
-              name: String,
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              }
             },
           ],
         },
       ],
       Dish: [
         {
-          name: String,
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
           subfoods: [
             {
-              name: String,
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
             },
           ],
         },
       ],
       Dessert: [
         {
-          name: String,
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
           subfoods: [
             {
-              name: String,
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
             },
           ],
         },
       ],
       Beverage: [
         {
-          name: String,
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
           subfoods: [
             {
-              name: String,
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
+            },
+          ],  
+        },
+      ],
+      Soup: [
+        {
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
+          subfoods: [
+            {
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
+            },
+          ],  
+        },
+      ],
+      Firstcourse: [
+        {
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
+          subfoods: [
+            {
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
+            },
+          ],  
+        },
+      ],
+      Secondcourse: [
+        {
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
+          subfoods: [
+            {
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
+            },
+          ],  
+        },
+      ],
+      Sidedish: [
+        {
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
+          subfoods: [
+            {
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
+            },
+          ],  
+        },
+      ],
+      Others: [
+        {
+          name: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+          },
+          subfoods: [
+            {
+              name: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food',
+              },
             },
           ],  
         },
