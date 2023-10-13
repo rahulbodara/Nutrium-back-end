@@ -37,13 +37,14 @@ const {
   deleteGoal,
   getGoalByMeasurementType,
   getAllGoals,
+  addMeasurementPreference,
+  getAllMeasurementPreferences,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,
   deleteMeasurementObject,
   updateMeasurementObject,
-  getBodyFatPercentage,
-  getWeight,
+  getClientInfo,
   updateBmi,
   updateGoal
 } = require('../controller/client/client');
@@ -183,6 +184,11 @@ router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
 router.put('/client-updateGoal/:clientId/entries/:entryId', isAuthenticated, updateGoal);
 
 //===================Measurements===================//
+
+router.get('/client-getpreferences', isAuthenticated, getAllMeasurementPreferences);
+
+router.post('/client/measurement-preference',isAuthenticated, addMeasurementPreference);
+
 router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
 
 router.post(
@@ -210,11 +216,9 @@ router.put(
 
 
 //===================planning===================//
-router.get('/client-getWeight/:clientId', isAuthenticated, getWeight);
+router.get('/client-getWeight/:clientId', isAuthenticated, getClientInfo);
 
-router.get('/client-getBodyFat', isAuthenticated, getBodyFatPercentage);
-
-router.put('/client-updateBmi', isAuthenticated, updateBmi);
+router.put('/client-updateBmi/:clientId', isAuthenticated, updateBmi);
 
 
 module.exports = router;

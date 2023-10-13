@@ -14,6 +14,7 @@ const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
+const measurementPreference = require('../../model/measurementsPreferences');
 
 // const registerClient = async (req, res, next) => {
 //   try {
@@ -1947,6 +1948,7 @@ const updateGoal = async (req, res, next) => {
           return res.status(200).json({
             success: true,
             message: 'Entry value updated successfully',
+            data:goalsData
           });
         }
       }
@@ -2060,6 +2062,66 @@ const getAllGoals = async (req, res, next) => {
       allGoals: allGoals,
     });
   } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}
+
+const addMeasurementPreference = async(req,res,next) => {
+  try{
+    const userId = req.userId;
+    const {anthropometricmeasurements,analyticaldata,bodycompotion,deducemeasurement} = req.body;
+
+    const existingMeasurementPreference = await measurementPreference.findOne({userId: userId});
+
+    if(existingMeasurementPreference)
+    {
+      existingMeasurementPreference.anthropometricmeasurements = anthropometricmeasurements;
+      existingMeasurementPreference.analyticaldata = analyticaldata;
+      existingMeasurementPreference.bodycompotion = bodycompotion;
+      existingMeasurementPreference.deducemeasurement = deducemeasurement;
+      const updatedPreference = await existingMeasurementPreference.save();
+      return res.status(400).json({
+        success: true,
+        message: 'Preference updated successfully!!!',
+        preference: updatedPreference,
+      });
+    }
+    else
+    {
+      const newPreferenceData = {
+        userId: userId,
+        anthropometricmeasurements,
+        analyticaldata,
+        bodycompotion,
+        deducemeasurement
+      };
+      const createPreference = await measurementPreference.create(newPreferenceData);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Preference created successfully!!!',
+        preference: createPreference,
+      });
+    }
+  }
+  catch(error){
+    next(error);
+  }
+}
+
+const getAllMeasurementPreferences = async(req,res,next) => {
+  try{
+    console.log('req.user:-->> ' + req.user)
+    const userId = req.userId;
+    const preferences = await measurementPreference.findOne({userId});
+    return res.status(200).json({
+      success: true,
+      message: 'Preferences retrieved successfully',
+      preferences: preferences
+    })
+  }
+  catch(error){
     console.log(error);
     next(error);
   }
@@ -2262,7 +2324,7 @@ const updateMeasurementObject = async (req, res, next) => {
   }
 };
 
-const getWeight = async (req, res, next) => {
+const getClientInfo = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
     const clientWeight = await Measurements.find({ clientId: clientId });
@@ -2409,28 +2471,48 @@ const getWeight = async (req, res, next) => {
     }
 
 
-    const bmi = await Measurements.findOneAndUpdate(
-      { clientId: clientId },
-      {
+    let bmi = await Measurements.findOne({ clientId: clientId });; 
+
+    if (bmi.bmiGoalWeight === null) {
+      bmi = await Measurements.findOneAndUpdate(
+        { clientId: clientId },
+        { bmiGoalWeight: bmiGoalWeight },
+        { new: true }
+      );
+    }
+    
+    if (bmi && bmi.bmiGoalWeight === null) {
+      console.log('<<--start-->>');
+      return res.status(200).json({
+        success: true,
+        weight: lastWeight,
+        goalWeight: goalWeight,
+        goalBodyFat: goalBodyFat,
+        height: lastHeight,
+        bodyFat: lastBodyFat,
         Reference_value: idealWeight,
         bmiLastWeight: bmiLastWeight,
+        bmiGoalWeight: bmiGoalWeight,
         bmiIdealWeight: bmiIdealWeight,
-      },
-      { new: true }
-    );
+      });
+    } else {
+      console.log('<<--end-->>');
+      return res.status(200).json({
+        success: true,
+        weight: lastWeight,
+        goalWeight: goalWeight,
+        goalBodyFat: goalBodyFat,
+        height: lastHeight,
+        bodyFat: lastBodyFat,
+        Reference_value: idealWeight,
+        bmiLastWeight: bmiLastWeight,
+        bmiGoalWeight: bmi ? bmi.bmiGoalWeight : null,
+        bmiIdealWeight: bmiIdealWeight,
+      });
+    }
+    
 
-    return res.status(200).json({
-      success: true,
-      weight: lastWeight,
-      goalWeight: goalWeight,
-      goalBodyFat:goalBodyFat,
-      height: lastHeight,
-      bodyFat:lastBodyFat,
-      Reference_value: idealWeight,
-      bmiLastWeight: bmiLastWeight,
-      bmiGoalWeight: bmiGoalWeight,
-      bmiIdealWeight: bmiIdealWeight,
-    });
+    
   } catch (error) {
     console.log(error);
     next(error);
@@ -2440,14 +2522,12 @@ const getWeight = async (req, res, next) => {
 
 const updateBmi = async (req, res, next) => {
   try {
-    const { clientId, Reference_value, bmiLastWeight, bmiGoalWeight, bmiIdealWeight } = req.body;
+    const clientId = req.params.clientId;
+    const {bmiGoalWeight} = req.body;
     const bmi = await Measurements.findOneAndUpdate(
       { clientId: clientId },
       {
-        Reference_value,
-        bmiLastWeight,
-        bmiGoalWeight,
-        bmiIdealWeight,
+       bmiGoalWeight:bmiGoalWeight
       },
       { new: true }
     );
@@ -2459,57 +2539,6 @@ const updateBmi = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       bmi: bmi,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-
-
-const getBodyFatPercentage = async (req, res, next) => {
-  try {
-    const clientId = req.body.clientId;
-    const clientBodyFat = await Measurements.find({ clientId: clientId });
-
-    const goals = await Goals.find({ clientId: clientId, measurementType: 'Body fat percentage' }, { value: 1, unit: 1, deadline: 1 })
-      .sort({ deadline: 1 });
-
-    let lastBodyFat = null;
-    let goalBodyFat = null;
-
-    if (clientBodyFat.length > 0) {
-      const fatData = clientBodyFat.map((measurement) => ({
-        bodyFatPercentage: measurement.bodyFatPercentage,
-      }));
-
-      const bodyFatPercentage = fatData[0]?.bodyFatPercentage;
-
-      if (bodyFatPercentage && bodyFatPercentage.length > 0) {
-        lastBodyFat = bodyFatPercentage[bodyFatPercentage.length - 1];
-      }
-    }
-
-    if (goals.length > 0) {
-      goalBodyFat = goals[0];
-
-      for (const goal of goals) {
-        if (goal.deadline === lastBodyFat.date) {
-          goalBodyFat = goal;
-          break;
-        }
-      }
-    }
-    else {
-      return res.status(200).json({
-        message: 'Body fat percentage not found',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      bodyFat: lastBodyFat,
-      goalBodyFat: goalBodyFat
     });
   } catch (error) {
     next(error);
@@ -2555,13 +2584,14 @@ module.exports = {
   deleteGoal,
   getGoalByMeasurementType,
   getAllGoals,
+  addMeasurementPreference,
+  getAllMeasurementPreferences,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,
   deleteMeasurementObject,
   updateMeasurementObject,
-  getWeight,
-  getBodyFatPercentage,
+  getClientInfo,
   updateBmi,
   updateGoal
 };
