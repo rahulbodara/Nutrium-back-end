@@ -14,7 +14,6 @@ const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
-const measurementPreference = require('../../model/measurementsPreferences');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -1388,7 +1387,7 @@ const createFileDetail = async (req, res, next) => {
     const { name, description, date, category } = req.body;
     const userId = req.userId;
     const clientId = req.params.id;
-    const file = req.file.path;
+    const file = req.file.filename;
     if (!file) {
       return res.status(400).json({
         success: false,
@@ -2067,66 +2066,6 @@ const getAllGoals = async (req, res, next) => {
   }
 }
 
-const addMeasurementPreference = async(req,res,next) => {
-  try{
-    const userId = req.userId;
-    const {anthropometricmeasurements,analyticaldata,bodycompotion,deducemeasurement} = req.body;
-
-    const existingMeasurementPreference = await measurementPreference.findOne({userId: userId});
-
-    if(existingMeasurementPreference)
-    {
-      existingMeasurementPreference.anthropometricmeasurements = anthropometricmeasurements;
-      existingMeasurementPreference.analyticaldata = analyticaldata;
-      existingMeasurementPreference.bodycompotion = bodycompotion;
-      existingMeasurementPreference.deducemeasurement = deducemeasurement;
-      const updatedPreference = await existingMeasurementPreference.save();
-      return res.status(400).json({
-        success: true,
-        message: 'Preference updated successfully!!!',
-        preference: updatedPreference,
-      });
-    }
-    else
-    {
-      const newPreferenceData = {
-        userId: userId,
-        anthropometricmeasurements,
-        analyticaldata,
-        bodycompotion,
-        deducemeasurement
-      };
-      const createPreference = await measurementPreference.create(newPreferenceData);
-
-      return res.status(201).json({
-        success: true,
-        message: 'Preference created successfully!!!',
-        preference: createPreference,
-      });
-    }
-  }
-  catch(error){
-    next(error);
-  }
-}
-
-const getAllMeasurementPreferences = async(req,res,next) => {
-  try{
-    console.log('req.user:-->> ' + req.user)
-    const userId = req.userId;
-    const preferences = await measurementPreference.findOne({userId});
-    return res.status(200).json({
-      success: true,
-      message: 'Preferences retrieved successfully',
-      preferences: preferences
-    })
-  }
-  catch(error){
-    console.log(error);
-    next(error);
-  }
-}
-
 const registerMeasurement = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -2584,8 +2523,6 @@ module.exports = {
   deleteGoal,
   getGoalByMeasurementType,
   getAllGoals,
-  addMeasurementPreference,
-  getAllMeasurementPreferences,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,

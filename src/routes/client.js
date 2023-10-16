@@ -37,8 +37,6 @@ const {
   deleteGoal,
   getGoalByMeasurementType,
   getAllGoals,
-  addMeasurementPreference,
-  getAllMeasurementPreferences,
   registerMeasurement,
   addNewMeasurement,
   getMeasurementById,
@@ -184,10 +182,6 @@ router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
 router.put('/client-updateGoal/:clientId/entries/:entryId', isAuthenticated, updateGoal);
 
 //===================Measurements===================//
-
-router.get('/client-getpreferences', isAuthenticated, getAllMeasurementPreferences);
-
-router.post('/client/measurement-preference',isAuthenticated, addMeasurementPreference);
 
 router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
 
