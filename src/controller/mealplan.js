@@ -644,12 +644,7 @@ const updateMealPlan = async (req, res, next) => {
 }
 
 
-
-
-
-
 //delete perticular meal plan object
-
 const deleteMealPlanObject = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -672,6 +667,7 @@ const deleteMealPlanObject = async (req, res, next) => {
 
 }
 
+// delete whole meal Plan
 const deleteMealPlan = async (req, res, next) => {
   try {
     const mealId = req.params.mealId;

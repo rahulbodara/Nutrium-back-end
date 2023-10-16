@@ -16,198 +16,198 @@ const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
 const measurementPreference = require('../../model/measurementsPreferences');
 
-// const registerClient = async (req, res, next) => {
-//   try {
-//     const userId = req.userId;
-//     const {
-//       fullName,
-//       gender,
-//       workplace,
-//       dateOfBirth,
-//       phoneNumber,
-//       email,
-//       occupation,
-//       country,
-//       zipcode,
-//     } = req.body;
-
-//     const exist = await Client.findOne({ email, userId: { $ne: userId } });
-
-//     if (exist) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'This email already exists',
-//       });
-//     }
-//     const client = await Client.create({
-//       userId,
-//       fullName,
-//       gender,
-//       workplace,
-//       dateOfBirth,
-//       phoneNumber,
-//       email,
-//       occupation,
-//       country,
-//       zipcode,
-//     });
-
-//     // await getScheduleAppointmentInfo(client._id);
-
-//     return res.status(200).json({
-//       success: true,
-//       message: 'Client added successfully',
-//       client,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//   }
-// };
-
 const registerClient = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const clientsData = req.body;
+    const {
+      fullName,
+      gender,
+      workplace,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      occupation,
+      country,
+      zipcode,
+    } = req.body;
 
-    const emails = clientsData.map(client => client.email);
+    const exist = await Client.findOne({ email, userId: { $ne: userId } });
 
-    const existingClients = await Client.find({ email: { $in: emails }, userId });
-
-    const emailsNotInExistingClients = emails.filter(email => !existingClients.some(client => client.email === email));
-    console.log(emailsNotInExistingClients);
-
-    const addedClients = [];
-    const updatedClients = [];
-    const invalidEmails = [];
-    const importedHistory = [];
-    let importHistoryCreated = false;
-
-
-    for (const clientData of clientsData) {
-      const {
-        fullName,
-        gender,
-        workplace,
-        dateOfBirth,
-        phoneNumber,
-        email,
-        occupation,
-        country,
-        zipcode,
-        address,
-        tags,
-        processNumber,
-        nationalNumber,
-        healthNumber,
-        vatNumber,
-        isImported,
-      } = clientData;
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        invalidEmails.push(email);
-        continue;
-      }
-      if (isImported === true) {
-
-
-        await Client.updateMany({ email, userId, isImported: true }, {
-          fullName,
-          gender,
-          workplace,
-          dateOfBirth,
-          phoneNumber,
-          email,
-          occupation,
-          country,
-          zipcode,
-          address,
-          tags,
-          processNumber,
-          nationalNumber,
-          healthNumber,
-          vatNumber,
-          isImported,
-        },
-          { upsert: true });
-
-
-        const updatedData = await Client.find({ email, userId });
-        updatedClients.push(...updatedData);
-
-        if (!importHistoryCreated) {
-          const { status, importedIn, clients, new_client, updated, success } = req.body;
-          const totalClientsAdded = clientsData.length;
-          let countClients;
-
-          const successPercentage = ((countClients + existingClients.length) / totalClientsAdded) * 100;
-          console.log('successPercentage-->>', successPercentage);
-
-          const History = new importHistory({
-            status,
-            importedIn,
-            clients: totalClientsAdded,
-            new_client: countClients,
-            updated: existingClients.length,
-            success: `${successPercentage}%`
-          });
-          console.log('History-->>', History);
-
-          // await History.save();
-          importedHistory.push(History);
-
-          importHistoryCreated = true;
-        }
-
-      } else {
-        const exist = await Client.find({ email, userId });
-        const existEmails = exist.map(client => client.email);
-
-        if (exist.length > 0) {
-          return res.status(400).json({
-            success: false,
-            message: `${existEmails.join(', ')} email already exists`,
-          });
-        } else {
-          // Create a new client
-          const client = await Client.create({
-            userId,
-            fullName,
-            gender,
-            workplace,
-            dateOfBirth,
-            phoneNumber,
-            email,
-            occupation,
-            country,
-            zipcode,
-            address,
-            tags,
-            processNumber,
-            nationalNumber,
-            healthNumber,
-            vatNumber,
-            isImported,
-          });
-          addedClients.push(client);
-        }
-      }
+    if (exist) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email already exists',
+      });
     }
+    const client = await Client.create({
+      userId,
+      fullName,
+      gender,
+      workplace,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      occupation,
+      country,
+      zipcode,
+    });
+
+    // await getScheduleAppointmentInfo(client._id);
 
     return res.status(200).json({
       success: true,
-      message: 'Clients processed successfully',
-      addedClients,
-      updatedClients,
-      invalidEmails,
-      importedHistory
+      message: 'Client added successfully',
+      client,
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
+
+// const registerClient = async (req, res, next) => {
+//   try {
+//     const userId = req.userId;
+//     const clientsData = req.body;
+
+//     const emails = clientsData.map(client => client.email);
+
+//     const existingClients = await Client.find({ email: { $in: emails }, userId });
+
+//     const emailsNotInExistingClients = emails.filter(email => !existingClients.some(client => client.email === email));
+//     console.log(emailsNotInExistingClients);
+
+//     const addedClients = [];
+//     const updatedClients = [];
+//     const invalidEmails = [];
+//     const importedHistory = [];
+//     let importHistoryCreated = false;
+
+
+//     for (const clientData of clientsData) {
+//       const {
+//         fullName,
+//         gender,
+//         workplace,
+//         dateOfBirth,
+//         phoneNumber,
+//         email,
+//         occupation,
+//         country,
+//         zipcode,
+//         address,
+//         tags,
+//         processNumber,
+//         nationalNumber,
+//         healthNumber,
+//         vatNumber,
+//         isImported,
+//       } = clientData;
+
+//       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//       if (!emailRegex.test(email)) {
+//         invalidEmails.push(email);
+//         continue;
+//       }
+//       if (isImported === true) {
+
+
+//         await Client.updateMany({ email, userId, isImported: true }, {
+//           fullName,
+//           gender,
+//           workplace,
+//           dateOfBirth,
+//           phoneNumber,
+//           email,
+//           occupation,
+//           country,
+//           zipcode,
+//           address,
+//           tags,
+//           processNumber,
+//           nationalNumber,
+//           healthNumber,
+//           vatNumber,
+//           isImported,
+//         },
+//           { upsert: true });
+
+
+//         const updatedData = await Client.find({ email, userId });
+//         updatedClients.push(...updatedData);
+
+//         if (!importHistoryCreated) {
+//           const { status, importedIn, clients, new_client, updated, success } = req.body;
+//           const totalClientsAdded = clientsData.length;
+//           let countClients;
+
+//           const successPercentage = ((countClients + existingClients.length) / totalClientsAdded) * 100;
+//           console.log('successPercentage-->>', successPercentage);
+
+//           const History = new importHistory({
+//             status,
+//             importedIn,
+//             clients: totalClientsAdded,
+//             new_client: countClients,
+//             updated: existingClients.length,
+//             success: `${successPercentage}%`
+//           });
+//           console.log('History-->>', History);
+
+//           // await History.save();
+//           importedHistory.push(History);
+
+//           importHistoryCreated = true;
+//         }
+
+//       } else {
+//         const exist = await Client.find({ email, userId });
+//         const existEmails = exist.map(client => client.email);
+
+//         if (exist.length > 0) {
+//           return res.status(400).json({
+//             success: false,
+//             message: `${existEmails.join(', ')} email already exists`,
+//           });
+//         } else {
+//           // Create a new client
+//           const client = await Client.create({
+//             userId,
+//             fullName,
+//             gender,
+//             workplace,
+//             dateOfBirth,
+//             phoneNumber,
+//             email,
+//             occupation,
+//             country,
+//             zipcode,
+//             address,
+//             tags,
+//             processNumber,
+//             nationalNumber,
+//             healthNumber,
+//             vatNumber,
+//             isImported,
+//           });
+//           addedClients.push(client);
+//         }
+//       }
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Clients processed successfully',
+//       addedClients,
+//       updatedClients,
+//       invalidEmails,
+//       importedHistory
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 
 const addImportHistory = async (req, res, next) => {
 
