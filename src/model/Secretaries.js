@@ -23,10 +23,6 @@ const secretariesSchema = new mongoose.Schema({
   image:{
     type: String,
   },
-  isActive: {
-    type: Number,
-    default: 1,
-  },
 });
 
 const Secretaries = mongoose.model('Secretaries', secretariesSchema);

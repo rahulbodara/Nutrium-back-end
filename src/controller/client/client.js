@@ -491,9 +491,8 @@ const getScheduleAppointmentInfo = async (clientId) => {
 const deleteClient = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const deletedClient = await Client.findOneAndUpdate(
+    const deletedClient = await Client.findOneAndDelete(
       { _id: clientId, isActive: 1 },
-      { $set: { isActive: 0 } },
       { new: true }
     );
 

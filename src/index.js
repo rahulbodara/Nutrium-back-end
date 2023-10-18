@@ -34,6 +34,7 @@ const sendInvite = require('./routes/sendInvitaion');
 const client_Recommendation = require('./routes/recommendation')
 const dailyplan = require('./routes/dailyplan');
 const professionalPreference = require('./routes/professionalpreference');
+const privacyandnotification = require('./routes/privacyAndnotification');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -99,6 +100,7 @@ app.use('/api/v1', sendInvite);
 app.use('/api/v1', client_Recommendation);
 app.use('/api/v1', dailyplan);
 app.use('/api/v1', professionalPreference);
+app.use('/api/v1', privacyandnotification);
 
 app.use(HandleError);
 app.use(notFoundMiddleware);

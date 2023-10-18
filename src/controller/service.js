@@ -20,7 +20,6 @@ const getAllServices = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
-      isActive: 1,
     };
     const services = await Service.find(query);
     if (!services) {
@@ -37,7 +36,6 @@ const getServiceById = async (req, res, next) => {
     const query = {
       _id: req.params.id,
       userId: req.userId,
-      isActive: 1,
     };
 
     const service = await Service.findOne(query);
@@ -59,7 +57,6 @@ const updateService = async (req, res, next) => {
     const query = {
       _id: serviceId,
       userId: req.userId,
-      isActive: 1,
     };
 
     const updatedService = await Service.findOneAndUpdate(
@@ -84,12 +81,10 @@ const deleteService = async (req, res, next) => {
     const query = {
       _id: serviceId,
       userId: req.userId,
-      isActive: 1,
     };
 
-    const deletedService = await Service.findOneAndUpdate(
+    const deletedService = await Service.findOneAndDelete(
       query,
-      { $set: { isActive: 0 } },
       { new: true }
     );
 

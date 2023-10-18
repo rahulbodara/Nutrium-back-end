@@ -18,11 +18,10 @@ const appointmentInfo = new mongoose.Schema({
   expectations: {
     type: String,
   },
-  clinicGoals: [
-    {
-      type: String,
-    },
-  ],
+  clinicGoals:
+  {
+    type: Array,
+  },
   clinicGoalsInfo: {
     type: String,
   },

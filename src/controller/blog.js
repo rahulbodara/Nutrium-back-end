@@ -30,12 +30,10 @@ const deleteBlog = async (req, res, next) => {
     const query = {
       _id: blogId,
       userId: req.userId,
-      isActive: 1,
     };
 
-    const deletedBlog = await Blog.findOneAndUpdate(
+    const deletedBlog = await Blog.findOneAndDelete(
       query,
-      { $set: { isActive: 0 } },
       { new: true }
     );
 

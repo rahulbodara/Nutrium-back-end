@@ -29,10 +29,6 @@ const serviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  isActive: {
-    type: Number,
-    default: 1,
-  },
 });
 
 const Service = mongoose.model('Service', serviceSchema);
