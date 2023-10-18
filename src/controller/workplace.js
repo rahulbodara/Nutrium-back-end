@@ -25,7 +25,6 @@ const getAllWorkplaces = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
-      isActive: 1,
     };
     const workplace = await Workplace.find(query);
     if (!workplace) {
@@ -42,7 +41,6 @@ const getWorkplaceById = async (req, res, next) => {
     const query = {
       _id: req.params.id,
       userId: req.userId,
-      isActive: 1,
     };
     const workplace = await Workplace.findOne(query);
 
@@ -64,7 +62,6 @@ const updateWorkplace = async (req, res, error) => {
     const query = {
       _id: workplaceId,
       userId: userId,
-      isActive: 1,
     };
 
     const updatedWorkplace = await Workplace.findOneAndUpdate(
@@ -89,11 +86,9 @@ const deleteWorkplace = async (req, res, next) => {
     const query = {
       _id: workplaceId,
       userId: req.userId,
-      isActive: 1,
     };
-    const deletedWorkplace = await Workplace.findOneAndUpdate(
+    const deletedWorkplace = await Workplace.findOneAndDelete(
       query,
-      { $set: { isActive: 0 } },
       { new: true }
     );
 

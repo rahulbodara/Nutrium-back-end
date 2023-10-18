@@ -55,11 +55,7 @@ const workplaceSchema = new mongoose.Schema({
         message: 'Invalid zip code format',
       },
     },
-  },
-  isActive: {
-    type: Number,
-    default: 1,
-  },
+  }
 });
 
 const Workplace = mongoose.model('Workplace', workplaceSchema);

@@ -15,7 +15,7 @@ const createProfessionalPreference = async (req, res, next) => {
                 measurementspreferences
             } = req.body;
 
-        const existingPreference = await professionalPreference.findOne({userId:userId});
+        const existingPreference = await professionalPreference.findOne({ userId: userId });
 
         if (existingPreference) {
             existingPreference.systempreference = systempreference;
@@ -54,6 +54,24 @@ const createProfessionalPreference = async (req, res, next) => {
     }
 };
 
+const getprofessionPreference = async (req, res, next) => {
+    try {
+        const userId = req.userId;
+        const existingPreference = await professionalPreference.findOne({ userId: userId });
+
+        if (existingPreference) {
+            return res.status(200).json({ success: true, message: "professionPreference found successfully", data: existingPreference });
+        }
+        else {
+            return res.status(404).json({ success: false, message: "No professionPreference found" });
+        }
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+}
+
 module.exports = {
-    createProfessionalPreference
+    createProfessionalPreference,
+    getprofessionPreference
 }

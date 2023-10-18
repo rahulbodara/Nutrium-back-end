@@ -35,7 +35,6 @@ const getAllSecretaries = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
-      isActive: 1,
     };
     const secretaries = await Secretaries.find(query).sort('-_id');
     if (!secretaries) {
@@ -52,7 +51,6 @@ const getSecretariesById = async (req, res, next) => {
     const query = {
       _id: req.params.id,
       userId: req.userId,
-      isActive: 1,
     };
 
     const secretaries = await Secretaries.findOne(query);
@@ -126,11 +124,9 @@ const deleteSecretaries = async (req, res, next) => {
     const query = {
       _id: secretariesId,
       userId: req.userId,
-      isActive: 1,
     };
-    const deletedSecretaries = await Secretaries.findOneAndUpdate(
+    const deletedSecretaries = await Secretaries.findOneAndDelete(
       query,
-      { $set: { isActive: 0 } },
       { new: true }
     );
 
