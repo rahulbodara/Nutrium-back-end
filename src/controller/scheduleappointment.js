@@ -11,6 +11,8 @@ const createAppointment = async (req, res, next) => {
     const {
       status,
       videoConsultation,
+      start,
+      end,
       schedulingNotes,
       newStartTime,
       newEndTime,
@@ -20,6 +22,8 @@ const createAppointment = async (req, res, next) => {
     } = req.body;
     const appointment = new Appointment({
       status,
+      start,
+      end,
       videoConsultation,
       schedulingNotes,
       newStartTime,
@@ -59,8 +63,8 @@ const updateAppointment = async (req, res, next) => {
       status,
       videoConsultation,
       schedulingNotes,
-      newStartTime,
-      newEndTime,
+      start,
+      end
     } = req.body;
 
     const appointment = await Appointment.findById(appointmentId);
@@ -78,9 +82,6 @@ const updateAppointment = async (req, res, next) => {
     appointment.status = status;
     appointment.videoConsultation = videoConsultation;
     appointment.schedulingNotes = schedulingNotes;
-
-    const start = new Date(newStartTime);
-    const end = new Date(newEndTime);
 
     appointment.start = start;
     appointment.end = end;
