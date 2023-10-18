@@ -129,7 +129,7 @@ const createMealPlan = async (req, res, next) => {
           }
         }
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: {$in:mealPlanData.copyMealPlan} });
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
@@ -192,7 +192,7 @@ const createMealPlan = async (req, res, next) => {
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
 
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: {$in: mealPlanData.copyMealPlan} });
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
@@ -247,8 +247,8 @@ const createMealPlan = async (req, res, next) => {
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
 
         // Check if copyMealPlan is specified and set to 'Copy from Every Day'
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: mealPlanData.copyMealPlan });
-        console.log("everyDayPlan---------------------->", everyDayPlan)
+        const everyDayPlan = await MealPlan.findOne({ clientId, days:{$in: mealPlanData.copyMealPlan} });
+        console.log("everyDayPlan---------------------->single", everyDayPlan)
 
         if (everyDayPlan) {
           mealPlanData.mealPlans = everyDayPlan.mealPlans;
