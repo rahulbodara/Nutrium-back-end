@@ -12,7 +12,6 @@ const getAllSchedules = async (req, res, next) => {
 const setSchedule = async (req, res, next) => {
     try {
       const userId = req.userId; 
-      console.log(userId, "dddd");
       const { day, isEnabled, startTime, endTime } = req.body;
       let schedule = await Schedule.findOne({ day });
   

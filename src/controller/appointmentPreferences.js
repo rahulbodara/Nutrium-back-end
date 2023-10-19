@@ -61,7 +61,6 @@ const updateAppointmentPref = async (req, res, next) => {
       res.status(404).json({ message: 'not found' });
     }
   } catch (error) {
-    console.log('error------', error);
     next(error);
   }
 };

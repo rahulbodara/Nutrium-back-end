@@ -30,7 +30,6 @@ const sendInvitation = async (req, res, next) => {
 const acceptInvitation = async (req, res, next) => {
   try {
     const { inviteId } = req.query;
-    console.log('inviteId', inviteId);
 
     await SendInvitation.findByIdAndUpdate(
       inviteId,
@@ -43,7 +42,6 @@ const acceptInvitation = async (req, res, next) => {
       message: 'Invitation accepted successfully',
     });
   } catch (error) {
-    console.log('error---------->', error);
     next(error);
   }
 };
@@ -84,7 +82,6 @@ const deleteInvitation = async (req, res, next) => {
       deleteInvitations,
     });
   } catch (error) {
-    console.log('error---------->', error);
     next(error);
   }
 };

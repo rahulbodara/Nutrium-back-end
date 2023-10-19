@@ -2,7 +2,6 @@ const CalenderSetting = require('../model/CalenderSetting');
 
 const createCalenderSetting = async (req, res, next) => {
   const userId = req.userId;
-  console.log(userId, 'pp');
   try {
     const { birthdaySystem, appointmentRequestSystem } = req.body;
 
