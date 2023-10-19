@@ -129,7 +129,7 @@ const createMealPlan = async (req, res, next) => {
           }
         }
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: {$in:mealPlanData.copyMealPlan} });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
@@ -192,7 +192,7 @@ const createMealPlan = async (req, res, next) => {
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
 
 
-        const everyDayPlan = await MealPlan.findOne({ clientId, days: {$in: mealPlanData.copyMealPlan} });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
         console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
@@ -247,7 +247,7 @@ const createMealPlan = async (req, res, next) => {
         const remainingDays = allDays.filter(day => !selectedDays.includes(day));
 
         // Check if copyMealPlan is specified and set to 'Copy from Every Day'
-        const everyDayPlan = await MealPlan.findOne({ clientId, days:{$in: mealPlanData.copyMealPlan} });
+        const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
         console.log("everyDayPlan---------------------->single", everyDayPlan)
 
         if (everyDayPlan) {
@@ -385,7 +385,7 @@ const updateMealPlan = async (req, res, next) => {
 
     const sumNutrients = (mealPlan) => {
       const nutrientTotals = {
-        _id:0,
+        _id: 0,
         energy: 0,
         fat: 0,
         carbohydrate: 0,
@@ -410,15 +410,15 @@ const updateMealPlan = async (req, res, next) => {
 
 
     const nutrientSumsForMealPlans = pop.mealPlans.map((mealPlan) => ({
-      
+
       nutrientSums: sumNutrients(mealPlan),
     }));
 
-    console.log('nutrientSumsForMealPlans-->>',nutrientSumsForMealPlans);
+    console.log('nutrientSumsForMealPlans-->>', nutrientSumsForMealPlans);
 
 
-    
-  
+
+
 
 
     const modifiedPop = {
@@ -433,7 +433,7 @@ const updateMealPlan = async (req, res, next) => {
         time: plan.time,
         _id: plan._id,
         foods: plan.foods.map(food => (
-        {
+          {
 
             name: {
               macronutrients: {
@@ -625,7 +625,7 @@ const updateMealPlan = async (req, res, next) => {
           })),
         })),
         notes: plan.notes,
-        nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item)=> item.nutrientSums._id === plan._id)
+        nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item) => item.nutrientSums._id === plan._id)
       })),
     };
 

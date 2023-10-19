@@ -40,7 +40,6 @@ const createBillingInformation = async (userId, billingData) => {
 const updateBillingInformation = async (req, res, next) => {
   try {
     const billingInformationId = req.params.id;
-    console.log(billingInformationId);
     const { name, country, vatIdentificationNumber, address, city, zipcode } =
       req.body;
 
@@ -50,7 +49,6 @@ const updateBillingInformation = async (req, res, next) => {
         { name, country, vatIdentificationNumber, address, city, zipcode },
         { new: true }
       );
-    console.log(updatedBillingInformation, "qewed");
     if (!updatedBillingInformation) {
       return res.status(404).json({ message: "Billing information not found" });
     }

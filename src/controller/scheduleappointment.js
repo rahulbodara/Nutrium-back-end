@@ -1,5 +1,5 @@
 const Appointment = require("../model/ScheduleApointment");
-
+const mongoose = require("mongoose");
 const videoConsultationValues = {
   without_video_call: "Not available in this option",
   google_meet: "Generated after saving appointment",
@@ -8,6 +8,7 @@ const videoConsultationValues = {
 
 const createAppointment = async (req, res, next) => {
   try {
+    const userId = req.userId;
     const {
       status,
       videoConsultation,
@@ -20,10 +21,23 @@ const createAppointment = async (req, res, next) => {
       workplace,
       clientName
     } = req.body;
+
+    const startDateTime = new Date(start); 
+    const endDateTime = new Date(end); 
+    
+    function addTimeZoneOffset(inputDate) {
+      const timeZoneOffset = inputDate.getTimezoneOffset();
+      const dateWithOffset = new Date(inputDate.getTime() - timeZoneOffset * 60000);
+      return dateWithOffset;
+    }
+    const startWithOffset = addTimeZoneOffset(startDateTime);
+    const endWithOffset = addTimeZoneOffset(endDateTime);
+
     const appointment = new Appointment({
+      userId,
       status,
-      start,
-      end,
+      start:startWithOffset,
+      end:endWithOffset,
       videoConsultation,
       schedulingNotes,
       newStartTime,
@@ -44,7 +58,22 @@ const createAppointment = async (req, res, next) => {
 
 const getAllAppointments = async (req, res, next) => {
   try {
-    const getallappointments = await Appointment.find();
+    const userId = req.userId;
+    const userIdObj = new mongoose.Types.ObjectId(userId);
+
+    const getallappointments = await Appointment.aggregate([
+      {
+        $match:{userId: userIdObj},
+      },
+      {
+        $lookup:{
+          from: "clients",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "client"
+        }
+      }
+    ])
 
     return res.status(200).json({
       success: true,
@@ -67,6 +96,17 @@ const updateAppointment = async (req, res, next) => {
       end
     } = req.body;
 
+    const startDateTime = new Date(start); 
+    const endDateTime = new Date(end); 
+    
+    function addTimeZoneOffset(inputDate) {
+      const timeZoneOffset = inputDate.getTimezoneOffset();
+      const dateWithOffset = new Date(inputDate.getTime() - timeZoneOffset * 60000);
+      return dateWithOffset;
+    }
+    const startWithOffset = addTimeZoneOffset(startDateTime);
+    const endWithOffset = addTimeZoneOffset(endDateTime);
+
     const appointment = await Appointment.findById(appointmentId);
 
     if (!appointment) {
@@ -83,8 +123,8 @@ const updateAppointment = async (req, res, next) => {
     appointment.videoConsultation = videoConsultation;
     appointment.schedulingNotes = schedulingNotes;
 
-    appointment.start = start;
-    appointment.end = end;
+    appointment.start = startWithOffset;
+    appointment.end = endWithOffset;
     appointment.videoLink = updatedVideoLink;
 
     const updatedAppointment = await appointment.save();
@@ -95,7 +135,7 @@ const updateAppointment = async (req, res, next) => {
   }
 };
 
-const deleteAppointment = async(req,res,next) => {
+const deleteAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
     const appointment = await Appointment.findById(appointmentId);

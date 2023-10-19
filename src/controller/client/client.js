@@ -738,7 +738,6 @@ const createPregnancyHistory = async (req, res, next) => {
 
             const lactationMonthsRemaining =
               durationOfLactationInMonths - diffInMonths;
-            console.log('lactationMonthsRemaining -->>', lactationMonthsRemaining);
 
             const lastLactationMonthEndDate = new Date(
               lactationStartDate.getFullYear(),
@@ -807,7 +806,7 @@ const createPregnancyHistory = async (req, res, next) => {
             (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
           );
 
-          console.log('remainingDays -->>', remainingDays);
+
 
           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
             status = 'completed';
@@ -986,7 +985,7 @@ const updatePregnancyHistory = async (req, res, next) => {
             (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
           );
 
-          console.log('remainingDays -->>', remainingDays);
+
 
           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
             status = 'completed';
@@ -1963,7 +1962,6 @@ const updateGoal = async (req, res, next) => {
 const getGoalByMeasurementType = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
-    console.log('clientId: ' + clientId);
     const measurementType = req.params.measurementType;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
@@ -1976,7 +1974,6 @@ const getGoalByMeasurementType = async (req, res, next) => {
     const goal = await Goals.find({
       clientId: clientId,
     });
-    console.log('goal-->>', goal);
 
     if (goal.length === 0) {
       return res.status(404).json({
@@ -2196,7 +2193,6 @@ const deleteMeasurementObject = async (req, res, next) => {
     const entryId = req.params.entryId;
 
     const measurement = await Measurements.findOne({ clientId: clientId });
-    console.log(measurement);
     if (!measurement) {
       return res.status(404).json({ message: 'Measurement not found' });
     }
@@ -2267,7 +2263,6 @@ const getClientInfo = async (req, res, next) => {
     const clientId = req.params.clientId;
     const clientWeight = await Measurements.find({ clientId: clientId });
     const goal = await Goals.find({ clientId: clientId });
-    console.log('goal-->>', goal);
 
     if (clientWeight.length > 0) {
       clientWeight.forEach((measurement) => {
@@ -2322,7 +2317,6 @@ const getClientInfo = async (req, res, next) => {
       });
     });
 
-    console.log('goalFatMeasurements-->>', goalFatMeasurements)
 
 
     measurements.forEach((measurement) => {
@@ -2336,7 +2330,6 @@ const getClientInfo = async (req, res, next) => {
 
     measurements.sort((a, b) => a.deadlineDate - b.deadlineDate);
 
-    console.log('measurements-->>', measurements);
 
 
     if (!goal) {
@@ -2420,7 +2413,7 @@ const getClientInfo = async (req, res, next) => {
     }
     
     if (bmi && bmi.bmiGoalWeight === null) {
-      console.log('<<--start-->>');
+
       return res.status(200).json({
         success: true,
         weight: lastWeight,
@@ -2434,7 +2427,6 @@ const getClientInfo = async (req, res, next) => {
         bmiIdealWeight: bmiIdealWeight,
       });
     } else {
-      console.log('<<--end-->>');
       return res.status(200).json({
         success: true,
         weight: lastWeight,

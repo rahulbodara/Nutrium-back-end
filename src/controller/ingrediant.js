@@ -5,16 +5,12 @@ const axios = require("axios");
 const createIngredient = async (req, res, next) => {
   try {
     const userId = req.userId;
-    console.log("userId", userId);
     const { foodId } = req.body;
-    console.log(req.body, "body");
     const idAvailble = Food.find(_id === foodId);
-    console.log(idAvailble, "idididiid");
     const newIngredient = await Ingredient.create({
       userId,
       ingredient: [foodId],
     });
-    console.log(newIngredient, "ppppp");
     res.status(201).json({
       success: true,
       message: "Ingredient created successfully",

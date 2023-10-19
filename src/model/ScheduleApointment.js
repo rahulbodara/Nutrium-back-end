@@ -4,6 +4,12 @@ const appointmentSchema = new mongoose.Schema({
   clientId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+    ref: 'Clients'
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'user'
   },
   clientName: {
     type: String,

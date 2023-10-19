@@ -14,8 +14,7 @@ const Secretaries = require('../model/Secretaries');
 
 const SignUp = async (req, res, next) => {
   try {
-    console.log(createSubscription, 'hshhs');
-    console.log('adfasfas');
+
     const {
       fullName,
       email,
@@ -147,7 +146,7 @@ const getUserProfile = async (req, res, next) => {
     };
 
     const user = await User.findOne(query).select('-password');
-    console.log(query);
+
     if (!user) {
       return res.status(404).json({ message: 'User Not Found!' });
     }
@@ -275,7 +274,7 @@ const resetPassword = async (req, res, next) => {
 
     return res.status(200).json({ message: 'Password reset successful.' });
   } catch (error) {
-    console.log('error------>', error);
+  
     next(error.message);
   }
 };
