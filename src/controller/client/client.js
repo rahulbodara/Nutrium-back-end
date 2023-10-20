@@ -2028,33 +2028,33 @@ const getAllGoals = async (req, res, next) => {
     }
 
     // Extract entries array
-    let entries = [];
-    goalsData.forEach((userData) => {
-      if (userData.goals && Array.isArray(userData.goals)) {
-        userData.goals.forEach((goal) => {
-          if (goal.measurements && Array.isArray(goal.measurements)) {
-            goal.measurements.forEach((measurement) => {
-              if (measurement.entries && Array.isArray(measurement.entries)) {
-                entries.push(...measurement.entries);
-              }
-            });
-          }
-        });
-      }
-    });
+    // let entries = [];
+    // goalsData.forEach((userData) => {
+    //   if (userData.goals && Array.isArray(userData.goals)) {
+    //     userData.goals.forEach((goal) => {
+    //       if (goal.measurements && Array.isArray(goal.measurements)) {
+    //         goal.measurements.forEach((measurement) => {
+    //           if (measurement.entries && Array.isArray(measurement.entries)) {
+    //             entries.push(...measurement.entries);
+    //           }
+    //         });
+    //       }
+    //     });
+    //   }
+    // });
 
-    // Extract Generic goals
-    const genericGoals = goalsData[0].goals.filter(
-      (goal) =>
-        goal.goalType === 'Generic (Sports and food routines, among others)'
-    );
+    // // Extract Generic goals
+    // const genericGoals = goalsData[0].goals.filter(
+    //   (goal) =>
+    //     goal.goalType === 'Generic (Sports and food routines, among others)'
+    // );
 
-    const allGoals = [...entries, ...genericGoals];
+    // const allGoals = [...entries, ...genericGoals];
 
     return res.status(200).json({
       success: true,
       message: 'Goals retrieved successfully',
-      allGoals: allGoals,
+      allGoals: goalsData,
     });
   } catch (error) {
     console.log(error);
