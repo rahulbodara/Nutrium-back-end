@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { isAuthenticated } = require('../middleware/auth');
-const { createMealPlan,getMealPlan,updateMealPlan,deleteMealPlan,deleteMealPlanObject } = require('../controller/mealplan');
+const { createMealPlan,getMealPlan,updateMealPlan,deleteMealPlan,deleteMealPlanObject,deleteFoods,deleteParticularFood } = require('../controller/mealplan');
 
 router.post('/meal-plan/:clientId', isAuthenticated, createMealPlan);
 
@@ -12,5 +12,9 @@ router.put('/updateMeal-plan/:mealId', isAuthenticated, updateMealPlan);
 router.delete('/deleteMeal-plan/:mealId', isAuthenticated, deleteMealPlan);
 
 router.delete('/deleteMeal-planObject/:mealId/:objectId', isAuthenticated, deleteMealPlanObject);
+
+router.delete('/deleteMeal-foods/:mealId/:objectId', isAuthenticated, deleteFoods);
+
+router.delete('/deleteparticularfoods/:mealId/:objectId', isAuthenticated,deleteParticularFood);
 
 module.exports = router;
