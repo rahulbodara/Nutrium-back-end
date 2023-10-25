@@ -1423,12 +1423,16 @@ const updateFileDetail = async (req, res, next) => {
     const clientId = req.body.clientId;
     const { name, description, date, category } = req.body;
     const newFile = {
-      file: req.file.filename,
       name: name,
       description: description,
       date: date,
       category: category,
     };
+
+    if (req.file && req.file.filename) {
+      newFile.file = req.file.filename;
+    }
+
     if (
       !mongoose.Types.ObjectId.isValid(userId) ||
       !mongoose.Types.ObjectId.isValid(clientId) ||
