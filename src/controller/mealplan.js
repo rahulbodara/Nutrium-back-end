@@ -2,6 +2,7 @@ const DailyPlan = require('../model/DailyPlan');
 const MealPlan = require('../model/Mealplan');
 const mongoose = require('mongoose');
 const Food = require('../model/Food');
+const Mealplan = require('../model/Mealplan');
 
 // const createMealPlan = async (req, res, next) => {
 
@@ -434,7 +435,7 @@ const updateMealPlan = async (req, res, next) => {
         _id: plan._id,
         foods: plan.foods.map(food => (
           {
-            _id:food._id,
+            _id: food._id,
             name: {
               macronutrients: {
                 energy: food?.name?.macronutrients?.energy,
@@ -741,12 +742,13 @@ const deleteFoods = async (req, res, next) => {
 
 }
 
-const deleteParticularFood = async(req,res,next) => {
+const deleteParticularFood = async (req, res, next) => {
   try {
     const userId = req.userId;
 
     const mealId = req.params.mealId;
     const objectId = req.params.objectId;
+    const foodId = req.body.foodId;
 
     const mealPlan = await MealPlan.findOne({ _id: mealId, userId });
 
@@ -754,30 +756,61 @@ const deleteParticularFood = async(req,res,next) => {
       return res.status(404).json({ message: 'No matching meal found' });
     }
 
-    let found = false;
+    const mealTypes = ['foods', 'Appetizer', 'Dish', 'Dessert', 'Beverage', 'Soup', 'Firstcourse', 'Secondcourse', 'Sidedish', 'Others'];
 
-    mealPlan.mealPlans.forEach((meal) => {
-      meal.foods.forEach((food, index) => {
-        if (food.name == objectId) {
-          if (food.subfoods.length > 0) {
-            // Set the first subfood as the new "foods" name
-            meal.foods[index].name = food.subfoods[0].name;
-            // Remove the first subfood
-            meal.foods[index].subfoods.shift();
-          } else {
-            // If no subfoods, remove the entire food item
-            meal.foods.splice(index, 1);
-          }
-          found = true;
-        }
-      });
-    });
+    const meal = mealPlan.mealPlans
+      .map((meal) => mealTypes.map((type) => meal[type].filter((item) => item._id.toString() === objectId)))
+      .flat()
+      .filter((foods) => foods.length > 0);
 
-    if (!found) {
-      return res.status(404).json({ message: 'Food not found' });
+    if (meal[0][0].name === null) {
+      return res.status(404).json({ message: 'No matching food found' });
     }
 
-    await mealPlan.save();  
+    if (meal) {
+      const indexToDelete = meal[0].findIndex((food) => food.name.toString() === foodId);
+      if (indexToDelete !== -1) {
+        meal[0][indexToDelete].name = null;
+
+        let m1 = null;
+        meal[0].forEach((food) => {
+          if (food.subfoods.length > 0) {
+            m1 = food.subfoods[0].name
+          }
+        });
+
+        if (meal[0][0].name === null && m1 != null) {
+          meal[0][0].name = m1;
+          meal[0].forEach((food) => {
+
+            if (food.subfoods.length >= 1) {
+              food.subfoods.splice(0, 1);
+            }
+          });
+        } else if (meal[0][0].name === null && m1 === null) {
+          console.log('<<--start-->>');
+          meal.splice(0, 1);
+        }
+      }
+    }
+
+    const submeal = mealPlan.mealPlans
+      .map((meal) => mealTypes.map((type) => meal[type].filter((item) => item._id.toString() === objectId)))
+      .flat()
+      .filter((foods) => foods.length > 0);
+
+    if (submeal) {
+      for (const submealArray of submeal) {
+        for (const subfoodArray of submealArray) {
+          const indexToDelete = subfoodArray.subfoods.findIndex((subfood) => subfood.name.toString() === foodId);
+          if (indexToDelete !== -1) {
+            subfoodArray.subfoods.splice(indexToDelete, 1);
+          }
+        }
+      }
+    }
+
+    await mealPlan.save();
 
     return res.status(200).json({ message: 'Food deleted successfully' });
   } catch (error) {
