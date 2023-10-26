@@ -702,8 +702,12 @@ const createPregnancyHistory = async (req, res, next) => {
     let status = null;
 
     if (typeOfRecord === 'Pregnancy and lactation') {
+      if(durationOfLactationInMonths === 0)
+      {
+        return res.status(400).send({ message: 'Please enter a value greater than or equal to 1.' });
+      }
       if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).send({ message: 'lastMenstrualPeriod,beginningOfLactation,durationOfLactationInMonths are required fields.' });
+        return res.status(400).send({ message: 'This fields are required.' });
       }
       let trimester;
       let lactationMonthsRemaining = null

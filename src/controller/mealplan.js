@@ -106,32 +106,24 @@ const createMealPlan = async (req, res, next) => {
 
 
     if (mealPlanData.days && mealPlanData.days.length > 0) {
-      console.log("condition start ---------------->")
       const allDaysSelected = mealPlanData.days.length === 7;
 
       if (mealPlanData.creationMethod === 'Merge selected days into a single version') {
 
         const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
-        console.log('existingDays-->>', existingDays);
-
         for (const existingRecord of existingDays) {
           const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
-          console.log('allDaysMatch-->>', allDaysMatch);
-
           if (allDaysMatch) {
             const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
-            console.log('del_obj:-->> ', del_obj);
           } else {
             const updateResult = await MealPlan.updateOne(
               { _id: existingRecord._id },
               { $pull: { days: { $in: mealPlanData.days } } }
             );
-            console.log('updateResult:-->> ', updateResult);
           }
         }
 
         const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
-        console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
           mealPlanData.mealPlans = everyDayPlan.mealPlans;
@@ -150,7 +142,6 @@ const createMealPlan = async (req, res, next) => {
           { $set: { ...mealPlanData, clientId } },
           { upsert: true }
         );
-        console.log('result: ', result);
 
         const existingPlan = await MealPlan.findOne({ clientId });
         const currentDays = existingPlan ? existingPlan.days : [];
@@ -162,7 +153,6 @@ const createMealPlan = async (req, res, next) => {
         const filter = { clientId, userId, days: { $in: mealPlanData.copyMealPlan } };
         const update = { $pull: { days: { $in: mealPlanData.days } } };
         const data = await MealPlan.findOneAndUpdate(filter, update);
-        console.log('data-->>', data);
 
 
 
@@ -171,21 +161,17 @@ const createMealPlan = async (req, res, next) => {
 
         const selectedDays = mealPlanData.days;
         const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
-        console.log('existingDays-->>', existingDays);
 
         for (const existingRecord of existingDays) {
           const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
-          console.log('allDaysMatch-->>', allDaysMatch);
 
           if (allDaysMatch) {
             const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
-            console.log('del_obj:-->> ', del_obj);
           } else {
             const updateResult = await MealPlan.updateOne(
               { _id: existingRecord._id },
               { $pull: { days: { $in: mealPlanData.days } } }
             );
-            console.log('updateResult:-->> ', updateResult);
           }
         }
 
@@ -194,7 +180,6 @@ const createMealPlan = async (req, res, next) => {
 
 
         const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
-        console.log("everyDayPlan---------------------->", everyDayPlan)
 
         if (everyDayPlan) {
           mealPlanData.mealPlans = everyDayPlan.mealPlans;
@@ -225,21 +210,16 @@ const createMealPlan = async (req, res, next) => {
 
 
         const existingDays = await MealPlan.find({ clientId, days: { $in: mealPlanData.days } });
-        console.log('existingDays-->>', existingDays);
 
         for (const existingRecord of existingDays) {
           const allDaysMatch = existingRecord.days.every(day => mealPlanData.days.includes(day));
-          console.log('allDaysMatch-->>', allDaysMatch);
-
           if (allDaysMatch) {
             const del_obj = await MealPlan.deleteOne({ _id: existingRecord._id });
-            console.log('del_obj:-->> ', del_obj);
           } else {
             const updateResult = await MealPlan.updateOne(
               { _id: existingRecord._id },
               { $pull: { days: { $in: mealPlanData.days } } }
             );
-            console.log('updateResult:-->> ', updateResult);
           }
         }
 
@@ -249,7 +229,6 @@ const createMealPlan = async (req, res, next) => {
 
         // Check if copyMealPlan is specified and set to 'Copy from Every Day'
         const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
-        console.log("everyDayPlan---------------------->single", everyDayPlan)
 
         if (everyDayPlan) {
           mealPlanData.mealPlans = everyDayPlan.mealPlans;
@@ -271,15 +250,11 @@ const createMealPlan = async (req, res, next) => {
         const filter = { clientId, userId, days: 'Every Day' };
         const update = { $pull: { days: { $in: mealPlanData.days } } };
         const result = await MealPlan.findOneAndUpdate(filter, update);
-        console.log('result--->>', result);
-        console.log('mealPlanData.days-->>', mealPlanData.days);
         const updatedMealPlan = await MealPlan.findOne({ clientId });
 
         res.status(201).json({ data: updatedMealPlan, message: 'Meal plan created or updated successfully' });
       }
     } else {
-      console.log("start");
-      console.log(mealPlanData.copyMealPlan);
 
       const everyDayPlan = await MealPlan.findOne({ clientId, days: { $in: mealPlanData.copyMealPlan } });
 
@@ -378,8 +353,8 @@ const updateMealPlan = async (req, res, next) => {
     const pop = await MealPlan
       .findOne({ _id: mealId })
       .populate({
-        path: 'mealPlans.foods.name mealPlans.Appetizer.name mealPlans.Dish.name mealPlans.Dessert.name mealPlans.Beverage.name ' +
-          'mealPlans.foods.subfoods.name mealPlans.Appetizer.subfoods.name mealPlans.Dish.subfoods.name mealPlans.Dessert.subfoods.name mealPlans.Beverage.subfoods.name',
+        path: 'mealPlans.foods.foodId mealPlans.Appetizer.foodId mealPlans.Dish.foodId mealPlans.Dessert.foodId mealPlans.Beverage.foodId mealPlans.Soup.foodId mealPlans.Firstcourse.foodId mealPlans.Secondcourse.foodId mealPlans.Sidedish.foodId mealPlans.Others.foodId ' +
+          'mealPlans.foods.subfoods.foodId mealPlans.Appetizer.subfoods.foodId mealPlans.Dish.subfoods.foodId mealPlans.Dessert.subfoods.foodId mealPlans.Beverage.subfoods.foodId mealPlans.Soup.subfoods.foodId mealPlans.Firstcourse.subfoods.foodId mealPlans.Secondcourse.subfoods.foodId mealPlans.Sidedish.subfoods.foodId mealPlans.Others.subfoods.foodId ',
         model: 'Food',
       });
 
@@ -394,244 +369,294 @@ const updateMealPlan = async (req, res, next) => {
         fiber: 0,
       };
 
-      ["foods", "Appetizer", "Dessert", "Dish", "Beverage"].forEach((nutrientType) => {
+      ["foods", "Appetizer", "Dessert", "Dish", "Beverage","Soup","Firstcourse","Secondcourse","Sidedish","Others"].forEach((nutrientType) => {
         mealPlan[nutrientType].forEach((food) => {
           nutrientTotals._id = mealPlan._id;
-          nutrientTotals.energy += food?.name?.macronutrients?.energy?.value;
-          // nutrientTotals.energy += food.subfoods.map((item)=>item.name.macronutrients.energy.value);
-          nutrientTotals.fat += food?.name?.macronutrients?.fat?.value;
-          nutrientTotals.carbohydrate += food?.name?.macronutrients?.carbohydrate?.value;
-          nutrientTotals.protein += food?.name?.macronutrients?.protein?.value;
-          nutrientTotals.fiber += food?.name?.micronutrients?.fiber?.value;
+          nutrientTotals.energy += food?.foodId?.macronutrients?.energy?.value;
+          nutrientTotals.fat += food?.foodId?.macronutrients?.fat?.value;
+          nutrientTotals.carbohydrate += food?.foodId?.macronutrients?.carbohydrate?.value;
+          nutrientTotals.protein += food?.foodId?.macronutrients?.protein?.value;
+          nutrientTotals.fiber += food?.foodId?.micronutrients?.fiber?.value;
         });
       });
 
       return nutrientTotals;
     };
 
-
     const nutrientSumsForMealPlans = pop.mealPlans.map((mealPlan) => ({
 
       nutrientSums: sumNutrients(mealPlan),
     }));
 
-    console.log('nutrientSumsForMealPlans-->>', nutrientSumsForMealPlans);
-
-
-
-
-
+    console.log('nutrientSumsForMealPlans--->>>',nutrientSumsForMealPlans);
+    //   _id: pop._id,
+    //   clientId: pop.clientId,
+    //   userId: pop.userId,
+    //   days: pop.days,
+    //   copyMealPlan: pop.copyMealPlan,
+    //   creationMethod: pop.creationMethod,
+    //   mealPlans: pop.mealPlans.map(plan => ({
+    //     meal: plan.meal,
+    //     time: plan.time,
+    //     _id: plan._id,
+    //     foods: plan.foods.map(food => (
+    //       {
+    //          _id: food._id,
+    //           name: food?.name?.name,
+    //           source: food?.name?.source,
+    //           group: food?.name?.group,
+    //           quantity: food?.name?.quantity,
+    //           foodId: food?.name?.foodId,
+    //         subfoods: food.subfoods.map(subfood => ({
+    //           name: {
+    //             name: subfood?.name?.name,
+    //             source: subfood?.name?.source,
+    //             group: subfood?.name?.group,
+    //             quantity: subfood?.name?.quantity,
+    //             userId: subfood?.name?.userId,
+    //             _id: subfood?.name?._id,
+    //           },
+    //         })),
+    //       })),
+    //     Appetizer: plan.Appetizer.map(appetizer => ({
+    //       name: {
+    //         name: appetizer?.name?.name,
+    //         source: appetizer?.name?.source,
+    //         group: appetizer?.name?.group,
+    //         quantity: appetizer?.name?.quantity,
+    //         userId: appetizer?.name?.userId,
+    //         _id: appetizer?.name?._id,
+    //       },
+    //       subfoods: appetizer.subfoods.map(subfood => ({
+    //         name: {
+    //           name: subfood?.name?.name,
+    //           source: subfood?.name?.source,
+    //           group: subfood?.name?.group,
+    //           quantity: subfood?.name?.quantity,
+    //           userId: subfood?.name?.userId,
+    //           _id: subfood?.name?._id,
+    //         },
+    //       })),
+    //     })),
+    //     Dish: plan.Dish.map(dish => ({
+    //       name: {
+    //         name: dish?.name?.name,
+    //         source: dish?.name?.source,
+    //         group: dish?.name?.group,
+    //         quantity: dish?.name?.quantity,
+    //         userId: dish?.name?.userId,
+    //         _id: dish?.name?._id,
+    //       },
+    //       subfoods: dish.subfoods.map(subfood => ({
+    //         name: {
+    //           name: subfood?.name?.name,
+    //           source: subfood?.name?.source,
+    //           group: subfood?.name?.group,
+    //           quantity: subfood?.name?.quantity,
+    //           userId: subfood?.name?.userId,
+    //           _id: subfood?.name?._id,
+    //         },
+    //       })),
+    //     })),
+    //     Dessert: plan.Dessert.map(dessert => ({
+    //       name: {
+    //         name: dessert?.name?.name,
+    //         source: dessert?.name?.source,
+    //         group: dessert?.name?.group,
+    //         quantity: dessert?.name?.quantity,
+    //         userId: dessert?.name?.userId,
+    //         _id: dessert?.name?._id,
+    //       },
+    //       subfoods: dessert.subfoods.map(subfood => ({
+    //         name: {
+    //           name: subfood?.name?.name,
+    //           source: subfood?.name?.source,
+    //           group: subfood?.name?.group,
+    //           quantity: subfood?.name?.quantity,
+    //           userId: subfood?.name?.userId,
+    //           _id: subfood?.name?._id,
+    //         },
+    //       })),
+    //     })),
+    //     Beverage: plan.Beverage.map(beverage => ({
+    //       name: {
+    //         name: beverage?.name?.name,
+    //         source: beverage?.name?.source,
+    //         group: beverage?.name?.group,
+    //         quantity: beverage?.name?.quantity,
+    //         userId: beverage?.name?.userId,
+    //         _id: beverage?.name?._id,
+    //       },
+    //       subfoods: beverage.subfoods.map(subfood => ({
+    //         name: {
+    //           name: subfood?.name?.name,
+    //           source: subfood?.name?.source,
+    //           group: subfood?.name?.group,
+    //           quantity: subfood?.name?.quantity,
+    //           userId: subfood?.name?.userId,
+    //           _id: subfood?.name?._id,
+    //         },
+    //       })),
+    //     })),
+    //     notes: plan.notes,
+    //     nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item) => item.nutrientSums._id === plan._id)
+    //   })),
+    // };
 
     const modifiedPop = {
-      _id: pop._id,
-      clientId: pop.clientId,
       userId: pop.userId,
-      days: pop.days,
-      copyMealPlan: pop.copyMealPlan,
-      creationMethod: pop.creationMethod,
+      clientId: pop.clientId,
       mealPlans: pop.mealPlans.map(plan => ({
         meal: plan.meal,
         time: plan.time,
-        _id: plan._id,
-        foods: plan.foods.map(food => (
-          {
-            _id: food._id,
-            name: {
-              macronutrients: {
-                energy: food?.name?.macronutrients?.energy,
-                fat: food?.name?.macronutrients?.fat,
-                carbohydrate: food?.name?.macronutrients?.carbohydrate,
-                protein: food?.name?.macronutrients?.protein,
-              },
-              micronutrients: {
-                fiber: food?.name?.micronutrients?.fiber,
-              },
-              name: food?.name?.name,
-              source: food?.name?.source,
-              group: food?.name?.group,
-              quantity: food?.name?.quantity,
-              userId: food?.name?.userId,
-              _id: food?.name?._id,
-            },
-            subfoods: food.subfoods.map(subfood => ({
-              name: {
-                macronutrients: {
-                  energy: subfood?.name?.macronutrients?.energy,
-                  fat: subfood?.name?.macronutrients?.fat,
-                  carbohydrate: subfood?.name?.macronutrients?.carbohydrate,
-                  protein: subfood?.name?.macronutrients?.protein,
-                },
-                micronutrients: {
-                  fiber: subfood?.name?.micronutrients?.fiber,
-                },
-                name: subfood?.name?.name,
-                source: subfood?.name?.source,
-                group: subfood?.name?.group,
-                quantity: subfood?.name?.quantity,
-                userId: subfood?.name?.userId,
-                _id: subfood?.name?._id,
-              },
-            })),
+        foods: plan.foods.map(food => ({
+          name: food.name,
+          source: food.source,
+          group: food.group,
+          quantity: food.quantity,
+          foodId: food.foodId?._id,
+          subfoods: food.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
           })),
+        })),
         Appetizer: plan.Appetizer.map(appetizer => ({
-          name: {
-            macronutrients: {
-              energy: appetizer?.name?.macronutrients?.energy,
-              fat: appetizer?.name?.macronutrients?.fat,
-              carbohydrate: appetizer?.name?.macronutrients?.carbohydrate,
-              protein: appetizer?.name?.macronutrients?.protein,
-            },
-            micronutrients: {
-              fiber: appetizer?.name?.micronutrients?.fiber,
-            },
-            name: appetizer?.name?.name,
-            source: appetizer?.name?.source,
-            group: appetizer?.name?.group,
-            quantity: appetizer?.name?.quantity,
-            userId: appetizer?.name?.userId,
-            _id: appetizer?.name?._id,
-          },
+          name: appetizer.name,
+          source: appetizer.source,
+          group: appetizer.group,
+          quantity: appetizer.quantity,
+          foodId: appetizer.foodId?._id,
           subfoods: appetizer.subfoods.map(subfood => ({
-            name: {
-              macronutrients: {
-                energy: subfood?.name?.macronutrients?.energy,
-                fat: subfood?.name?.macronutrients?.fat,
-                carbohydrate: subfood?.name?.macronutrients?.carbohydrate,
-                protein: subfood?.name?.macronutrients?.protein,
-              },
-              micronutrients: {
-                fiber: subfood?.name?.micronutrients.fiber,
-              },
-              name: subfood?.name?.name,
-              source: subfood?.name?.source,
-              group: subfood?.name?.group,
-              quantity: subfood?.name?.quantity,
-              userId: subfood?.name?.userId,
-              _id: subfood?.name?._id,
-            },
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
           })),
         })),
         Dish: plan.Dish.map(dish => ({
-          name: {
-            macronutrients: {
-              energy: dish?.name?.macronutrients?.energy,
-              fat: dish?.name?.macronutrients?.fat,
-              carbohydrate: dish?.name?.macronutrients?.carbohydrate,
-              protein: dish?.name?.macronutrients?.protein,
-            },
-            micronutrients: {
-              fiber: dish?.name?.micronutrients?.fiber,
-            },
-            name: dish?.name?.name,
-            source: dish?.name?.source,
-            group: dish?.name?.group,
-            quantity: dish?.name?.quantity,
-            userId: dish?.name?.userId,
-            _id: dish?.name?._id,
-          },
+          name: dish.name,
+          source: dish.source,
+          group: dish.group,
+          quantity: dish.quantity,
+          foodId: dish.foodId?._id,
           subfoods: dish.subfoods.map(subfood => ({
-            name: {
-              macronutrients: {
-                energy: subfood?.name?.macronutrients?.energy,
-                fat: subfood?.name?.macronutrients?.fat,
-                carbohydrate: subfood?.name?.macronutrients?.carbohydrate,
-                protein: subfood?.name?.macronutrients?.protein,
-              },
-              micronutrients: {
-                fiber: subfood?.name?.micronutrients.fiber,
-              },
-              name: subfood?.name?.name,
-              source: subfood?.name?.source,
-              group: subfood?.name?.group,
-              quantity: subfood?.name?.quantity,
-              userId: subfood?.name?.userId,
-              _id: subfood?.name?._id,
-            },
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
           })),
         })),
         Dessert: plan.Dessert.map(dessert => ({
-          name: {
-            macronutrients: {
-              energy: dessert?.name?.macronutrients?.energy,
-              fat: dessert?.name?.macronutrients?.fat,
-              carbohydrate: dessert?.name?.macronutrients?.carbohydrate,
-              protein: dessert?.name?.macronutrients?.protein,
-            },
-            micronutrients: {
-              fiber: dessert?.name?.micronutrients?.fiber,
-            },
-            name: dessert?.name?.name,
-            source: dessert?.name?.source,
-            group: dessert?.name?.group,
-            quantity: dessert?.name?.quantity,
-            userId: dessert?.name?.userId,
-            _id: dessert?.name?._id,
-          },
+          name: dessert.name,
+          source: dessert.source,
+          group: dessert.group,
+          quantity: dessert.quantity,
+          foodId: dessert.foodId?._id,
           subfoods: dessert.subfoods.map(subfood => ({
-            name: {
-              macronutrients: {
-                energy: subfood?.name?.macronutrients?.energy,
-                fat: subfood?.name?.macronutrients?.fat,
-                carbohydrate: subfood?.name?.macronutrients?.carbohydrate,
-                protein: subfood?.name?.macronutrients?.protein,
-              },
-              micronutrients: {
-                fiber: subfood?.name?.micronutrients.fiber,
-              },
-              name: subfood?.name?.name,
-              source: subfood?.name?.source,
-              group: subfood?.name?.group,
-              quantity: subfood?.name?.quantity,
-              userId: subfood?.name?.userId,
-              _id: subfood?.name?._id,
-            },
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
           })),
         })),
         Beverage: plan.Beverage.map(beverage => ({
-          name: {
-            macronutrients: {
-              energy: beverage?.name?.macronutrients?.energy,
-              fat: beverage?.name?.macronutrients?.fat,
-              carbohydrate: beverage?.name?.macronutrients?.carbohydrate,
-              protein: beverage?.name?.macronutrients?.protein,
-            },
-            micronutrients: {
-              fiber: beverage?.name?.micronutrients?.fiber,
-            },
-            name: beverage?.name?.name,
-            source: beverage?.name?.source,
-            group: beverage?.name?.group,
-            quantity: beverage?.name?.quantity,
-            userId: beverage?.name?.userId,
-            _id: beverage?.name?._id,
-          },
+          name: beverage.name,
+          source: beverage.source,
+          group: beverage.group,
+          quantity: beverage.quantity,
+          foodId: beverage.foodId?._id,
           subfoods: beverage.subfoods.map(subfood => ({
-            name: {
-              macronutrients: {
-                energy: subfood?.name?.macronutrients?.energy,
-                fat: subfood?.name?.macronutrients?.fat,
-                carbohydrate: subfood?.name?.macronutrients?.carbohydrate,
-                protein: subfood?.name?.macronutrients?.protein,
-              },
-              micronutrients: {
-                fiber: subfood?.name?.micronutrients.fiber,
-              },
-              name: subfood?.name?.name,
-              source: subfood?.name?.source,
-              group: subfood?.name?.group,
-              quantity: subfood?.name?.quantity,
-              userId: subfood?.name?.userId,
-              _id: subfood?.name?._id,
-            },
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
+          })),
+        })),
+        Soup: plan.Soup.map(soup => ({
+          name: soup.name,
+          source: soup.source,
+          group: soup.group,
+          quantity: soup.quantity,
+          foodId: soup.foodId?._id,
+          subfoods: soup.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId._id,
+          })),
+        })),
+        Firstcourse: plan.Firstcourse.map(firstcourse => ({
+          name: firstcourse.name,
+          source: firstcourse.source,
+          group: firstcourse.group,
+          quantity: firstcourse.quantity,
+          foodId: firstcourse.foodId?._id,
+          subfoods: firstcourse.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
+          })),
+        })),
+        Secondcourse: plan.Secondcourse.map(secondcourse => ({
+          name: secondcourse.name,
+          source: secondcourse.source,
+          group: secondcourse.group,
+          quantity: secondcourse.quantity,
+          foodId: secondcourse.foodId?._id,
+          subfoods: secondcourse.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
+          })),
+        })),
+        Sidedish: plan.Sidedish.map(sidedish => ({
+          name: sidedish.name,
+          source: sidedish.source,
+          group: sidedish.group,
+          quantity: sidedish.quantity,
+          foodId: sidedish.foodId?._id,
+          subfoods: sidedish.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
+          })),
+        })),
+        Others: plan.Others.map(other => ({
+          name: other.name,
+          source: other.source,
+          group: other.group,
+          quantity: other.quantity,
+          foodId: other.foodId?._id,
+          subfoods: other.subfoods.map(subfood => ({
+            name: subfood.name,
+            source: subfood.source,
+            group: subfood.group,
+            quantity: subfood.quantity,
+            foodId: subfood.foodId?._id,
           })),
         })),
         notes: plan.notes,
         nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item) => item.nutrientSums._id === plan._id)
       })),
+      days: pop.days,
+      creationMethod: pop.creationMethod,
+      copyMealPlan: pop.copyMealPlan
     };
-
-
-
+    
 
     if (!mealPlan) {
       return res.status(404).json({ message: 'Meal plan not found' });
@@ -748,7 +773,7 @@ const deleteParticularFood = async (req, res, next) => {
 
     const mealId = req.params.mealId;
     const objectId = req.params.objectId;
-    const foodId = req.body.foodId;
+    const Id = req.body.Id;
 
     const mealPlan = await MealPlan.findOne({ _id: mealId, userId });
 
@@ -763,32 +788,50 @@ const deleteParticularFood = async (req, res, next) => {
       .flat()
       .filter((foods) => foods.length > 0);
 
+
     if (meal[0][0].name === null) {
       return res.status(404).json({ message: 'No matching food found' });
     }
 
     if (meal) {
-      const indexToDelete = meal[0].findIndex((food) => food.name.toString() === foodId);
+      console.log('start-->>');
+      const indexToDelete = meal[0].findIndex((food) => food.foodId.toString() === Id)
       if (indexToDelete !== -1) {
         meal[0][indexToDelete].name = null;
+        meal[0][indexToDelete].source = null
+        meal[0][indexToDelete].group = null
+        meal[0][indexToDelete].quantity = null
+        meal[0][indexToDelete].foodId = null
 
-        let m1 = null;
+        let m1 = null
+        let m2 = null
+        let m3 = null
+        let m4 = null
+        let m5 = null
         meal[0].forEach((food) => {
           if (food.subfoods.length > 0) {
-            m1 = food.subfoods[0].name
+            m1 = food.subfoods[0].name,
+            m2 = food.subfoods[0].source,
+            m3 = food.subfoods[0].group,
+            m4 = food.subfoods[0].quantity,
+            m5 = food.subfoods[0].foodId
           }
         });
 
-        if (meal[0][0].name === null && m1 != null) {
+        if (meal[0][0].foodId === null && m5 != null) {
           meal[0][0].name = m1;
+          meal[0][0].source = m2;
+          meal[0][0].group = m3;
+          meal[0][0].quantity = m4;
+          meal[0][0].foodId = m5;
           meal[0].forEach((food) => {
 
             if (food.subfoods.length >= 1) {
               food.subfoods.splice(0, 1);
             }
           });
-        } else if (meal[0][0].name === null && m1 === null) {
-          console.log('<<--start-->>');
+        } else if (meal[0][0].name === null && m5 === null) {
+          console.log('<<start>>');
           meal.splice(0, 1);
         }
       }
@@ -802,7 +845,7 @@ const deleteParticularFood = async (req, res, next) => {
     if (submeal) {
       for (const submealArray of submeal) {
         for (const subfoodArray of submealArray) {
-          const indexToDelete = subfoodArray.subfoods.findIndex((subfood) => subfood.name.toString() === foodId);
+          const indexToDelete = subfoodArray.subfoods.findIndex((subfood) => subfood.foodId.toString() === Id);
           if (indexToDelete !== -1) {
             subfoodArray.subfoods.splice(indexToDelete, 1);
           }

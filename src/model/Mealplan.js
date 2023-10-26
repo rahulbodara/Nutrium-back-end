@@ -16,15 +16,39 @@ const mealPlanSchema = mongoose.Schema({
       foods: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
-              name:{
+              name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref : 'Food'
-              } 
+                ref: 'food'
+              },
             },
           ],
         },
@@ -32,15 +56,39 @@ const mealPlanSchema = mongoose.Schema({
       Appetizer: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
-              }
+                ref: 'food'
+              },
             },
           ],
         },
@@ -48,14 +96,38 @@ const mealPlanSchema = mongoose.Schema({
       Dish: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
           ],
@@ -64,14 +136,38 @@ const mealPlanSchema = mongoose.Schema({
       Dessert: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
           ],
@@ -80,97 +176,241 @@ const mealPlanSchema = mongoose.Schema({
       Beverage: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       Soup: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       Firstcourse: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       Secondcourse: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       Sidedish: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       Others: [
         {
           name: {
+            type: String
+          },
+          source: {
+            type: String
+          },
+          group: {
+            type: String
+          },
+          quantity: {
+            type: String
+          },
+          foodId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Food',
+            ref: 'food'
           },
           subfoods: [
             {
               name: {
+                type: String
+              },
+              source: {
+                type: String
+              },
+              group: {
+                type: String
+              },
+              quantity: {
+                type: String
+              },
+              foodId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Food',
+                ref: 'food'
               },
             },
-          ],  
+          ],
         },
       ],
       notes: String,
@@ -182,7 +422,7 @@ const mealPlanSchema = mongoose.Schema({
   },
   creationMethod: {
     type: String,
-    enum: ['Merge selected days into a single version', 'Create a version for each day','single day'],
+    enum: ['Merge selected days into a single version', 'Create a version for each day', 'single day'],
     default: 'single day',
   },
   copyMealPlan: {
