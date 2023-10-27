@@ -711,7 +711,7 @@ const createPregnancyHistory = async (req, res, next) => {
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
     let lactating = null;
-    let status = null;
+    let status = "";
 
     if (typeOfRecord === 'Pregnancy and lactation') {
       if (durationOfLactationInMonths === 0) {
@@ -913,7 +913,7 @@ const updatePregnancyHistory = async (req, res, next) => {
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
     let lactating = null;
-    let status = null;
+    let status = "";
 
     if (typeOfRecord === 'Pregnancy and lactation') {
       if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
