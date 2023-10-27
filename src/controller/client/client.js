@@ -678,7 +678,7 @@ const updateAppointmentInfo = async (req, res, next) => {
 
 const createPregnancyHistory = async (req, res, next) => {
   try {
-    const {
+   let {
       typeOfRecord,
       gestationType,
       lastMenstrualPeriod,
@@ -688,13 +688,25 @@ const createPregnancyHistory = async (req, res, next) => {
       durationOfLactationInMonths,
     } = req.body;
 
-    const userId = req.userId;
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+      const dd = date.getDate().toString().padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${mm}-${dd}-${yyyy}`;
+    };
 
+     lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
+     beginningOfLactation = formatDate(beginningOfLactation);
+
+
+    const userId = req.userId;
     const lmpDate = new Date(lastMenstrualPeriod);
     const currentDate = new Date();
 
-    const gestationalAgeInWeeks =
-      (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+    const gestationalAgeInMilliseconds = currentDate - lmpDate;
+    const gestationalAgeInWeeks = gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
 
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
@@ -702,15 +714,14 @@ const createPregnancyHistory = async (req, res, next) => {
     let status = null;
 
     if (typeOfRecord === 'Pregnancy and lactation') {
-      if(durationOfLactationInMonths === 0)
-      {
+      if (durationOfLactationInMonths === 0) {
         return res.status(400).send({ message: 'Please enter a value greater than or equal to 1.' });
       }
       if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).send({ message: 'This fields are required.' });
+        return res.status(400).send({ message: 'These fields are required.' });
       }
       let trimester;
-      let lactationMonthsRemaining = null
+      let lactationMonthsRemaining = null;
 
       if (gestationalAgeInWeeks <= 13) {
         trimester = 'First Trimester 1';
@@ -730,7 +741,6 @@ const createPregnancyHistory = async (req, res, next) => {
         currentPregnancyTrimester = null;
         currentPregnancyWeek = null;
       }
-
 
       if (gestationalAgeInWeeks >= 40) {
         if (beginningOfLactation) {
@@ -789,7 +799,7 @@ const createPregnancyHistory = async (req, res, next) => {
       }
     } else if (typeOfRecord === 'Lactation') {
       if (!beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).json({ message: 'beginningOfLactation,durationOfLactationInMonths are required' });
+        return res.status(400).json({ message: 'beginningOfLactation and durationOfLactationInMonths are required' });
       }
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
@@ -810,8 +820,6 @@ const createPregnancyHistory = async (req, res, next) => {
             (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
           );
 
-
-
           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
             status = 'completed';
           } else {
@@ -826,14 +834,16 @@ const createPregnancyHistory = async (req, res, next) => {
       }
     }
 
+    const lastMenstrualPeriodFormatted = formatDate(lmpDate);
+    const beginningOfLactationFormatted = formatDate(new Date(beginningOfLactation));
 
     const newPregnancyHistory = new pregnancyHistory({
       userId: userId,
       clientId,
       typeOfRecord,
       gestationType,
-      lastMenstrualPeriod,
-      beginningOfLactation,
+      lastMenstrualPeriod: lastMenstrualPeriodFormatted,
+      beginningOfLactation: beginningOfLactationFormatted,
       durationOfLactationInMonths,
       observations,
       status,
@@ -844,12 +854,19 @@ const createPregnancyHistory = async (req, res, next) => {
 
     const data = await newPregnancyHistory.save();
 
-    return res.status(200).json({
+    const response = {
       success: true,
       message: 'Pregnancy History added successfully',
-      data: data,
-    });
+      data: {
+        ...data._doc,
+        lastMenstrualPeriod: lastMenstrualPeriodFormatted,
+        beginningOfLactation: beginningOfLactationFormatted,
+      },
+    };
+
+    return res.status(200).json(response);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -874,12 +891,24 @@ const updatePregnancyHistory = async (req, res, next) => {
       durationOfLactationInMonths,
     } = req.body;
 
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+      const dd = date.getDate().toString().padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${mm}-${dd}-${yyyy}`;
+    };
+
+     lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
+     beginningOfLactation = formatDate(beginningOfLactation);
 
     const lmpDate = new Date(lastMenstrualPeriod);
     const currentDate = new Date();
 
-    const gestationalAgeInWeeks =
-      (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+    const gestationalAgeInMilliseconds = currentDate - lmpDate;
+    const gestationalAgeInWeeks = gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
+
 
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
