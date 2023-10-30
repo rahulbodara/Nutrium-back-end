@@ -2064,29 +2064,39 @@ const getAllGoals = async (req, res, next) => {
       });
     }
 
-    // Extract entries array
-    // let entries = [];
-    // goalsData.forEach((userData) => {
-    //   if (userData.goals && Array.isArray(userData.goals)) {
-    //     userData.goals.forEach((goal) => {
-    //       if (goal.measurements && Array.isArray(goal.measurements)) {
-    //         goal.measurements.forEach((measurement) => {
-    //           if (measurement.entries && Array.isArray(measurement.entries)) {
-    //             entries.push(...measurement.entries);
-    //           }
-    //         });
-    //       }
-    //     });
-    //   }
-    // });
+    goalsData.forEach((userData) => {
+      if (userData.goals && Array.isArray(userData.goals)) {
+        userData.goals.forEach((goal) => {
+          if (goal.measurements && Array.isArray(goal.measurements)) {
+            goal.measurements.forEach((allMeasurement) => {
+              allMeasurement.entries.sort((a, b) => {
+                const datePartsA = a.deadline.split('-');
+                const datePartsB = b.deadline.split('-');
+                
+                const currentDate = new Date(); // Get current date
 
-    // // Extract Generic goals
-    // const genericGoals = goalsData[0].goals.filter(
-    //   (goal) =>
-    //     goal.goalType === 'Generic (Sports and food routines, among others)'
-    // );
+                const dayA = parseInt(datePartsA[0]);
+                const monthA = parseInt(datePartsA[1]);
+                const yearA = parseInt(datePartsA[2]);
+    
+                const dayB = parseInt(datePartsB[0]);
+                const monthB = parseInt(datePartsB[1]);
+                const yearB = parseInt(datePartsB[2]);
 
-    // const allGoals = [...entries, ...genericGoals];
+                const dateA = new Date(yearA, monthA - 1, dayA); 
+                const dateB = new Date(yearB, monthB - 1, dayB); 
+
+                const diffA = Math.abs(dateA - currentDate); 
+                const diffB = Math.abs(dateB - currentDate); 
+
+                return diffA - diffB;
+              });
+            });
+          }
+        });
+      }
+    });
+
 
     return res.status(200).json({
       success: true,
@@ -2207,9 +2217,12 @@ const getMeasurementById = async (req, res, next) => {
         if (monthA !== monthB) {
           return monthB - monthA;
         }
+        if (dayA - dayB !== 0) {
+          return dayB - dayA;
+        } else {
+          return measurementType.entries.findIndex(e => e._id === b._id) - measurementType.entries.findIndex(e => e._id === a._id);
+        }
     
-        // If years and months are the same, compare days
-        return dayB - dayA;
       });
     });
     
