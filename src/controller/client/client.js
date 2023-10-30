@@ -724,11 +724,11 @@ const createPregnancyHistory = async (req, res, next) => {
       let lactationMonthsRemaining = null;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = 'First Trimester 1';
+        trimester = ' Trimester 1';
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = 'Second Trimester 2';
+        trimester = ' Trimester 2';
       } else {
-        trimester = 'Third Trimester 3';
+        trimester = ' Trimester 3';
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -783,11 +783,11 @@ const createPregnancyHistory = async (req, res, next) => {
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = 'First Trimester 1';
+        trimester = ' Trimester 1';
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = 'Second Trimester 2';
+        trimester = ' Trimester 2';
       } else {
-        trimester = 'Third Trimester 3';
+        trimester = ' Trimester 3';
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -923,11 +923,11 @@ const updatePregnancyHistory = async (req, res, next) => {
       let lactationMonthsRemaining = null
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = 'First Trimester 1';
+        trimester = ' Trimester 1';
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = 'Second Trimester 2';
+        trimester = ' Trimester 2';
       } else {
-        trimester = 'Third Trimester 3';
+        trimester = ' Trimester 3';
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -983,11 +983,11 @@ const updatePregnancyHistory = async (req, res, next) => {
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = 'First Trimester 1';
+        trimester = ' Trimester 1';
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = 'Second Trimester 2';
+        trimester = ' Trimester 2';
       } else {
-        trimester = 'Third Trimester 3';
+        trimester = ' Trimester 3';
       }
 
       if (gestationalAgeInWeeks < 40) {

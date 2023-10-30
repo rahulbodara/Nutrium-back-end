@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const fs = require('fs');
 const createSubscription = require('./subscription').createSubscription;
+const createProfessionalPreference = require('./professionalpreference').createProfessionalPreference;
 const createBillingInformation =
   require('./billinginformation').createBillingInformation;
 const { generateResetToken, sendEmail } = require('../utils/EmailSender');
@@ -84,6 +85,9 @@ const SignUp = async (req, res, next) => {
       await workplaceData.save();
     }
     await createSubscription(savedUser._id);
+    console.log("<<-- first -->>")
+    await createProfessionalPreference(savedUser._id);
+    console.log("<<-- second -->>")
     await createBillingInformation(savedUser._id, req.body);
     return res.status(200).json({
       success: true,
