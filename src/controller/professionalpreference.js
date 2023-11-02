@@ -97,45 +97,40 @@ const getprofessionPreference = async (req, res, next) => {
     }
 }
 
-const updateprofessionPreference = async(req,res,next) => {
+const updateprofessionPreference = async (req, res, next) => {
     try {
         const userId = req.userId;
-        const
-            {
-                systempreference,
-                calendarsettings,
-                presets,
-                appointementreference,
-                nutritionassessmentformconfiguration,
-                emailandprintingpreference,
-                mealplansettings,
-                measurementspreferences
-            } = req.body;
+        const updateFields = req.body;
 
         const existingPreference = await professionalPreference.findOne({ userId: userId });
 
         if (existingPreference) {
-            existingPreference.systempreference = systempreference;
-            existingPreference.calendarsettings = calendarsettings;
-            existingPreference.presets = presets;
-            existingPreference.appointementreference = appointementreference;
-            existingPreference.nutritionassessmentformconfiguration = nutritionassessmentformconfiguration;
-            existingPreference.emailandprintingpreference = emailandprintingpreference;
-            existingPreference.mealplansettings = mealplansettings;
-            existingPreference.measurementspreferences = measurementspreferences;
+            Object.keys(updateFields).forEach(field => {
+                if (typeof updateFields[field] === 'object' && updateFields[field] !== null) {
+                    Object.keys(updateFields[field]).forEach(subField => {
+                        if (existingPreference[field] && existingPreference[field][subField] !== undefined) {
+                            existingPreference[field][subField] = updateFields[field][subField];
+                        }
+                    });
+                } else {
+                    if (existingPreference[field] !== undefined) {
+                        existingPreference[field] = updateFields[field];
+                    }
+                }
+            });
 
             const result = await existingPreference.save();
             return res.status(201).json({ success: true, message: "professionPreference updated successfully", data: result });
-        }
-        else {
-            res.status(404).json({message: "professionPreference not found"})
+        } else {
+            res.status(404).json({ message: "professionPreference not found" });
         }
 
-    }
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 }
+
+
 
 module.exports = {
     createProfessionalPreference,
