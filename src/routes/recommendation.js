@@ -5,7 +5,9 @@ const { isAuthenticated } = require("../middleware/auth");
 const {
   createRecommendation,
   deletePhysicalActivity,
-  getRecommendations
+  getRecommendations,
+  createPhysicalActivity,
+  getPhysicalActivity
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId',isAuthenticated,createRecommendation);
@@ -14,4 +16,8 @@ router.delete('/deleteActivity/:id/:subArrayIndex/:elementIndex',isAuthenticated
 
 router.get('/recommendations/:clientId',isAuthenticated,getRecommendations);
 
-module.exports = router;
+router.post('/createActivity',createPhysicalActivity);
+
+router.get('/activities',getPhysicalActivity);
+
+module.exports = router;                                                             

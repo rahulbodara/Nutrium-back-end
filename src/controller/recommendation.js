@@ -1,4 +1,5 @@
 const client_Recommendation = require('../model/Recommendations');
+const physicalActivity = require('../model/Physicalactivity');
 
 const createRecommendation = async (req, res, next) => {
     try {
@@ -67,9 +68,47 @@ const getRecommendations = async(req,res,next)=>{
     }
 }
 
+const createPhysicalActivity = async(req,res,next)=>{
+    try{
+
+        const {time,timeunit,durations,activity,met,byactivity,dailyaverage} = req.body;
+
+        const newActivity = new physicalActivity({
+            time,
+            timeunit,
+            durations,
+            activity,
+            met,
+            byactivity,
+            dailyaverage
+        });
+        const result = await newActivity.save();
+        return res.status(200).json({success:true,data:result});
+
+    }
+    catch(err){
+        next(err);
+    }
+}
+
+const getPhysicalActivity = async(req,res,next)=>{
+    try{
+        const activities = await physicalActivity.find();
+        if(!activities){
+            return res.status(404).json({message:'Activities not found'});
+        }
+       return res.status(200).json({success:true,data:activities});
+    }
+    catch(err){
+        next(err);
+    }
+}
+
 
 module.exports = {
     createRecommendation,
     deletePhysicalActivity,
-    getRecommendations
+    getRecommendations,
+    createPhysicalActivity,
+    getPhysicalActivity
 }

@@ -678,7 +678,7 @@ const updateAppointmentInfo = async (req, res, next) => {
 
 const createPregnancyHistory = async (req, res, next) => {
   try {
-   let {
+    let {
       typeOfRecord,
       gestationType,
       lastMenstrualPeriod,
@@ -697,8 +697,8 @@ const createPregnancyHistory = async (req, res, next) => {
       return `${mm}-${dd}-${yyyy}`;
     };
 
-     lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
-     beginningOfLactation = formatDate(beginningOfLactation);
+    lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
+    beginningOfLactation = formatDate(beginningOfLactation);
 
 
     const userId = req.userId;
@@ -882,7 +882,7 @@ const updatePregnancyHistory = async (req, res, next) => {
         message: 'Pregnancy History not found',
       });
     }
-    const {
+    let {
       typeOfRecord,
       gestationType,
       lastMenstrualPeriod,
@@ -900,8 +900,8 @@ const updatePregnancyHistory = async (req, res, next) => {
       return `${mm}-${dd}-${yyyy}`;
     };
 
-     lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
-     beginningOfLactation = formatDate(beginningOfLactation);
+    lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
+    beginningOfLactation = formatDate(beginningOfLactation);
 
     const lmpDate = new Date(lastMenstrualPeriod);
     const currentDate = new Date();
@@ -1056,6 +1056,7 @@ const updatePregnancyHistory = async (req, res, next) => {
       data: data,
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -1968,28 +1969,28 @@ const updateGoal = async (req, res, next) => {
         success: false,
         message: 'Goals not found for the client',
       });
-    }  
+    }
 
     for (const goal of goalsData.goals) {
       for (const measurement of goal.measurements) {
         const entryToUpdate = measurement.entries.find(
           (entry) => entry._id.toString() === idToUpdate
         );
-        
+
         if (entryToUpdate) {
           entryToUpdate.value = newValue;
           await goalsData.save();
           return res.status(200).json({
             success: true,
             message: 'Entry value updated successfully',
-            data:goalsData
+            data: goalsData
           });
         }
       }
     }
 
 
-  }catch (error) {
+  } catch (error) {
     next(error);
   }
 
@@ -2072,22 +2073,22 @@ const getAllGoals = async (req, res, next) => {
               allMeasurement.entries.sort((a, b) => {
                 const datePartsA = a.deadline.split('-');
                 const datePartsB = b.deadline.split('-');
-                
+
                 const currentDate = new Date(); // Get current date
 
                 const dayA = parseInt(datePartsA[0]);
                 const monthA = parseInt(datePartsA[1]);
                 const yearA = parseInt(datePartsA[2]);
-    
+
                 const dayB = parseInt(datePartsB[0]);
                 const monthB = parseInt(datePartsB[1]);
                 const yearB = parseInt(datePartsB[2]);
 
-                const dateA = new Date(yearA, monthA - 1, dayA); 
-                const dateB = new Date(yearB, monthB - 1, dayB); 
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
 
-                const diffA = Math.abs(dateA - currentDate); 
-                const diffB = Math.abs(dateB - currentDate); 
+                const diffA = Math.abs(dateA - currentDate);
+                const diffB = Math.abs(dateB - currentDate);
 
                 return diffA - diffB;
               });
@@ -2126,6 +2127,7 @@ const registerMeasurement = async (req, res, next) => {
     if (existingMeasurement) {
       existingMeasurement.measurements = measurements;
       existingMeasurement.measurementsdate = measurementsdate;
+      console.log(existingMeasurement);
       await existingMeasurement.save();
       return res.status(200).json({
         success: true,
@@ -2199,20 +2201,20 @@ const getMeasurementById = async (req, res, next) => {
       measurementType.entries.sort((a, b) => {
         const datePartsA = a.date.split('-');
         const datePartsB = b.date.split('-');
-    
+
         const dayA = parseInt(datePartsA[0]);
         const monthA = parseInt(datePartsA[1]);
         const yearA = parseInt(datePartsA[2]);
-    
+
         const dayB = parseInt(datePartsB[0]);
         const monthB = parseInt(datePartsB[1]);
         const yearB = parseInt(datePartsB[2]);
-    
+
         // First, compare years
         if (yearA !== yearB) {
           return yearB - yearA;
         }
-    
+
         // If years are the same, compare months
         if (monthA !== monthB) {
           return monthB - monthA;
@@ -2222,11 +2224,11 @@ const getMeasurementById = async (req, res, next) => {
         } else {
           return measurementType.entries.findIndex(e => e._id === b._id) - measurementType.entries.findIndex(e => e._id === a._id);
         }
-    
+
       });
     });
-    
-    
+
+
 
     return res.status(200).json({
       success: true,
@@ -2289,7 +2291,7 @@ const updateMeasurementObject = async (req, res, next) => {
       measurementEntry.entries = measurementEntry.entries.map((entry) => {
         if (entry._id.toString() === entryId) {
           entryUpdated = true;
-  
+
           return { ...entry, ...updatedData };
         }
         return entry;
@@ -2320,24 +2322,24 @@ const getClientInfo = async (req, res, next) => {
           measurementType.entries.sort((a, b) => {
             const datePartsA = a.date.split('-');
             const datePartsB = b.date.split('-');
-    
+
             const dayA = parseInt(datePartsA[0]);
-            const monthA = parseInt(datePartsA[1]) - 1; 
+            const monthA = parseInt(datePartsA[1]) - 1;
             const yearA = parseInt(datePartsA[2]);
-    
+
             const dayB = parseInt(datePartsB[0]);
-            const monthB = parseInt(datePartsB[1]) - 1; 
+            const monthB = parseInt(datePartsB[1]) - 1;
             const yearB = parseInt(datePartsB[2]);
-    
+
             const dateA = new Date(yearA, monthA, dayA);
             const dateB = new Date(yearB, monthB, dayB);
-    
+
             return dateB - dateA;
           });
         });
       });
     }
-    
+
     const measurements = [];
 
     const measurement = goal.forEach((item) => {
@@ -2394,7 +2396,7 @@ const getClientInfo = async (req, res, next) => {
     let goalBodyFat = null;
 
     if (clientWeight.length > 0) {
-      const weightData = clientWeight.map((measurement) => ({  
+      const weightData = clientWeight.map((measurement) => ({
         weight: measurement.measurements.filter((entry) => entry.measurementtype === 'Weight')[0]?.entries
       }));
 
@@ -2403,7 +2405,7 @@ const getClientInfo = async (req, res, next) => {
         height: measurement.measurements.filter((entry) => entry.measurementtype === "Height")[0]?.entries,
       }));
 
-      const lastBodyFatData = clientWeight.map((measurement) => ({  
+      const lastBodyFatData = clientWeight.map((measurement) => ({
         BodyFat: measurement.measurements.filter((entry) => entry.measurementtype === 'Body fat percentage')[0]?.entries
       }));
 
@@ -2427,7 +2429,7 @@ const getClientInfo = async (req, res, next) => {
     if (measurements.length > 0) {
       goalWeight = measurements[0];
     }
-    if(goalFatMeasurements.length > 0){
+    if (goalFatMeasurements.length > 0) {
       goalBodyFat = goalFatMeasurements[0];
     }
 
@@ -2444,55 +2446,65 @@ const getClientInfo = async (req, res, next) => {
     const heightInInches = lastHeight ? lastHeight.value / 2.54 : null;
     const idealWeight = lastHeight ? 52 + 1.9 * (heightInInches - 60) : null;
     const bmiIdealWeight = lastHeight ? idealWeight / (heightInMeters * heightInMeters) : null;
-    const bmiGoalWeight = goalWeight ? goalWeight.value / (heightInMeters * heightInMeters) : null;
+    let bmiGoalWeight = goalWeight ? goalWeight?.value / (heightInMeters * heightInMeters) : null;
+    console.log("goalWeight?.value------->", goalWeight?.value)
 
-    if(goalWeight === null)
-    {
+    console.log('bmiGoalWeight--->>', bmiGoalWeight);
+
+    if (goalWeight === null) {
       goalWeight = idealWeight;
+      bmiGoalWeight = goalWeight !== null ? goalWeight / (heightInMeters * heightInMeters) : null;
     }
 
 
-    let bmi = await Measurements.findOne({ clientId: clientId });; 
+    let bmi = await Measurements.findOne({ clientId: clientId });
+    if (!bmi) {
+      return res.status(404).json({ message: 'record not found' });
+    }
 
-    if (bmi.bmiGoalWeight === null) {
+    if (bmi && bmi.bmiFlag === false) {
       bmi = await Measurements.findOneAndUpdate(
         { clientId: clientId },
         { bmiGoalWeight: bmiGoalWeight },
         { new: true }
       );
     }
-    
-    if (bmi && bmi.bmiGoalWeight === null) {
+
+    if (bmi && bmi.bmiFlag === false) {
 
       return res.status(200).json({
         success: true,
-        weight: lastWeight,
-        goalWeight: goalWeight,
-        goalBodyFat: goalBodyFat,
-        height: lastHeight,
-        bodyFat: lastBodyFat,
-        Reference_value: idealWeight,
-        bmiLastWeight: bmiLastWeight,
-        bmiGoalWeight: bmiGoalWeight,
-        bmiIdealWeight: bmiIdealWeight,
+        data: {
+          weight: lastWeight,
+          goalWeight: goalWeight,
+          goalBodyFat: goalBodyFat,
+          height: lastHeight,
+          bodyFat: lastBodyFat,
+          Reference_value: idealWeight,
+          bmiLastWeight: bmiLastWeight,
+          bmiGoalWeight: bmiGoalWeight,
+          bmiIdealWeight: bmiIdealWeight,
+        }
       });
     } else {
       return res.status(200).json({
         success: true,
-        weight: lastWeight,
-        goalWeight: goalWeight,
-        goalBodyFat: goalBodyFat,
-        height: lastHeight,
-        bodyFat: lastBodyFat,
-        Reference_value: idealWeight,
-        bmiLastWeight: bmiLastWeight,
-        bmiGoalWeight: bmi ? bmi.bmiGoalWeight : null,
-        bmiIdealWeight: bmiIdealWeight,
+        data: {
+          weight: lastWeight,
+          goalWeight: goalWeight,
+          goalBodyFat: goalBodyFat,
+          height: lastHeight,
+          bodyFat: lastBodyFat,
+          Reference_value: idealWeight,
+          bmiLastWeight: bmiLastWeight,
+          bmiGoalWeight: bmi ? bmi.bmiGoalWeight : null,
+          bmiIdealWeight: bmiIdealWeight,
+        }
       });
     }
-    
 
-    
+
+
   } catch (error) {
     console.log(error);
     next(error);
@@ -2503,11 +2515,11 @@ const getClientInfo = async (req, res, next) => {
 const updateBmi = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
-    const {bmiGoalWeight} = req.body;
+    const { bmiGoalWeight } = req.body;
     const bmi = await Measurements.findOneAndUpdate(
       { clientId: clientId },
       {
-       bmiGoalWeight:bmiGoalWeight
+        bmiGoalWeight: bmiGoalWeight
       },
       { new: true }
     );
@@ -2515,6 +2527,8 @@ const updateBmi = async (req, res, next) => {
     if (!bmi) {
       return res.status(404).json({ message: 'BMI not found' });
     }
+    bmi.bmiFlag = true;
+    await bmi.save();
 
     return res.status(200).json({
       success: true,

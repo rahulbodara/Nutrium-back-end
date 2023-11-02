@@ -37,6 +37,10 @@ const measurementSchema = new mongoose.Schema({
   bmiGoalWeight:{
     type: String,
     default : null,
+  },
+  bmiFlag :{
+    type: Boolean,
+    default: false,
   }
 });
 
