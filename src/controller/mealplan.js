@@ -353,42 +353,10 @@ const updateMealPlan = async (req, res, next) => {
     const pop = await MealPlan
       .findOne({ _id: mealId })
       .populate({
-        path: 'mealPlans.foods.foodId mealPlans.Appetizer.foodId mealPlans.Dish.foodId mealPlans.Dessert.foodId mealPlans.Beverage.foodId mealPlans.Soup.foodId mealPlans.Firstcourse.foodId mealPlans.Secondcourse.foodId mealPlans.Sidedish.foodId mealPlans.Others.foodId ' +
-          'mealPlans.foods.subfoods.foodId mealPlans.Appetizer.subfoods.foodId mealPlans.Dish.subfoods.foodId mealPlans.Dessert.subfoods.foodId mealPlans.Beverage.subfoods.foodId mealPlans.Soup.subfoods.foodId mealPlans.Firstcourse.subfoods.foodId mealPlans.Secondcourse.subfoods.foodId mealPlans.Sidedish.subfoods.foodId mealPlans.Others.subfoods.foodId ',
+        path: 'mealPlans.foods.foodId mealPlans.Appetizer.foodId mealPlans.Dish.foodId mealPlans.Dessert.foodId mealPlans.Beverage.foodId mealPlans.Soup.foodId mealPlans.Firstcourse.foodId mealPlans.Secondcourse.foodId mealPlans.Sidedish.foodId mealPlans.Others.foodId mealPlans.foods.subfoods.foodId mealPlans.Appetizer.subfoods.foodId mealPlans.Dish.subfoods.foodId mealPlans.Dessert.subfoods.foodId mealPlans.Beverage.subfoods.foodId mealPlans.Soup.subfoods.foodId mealPlans.Firstcourse.subfoods.foodId mealPlans.Secondcourse.subfoods.foodId mealPlans.Sidedish.subfoods.foodId mealPlans.Others.subfoods.foodId',
         model: 'Food',
       });
 
-
-    const sumNutrients = (mealPlan) => {
-      const nutrientTotals = {
-        _id: 0,
-        energy: 0,
-        fat: 0,
-        carbohydrate: 0,
-        protein: 0,
-        fiber: 0,
-      };
-
-      ["foods", "Appetizer", "Dessert", "Dish", "Beverage","Soup","Firstcourse","Secondcourse","Sidedish","Others"].forEach((nutrientType) => {
-        mealPlan[nutrientType].forEach((food) => {
-          nutrientTotals._id = mealPlan._id;
-          nutrientTotals.energy += food?.foodId?.macronutrients?.energy?.value;
-          nutrientTotals.fat += food?.foodId?.macronutrients?.fat?.value;
-          nutrientTotals.carbohydrate += food?.foodId?.macronutrients?.carbohydrate?.value;
-          nutrientTotals.protein += food?.foodId?.macronutrients?.protein?.value;
-          nutrientTotals.fiber += food?.foodId?.micronutrients?.fiber?.value;
-        });
-      });
-
-      return nutrientTotals;
-    };
-
-    const nutrientSumsForMealPlans = pop.mealPlans.map((mealPlan) => ({
-
-      nutrientSums: sumNutrients(mealPlan),
-    }));
-
-    console.log('nutrientSumsForMealPlans--->>>',nutrientSumsForMealPlans);
     //   _id: pop._id,
     //   clientId: pop.clientId,
     //   userId: pop.userId,
@@ -650,7 +618,6 @@ const updateMealPlan = async (req, res, next) => {
           })),
         })),
         notes: plan.notes,
-        nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item) => item.nutrientSums._id === plan._id)
       })),
       days: pop.days,
       creationMethod: pop.creationMethod,

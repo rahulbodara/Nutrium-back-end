@@ -96,7 +96,6 @@ const getprofessionPreference = async (req, res, next) => {
         next(error);
     }
 }
-
 const updateprofessionPreference = async (req, res, next) => {
     try {
         const userId = req.userId;
@@ -105,30 +104,43 @@ const updateprofessionPreference = async (req, res, next) => {
         const existingPreference = await professionalPreference.findOne({ userId: userId });
 
         if (existingPreference) {
-            Object.keys(updateFields).forEach(field => {
-                if (typeof updateFields[field] === 'object' && updateFields[field] !== null) {
-                    Object.keys(updateFields[field]).forEach(subField => {
-                        if (existingPreference[field] && existingPreference[field][subField] !== undefined) {
-                            existingPreference[field][subField] = updateFields[field][subField];
-                        }
-                    });
-                } else {
-                    if (existingPreference[field] !== undefined) {
-                        existingPreference[field] = updateFields[field];
-                    }
+            for (let field in updateFields) {
+                if (existingPreference.systempreference.hasOwnProperty(field)) {
+                    existingPreference.systempreference[field] = updateFields[field];
                 }
-            });
+                if (existingPreference.calendarsettings.hasOwnProperty(field)) {
+                    existingPreference.calendarsettings[field] = updateFields[field];
+                }
+                if (existingPreference.presets.hasOwnProperty(field)) {
+                    existingPreference.presets[field] = updateFields[field];
+                }
+                if (existingPreference.appointementreference.hasOwnProperty(field)){
+                    existingPreference.appointementreference[field] = updateFields[field];
+                }
+                if (existingPreference.nutritionassessmentformconfiguration.hasOwnProperty(field)){
+                    existingPreference.nutritionassessmentformconfiguration[field] = updateFields[field];
+                }
+                if (existingPreference.emailandprintingpreference.hasOwnProperty(field)){
+                    existingPreference.emailandprintingpreference[field] = updateFields[field];
+                }
+                if (existingPreference.mealplansettings.hasOwnProperty(field)){
+                    existingPreference.mealplansettings[field] = updateFields[field];
+                }
+                if (existingPreference.measurementspreferences.hasOwnProperty(field)){
+                    existingPreference.measurementspreferences[field] = updateFields[field];
+                }
+            }
 
             const result = await existingPreference.save();
             return res.status(201).json({ success: true, message: "professionPreference updated successfully", data: result });
         } else {
             res.status(404).json({ message: "professionPreference not found" });
         }
-
     } catch (error) {
         next(error);
     }
-}
+};
+
 
 
 
