@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
+const path = require('path');
 
 const generateResetToken = async (user) => {
   const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
@@ -55,8 +56,9 @@ const sendInvitationEmail = async (
   const acceptLink = `http://localhost:3000/api/v1/invitations?inviteId=${inviteId}`;
 
   // Render the invitation template with dynamic content
+  const filePath = path.join(__dirname, '../view', 'invitation.ejs');
   const htmlContent = await ejs.renderFile(
-    '/home/ts/JBA/nutrition-backend/src/view/invitation.ejs',
+    filePath,
     {
       title: `${username} invited you to Nutrium`,
       acceptLink: acceptLink,
