@@ -17,7 +17,7 @@ const professionalPreferenceSchema = new mongoose.Schema({
         weightunit:{
             type: String,
         },
-        legnthunit:{
+        lengthunit:{
             type: String,
         },
         energyunit:{

@@ -5,10 +5,29 @@ const recommendation_schema = new mongoose.Schema({
     physicalActivity: [
         [
             {
-                type: String,
-                required: true,
-            },
-        ],
+                time: {
+                    type: Number
+                },
+                timeunit: {
+                    type: String,
+                },
+                durations: {
+                    type: String,
+                },
+                activities: {
+                    type: String,
+                },
+                met: {
+                    type: String,
+                },
+                byactivity: {
+                    type: String,
+                },
+                dailyaverage: {
+                    type: String,
+                }
+            }
+        ]
     ],
     foodAvoids: {
         type: [String]
@@ -29,9 +48,9 @@ const recommendation_schema = new mongoose.Schema({
         required: true,
         ref: 'Clients',
     },
-  
+
 },
-{ timestamps:true }
+    { timestamps: true }
 );
 
 const Recommendation = mongoose.model('client_Recommendation', recommendation_schema);
