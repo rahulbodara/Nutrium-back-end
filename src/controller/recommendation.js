@@ -17,7 +17,7 @@ const createRecommendation = async (req, res, next) => {
             foodAvoids,
             waterIntake,
             recommendation
-        };
+        };          
 
         const result = await client_Recommendation.findOneAndUpdate(filter, update, {
             upsert: true, 
@@ -50,9 +50,7 @@ const deletePhysicalActivity = async (req, res, next) => {
     catch (err) {
         next(err);
     }
-
 }
-
 
 const getRecommendations = async(req,res,next)=>{
     try{
