@@ -7,15 +7,19 @@ const sendInvitation = async (req, res, next) => {
     const { inviteEmail } = req.body;
     const userId = req.userId;
     const user = await User.findById(userId);
+
+    for(let i = 0; i < inviteEmail.length; i++) {
     const newInvitation = await SendInvitation.create({
-      email: inviteEmail,
+      email: inviteEmail[i],
       userId: userId,
     });
+
 
     invitationId = newInvitation._id.toString();
     username = user.fullName;
     useremail = user.email;
-    await sendInvitationEmail(inviteEmail, invitationId, username, useremail);
+    await sendInvitationEmail(inviteEmail[i], invitationId, username, useremail);
+  }
 
     return res.status(201).json({
       success: true,

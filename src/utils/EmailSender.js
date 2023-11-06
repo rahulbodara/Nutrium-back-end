@@ -57,23 +57,23 @@ const sendInvitationEmail = async (
 
   // Render the invitation template with dynamic content
   const filePath = path.join(__dirname, '../view', 'invitation.ejs');
-  const htmlContent = await ejs.renderFile(
-    filePath,
-    {
-      title: `${username} invited you to Nutrium`,
-      acceptLink: acceptLink,
-      useremail: useremail,
-      username: username,
-    }
-  );
+    const htmlContent = await ejs.renderFile(
+      filePath,
+      {
+        title: `${username} invited you to Nutrium`,
+        acceptLink: acceptLink,
+        useremail: useremail,
+        username: username,
+      }
+    );
 
-  const mailOptions = {
-    from: process.env.GMAIL,
-    to: inviteEmail,
-    subject: `${username} invited you to Nutrium`,
-    html: htmlContent,
-  };
-  await transporter.sendMail(mailOptions);
+    const mailOptions = {
+      from: process.env.GMAIL,
+      to: inviteEmail,
+      subject: `${username} invited you to Nutrium`,
+      html: htmlContent,
+    };
+    await transporter.sendMail(mailOptions);
 };
 
 module.exports = {
