@@ -17,11 +17,11 @@ const createRecommendation = async (req, res, next) => {
             foodAvoids,
             waterIntake,
             recommendation
-        };          
+        };
 
         const result = await client_Recommendation.findOneAndUpdate(filter, update, {
-            upsert: true, 
-            new: true, 
+            upsert: true,
+            new: true,
         });
 
         res.status(200).json({ success: true, data: result });
@@ -32,18 +32,32 @@ const createRecommendation = async (req, res, next) => {
 
 const deletePhysicalActivity = async (req, res, next) => {
 
-    const { subArrayIndex, elementIndex } = req.params;
+    const { clientId, objectId } = req.params;
 
     try {
-        const activity = await client_Recommendation.findOne({ _id: req.params.id });
+        const client = await client_Recommendation.findOne({ clientId: clientId });
+        if (!client) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        let activity = client.physicalActivity.map(object => {
+            const data = object.map(item => {
+                if (item._id.toString() !== objectId) {
+                    return item
+                }
+            }
+            )
+            return data;
+        });
+
+        let data = activity.map(subArray => subArray.filter(item => item));
+
+        client.physicalActivity = data;
 
         if (!activity) {
             return res.status(404).json({ message: 'Activity not found' });
         }
 
-        activity.physicalActivity[subArrayIndex].splice(elementIndex, 1);
-
-        const result = await activity.save();
+        const result = await client.save()
 
         return res.status(200).json({ message: 'Activity removed successfully', data: result });
     }
@@ -51,25 +65,24 @@ const deletePhysicalActivity = async (req, res, next) => {
         next(err);
     }
 }
-
-const getRecommendations = async(req,res,next)=>{
-    try{
+const getRecommendations = async (req, res, next) => {
+    try {
         const clientId = req.params.clientId;
-        const recommendations = await client_Recommendation.find({clientId: clientId});
-        if(!recommendations){
-            return res.status(404).json({message:'Recommendations not found'});
+        const recommendations = await client_Recommendation.find({ clientId: clientId });
+        if (!recommendations) {
+            return res.status(404).json({ message: 'Recommendations not found' });
         }
-       return res.status(200).json({success:true,data:recommendations});
+        return res.status(200).json({ success: true, data: recommendations });
     }
-    catch(err){
+    catch (err) {
         next(err);
     }
 }
 
-const createPhysicalActivity = async(req,res,next)=>{
-    try{
+const createPhysicalActivity = async (req, res, next) => {
+    try {
 
-        const {time,timeunit,durations,activity,met,byactivity,dailyaverage} = req.body;
+        const { time, timeunit, durations, activity, met, byactivity, dailyaverage } = req.body;
 
         const newActivity = new physicalActivity({
             time,
@@ -81,23 +94,23 @@ const createPhysicalActivity = async(req,res,next)=>{
             dailyaverage
         });
         const result = await newActivity.save();
-        return res.status(200).json({success:true,data:result});
+        return res.status(200).json({ success: true, data: result });
 
     }
-    catch(err){
+    catch (err) {
         next(err);
     }
 }
 
-const getPhysicalActivity = async(req,res,next)=>{
-    try{
+const getPhysicalActivity = async (req, res, next) => {
+    try {
         const activities = await physicalActivity.find();
-        if(!activities){
-            return res.status(404).json({message:'Activities not found'});
+        if (!activities) {
+            return res.status(404).json({ message: 'Activities not found' });
         }
-       return res.status(200).json({success:true,data:activities});
+        return res.status(200).json({ success: true, data: activities });
     }
-    catch(err){
+    catch (err) {
         next(err);
     }
 }

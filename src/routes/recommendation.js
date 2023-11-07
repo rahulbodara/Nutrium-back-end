@@ -12,7 +12,7 @@ const {
 
 router.put('/recommendations/:clientId',isAuthenticated,createRecommendation);
 
-router.delete('/deleteActivity/:id/:subArrayIndex/:elementIndex',isAuthenticated,deletePhysicalActivity);
+router.delete('/deleteActivity/:clientId/:objectId',isAuthenticated,deletePhysicalActivity);
 
 router.get('/recommendations/:clientId',isAuthenticated,getRecommendations);
 

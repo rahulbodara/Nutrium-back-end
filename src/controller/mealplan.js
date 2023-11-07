@@ -352,126 +352,9 @@ const updateMealPlan = async (req, res, next) => {
 
     const pop = await MealPlan
       .findOne({ _id: mealId })
-      .populate({
-        path: 'mealPlans.foods.foodId mealPlans.Appetizer.foodId mealPlans.Dish.foodId mealPlans.Dessert.foodId mealPlans.Beverage.foodId mealPlans.Soup.foodId mealPlans.Firstcourse.foodId mealPlans.Secondcourse.foodId mealPlans.Sidedish.foodId mealPlans.Others.foodId mealPlans.foods.subfoods.foodId mealPlans.Appetizer.subfoods.foodId mealPlans.Dish.subfoods.foodId mealPlans.Dessert.subfoods.foodId mealPlans.Beverage.subfoods.foodId mealPlans.Soup.subfoods.foodId mealPlans.Firstcourse.subfoods.foodId mealPlans.Secondcourse.subfoods.foodId mealPlans.Sidedish.subfoods.foodId mealPlans.Others.subfoods.foodId',
-        model: 'Food',
-      });
-
-    //   _id: pop._id,
-    //   clientId: pop.clientId,
-    //   userId: pop.userId,
-    //   days: pop.days,
-    //   copyMealPlan: pop.copyMealPlan,
-    //   creationMethod: pop.creationMethod,
-    //   mealPlans: pop.mealPlans.map(plan => ({
-    //     meal: plan.meal,
-    //     time: plan.time,
-    //     _id: plan._id,
-    //     foods: plan.foods.map(food => (
-    //       {
-    //          _id: food._id,
-    //           name: food?.name?.name,
-    //           source: food?.name?.source,
-    //           group: food?.name?.group,
-    //           quantity: food?.name?.quantity,
-    //           foodId: food?.name?.foodId,
-    //         subfoods: food.subfoods.map(subfood => ({
-    //           name: {
-    //             name: subfood?.name?.name,
-    //             source: subfood?.name?.source,
-    //             group: subfood?.name?.group,
-    //             quantity: subfood?.name?.quantity,
-    //             userId: subfood?.name?.userId,
-    //             _id: subfood?.name?._id,
-    //           },
-    //         })),
-    //       })),
-    //     Appetizer: plan.Appetizer.map(appetizer => ({
-    //       name: {
-    //         name: appetizer?.name?.name,
-    //         source: appetizer?.name?.source,
-    //         group: appetizer?.name?.group,
-    //         quantity: appetizer?.name?.quantity,
-    //         userId: appetizer?.name?.userId,
-    //         _id: appetizer?.name?._id,
-    //       },
-    //       subfoods: appetizer.subfoods.map(subfood => ({
-    //         name: {
-    //           name: subfood?.name?.name,
-    //           source: subfood?.name?.source,
-    //           group: subfood?.name?.group,
-    //           quantity: subfood?.name?.quantity,
-    //           userId: subfood?.name?.userId,
-    //           _id: subfood?.name?._id,
-    //         },
-    //       })),
-    //     })),
-    //     Dish: plan.Dish.map(dish => ({
-    //       name: {
-    //         name: dish?.name?.name,
-    //         source: dish?.name?.source,
-    //         group: dish?.name?.group,
-    //         quantity: dish?.name?.quantity,
-    //         userId: dish?.name?.userId,
-    //         _id: dish?.name?._id,
-    //       },
-    //       subfoods: dish.subfoods.map(subfood => ({
-    //         name: {
-    //           name: subfood?.name?.name,
-    //           source: subfood?.name?.source,
-    //           group: subfood?.name?.group,
-    //           quantity: subfood?.name?.quantity,
-    //           userId: subfood?.name?.userId,
-    //           _id: subfood?.name?._id,
-    //         },
-    //       })),
-    //     })),
-    //     Dessert: plan.Dessert.map(dessert => ({
-    //       name: {
-    //         name: dessert?.name?.name,
-    //         source: dessert?.name?.source,
-    //         group: dessert?.name?.group,
-    //         quantity: dessert?.name?.quantity,
-    //         userId: dessert?.name?.userId,
-    //         _id: dessert?.name?._id,
-    //       },
-    //       subfoods: dessert.subfoods.map(subfood => ({
-    //         name: {
-    //           name: subfood?.name?.name,
-    //           source: subfood?.name?.source,
-    //           group: subfood?.name?.group,
-    //           quantity: subfood?.name?.quantity,
-    //           userId: subfood?.name?.userId,
-    //           _id: subfood?.name?._id,
-    //         },
-    //       })),
-    //     })),
-    //     Beverage: plan.Beverage.map(beverage => ({
-    //       name: {
-    //         name: beverage?.name?.name,
-    //         source: beverage?.name?.source,
-    //         group: beverage?.name?.group,
-    //         quantity: beverage?.name?.quantity,
-    //         userId: beverage?.name?.userId,
-    //         _id: beverage?.name?._id,
-    //       },
-    //       subfoods: beverage.subfoods.map(subfood => ({
-    //         name: {
-    //           name: subfood?.name?.name,
-    //           source: subfood?.name?.source,
-    //           group: subfood?.name?.group,
-    //           quantity: subfood?.name?.quantity,
-    //           userId: subfood?.name?.userId,
-    //           _id: subfood?.name?._id,
-    //         },
-    //       })),
-    //     })),
-    //     notes: plan.notes,
-    //     nutrientSumsForMealPlans: nutrientSumsForMealPlans.filter((item) => item.nutrientSums._id === plan._id)
-    //   })),
-    // };
 
     const modifiedPop = {
+      _id: pop._id,
       userId: pop.userId,
       clientId: pop.clientId,
       mealPlans: pop.mealPlans.map(plan => ({
@@ -623,7 +506,7 @@ const updateMealPlan = async (req, res, next) => {
       creationMethod: pop.creationMethod,
       copyMealPlan: pop.copyMealPlan
     };
-    
+
 
     if (!mealPlan) {
       return res.status(404).json({ message: 'Meal plan not found' });
@@ -778,10 +661,10 @@ const deleteParticularFood = async (req, res, next) => {
         meal[0].forEach((food) => {
           if (food.subfoods.length > 0) {
             m1 = food.subfoods[0].name,
-            m2 = food.subfoods[0].source,
-            m3 = food.subfoods[0].group,
-            m4 = food.subfoods[0].quantity,
-            m5 = food.subfoods[0].foodId
+              m2 = food.subfoods[0].source,
+              m3 = food.subfoods[0].group,
+              m4 = food.subfoods[0].quantity,
+              m5 = food.subfoods[0].foodId
           }
         });
 
