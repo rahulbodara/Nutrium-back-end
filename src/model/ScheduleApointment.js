@@ -18,7 +18,7 @@ const appointmentSchema = new mongoose.Schema({
   start: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ["confirmed", "not_confirmed", "completed"],
+    enum: ["confirmed", "not_confirmed", "completed", "canceled"],
     default: "not_confirmed",
   },
   videoConsultation: {
@@ -35,6 +35,10 @@ const appointmentSchema = new mongoose.Schema({
   workplace: { type: String, required: true },
   schedulingNotes: { type: String, default: "" },
   videoLink: { type: String, default: "" },
+  description:{
+    type: String,
+    default: "Not Yet"
+  }
 });
 
 const ScheduleApointment = mongoose.model("Appointment", appointmentSchema);

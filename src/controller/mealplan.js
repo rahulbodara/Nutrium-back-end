@@ -343,12 +343,13 @@ const getMealPlan = async (req, res, next) => {
 const updateMealPlan = async (req, res, next) => {
   try {
     const mealId = req.params.mealId;
-
-    const mealPlan = await MealPlan.findOneAndUpdate(
-      { _id: mealId },
-      req.body,
-      { new: true }
-    );
+    
+      const mealPlan = await MealPlan.findOneAndUpdate(
+        { _id: mealId },
+        req.body,
+        { new: true }
+      );
+  
 
     const pop = await MealPlan
       .findOne({ _id: mealId })
@@ -508,9 +509,9 @@ const updateMealPlan = async (req, res, next) => {
     };
 
 
-    if (!mealPlan) {
-      return res.status(404).json({ message: 'Meal plan not found' });
-    }
+    // if (!mealPlan) {
+    //   return res.status(404).json({ message: 'Meal plan not found' });
+    // }
 
     return res.status(200).json({ message: "Meal plan updated successfully", pop: modifiedPop });
   } catch (error) {

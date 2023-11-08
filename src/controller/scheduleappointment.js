@@ -22,22 +22,12 @@ const createAppointment = async (req, res, next) => {
       clientName
     } = req.body;
 
-    const startDateTime = new Date(start); 
-    const endDateTime = new Date(end); 
-    
-    function addTimeZoneOffset(inputDate) {
-      const timeZoneOffset = inputDate.getTimezoneOffset();
-      const dateWithOffset = new Date(inputDate.getTime() - timeZoneOffset * 60000);
-      return dateWithOffset;
-    }
-    const startWithOffset = addTimeZoneOffset(startDateTime);
-    const endWithOffset = addTimeZoneOffset(endDateTime);
 
     const appointment = new Appointment({
       userId,
       status,
-      start:startWithOffset,
-      end:endWithOffset,
+      start:start,
+      end:end,
       videoConsultation,
       schedulingNotes,
       newStartTime,
@@ -75,6 +65,21 @@ const getAllAppointments = async (req, res, next) => {
       }
     ])
 
+    const currentDate = new Date();
+
+    const completedAppointement = getallappointments.filter(appointement => appointement.status === "completed");
+
+    const closestCompletedAppointment = completedAppointement.reduce((closest, appointement) =>{
+      const appointementDate = new Date(appointement.start);
+      if(appointementDate < currentDate && (closest === null || appointmentDate > new Date(closest.start))){
+        return appointement;
+      }
+      return closest;
+    }, null);
+
+    console.log('closestCompletedAppointment-->>',closestCompletedAppointment);
+
+
     return res.status(200).json({
       success: true,
       getallappointments,
@@ -96,17 +101,6 @@ const updateAppointment = async (req, res, next) => {
       end
     } = req.body;
 
-    const startDateTime = new Date(start); 
-    const endDateTime = new Date(end); 
-    
-    function addTimeZoneOffset(inputDate) {
-      const timeZoneOffset = inputDate.getTimezoneOffset();
-      const dateWithOffset = new Date(inputDate.getTime() - timeZoneOffset * 60000);
-      return dateWithOffset;
-    }
-    const startWithOffset = addTimeZoneOffset(startDateTime);
-    const endWithOffset = addTimeZoneOffset(endDateTime);
-
     const appointment = await Appointment.findById(appointmentId);
 
     if (!appointment) {
@@ -123,8 +117,8 @@ const updateAppointment = async (req, res, next) => {
     appointment.videoConsultation = videoConsultation;
     appointment.schedulingNotes = schedulingNotes;
 
-    appointment.start = startWithOffset;
-    appointment.end = endWithOffset;
+    appointment.start = start;
+    appointment.end = end;
     appointment.videoLink = updatedVideoLink;
 
     const updatedAppointment = await appointment.save();
