@@ -31,13 +31,26 @@ const createProfessionalPreference = async (userId) => {
             },
             "appointementreference":{
                 "status":"Not confirmed",
-                "appointementnotification":["Notify 1 hour before the appointment","Notify 1 day before the appointment","Notify 3 days before the appointment"]
+                "appointementnotification":[
+                    {
+                        "time": 1,
+                        "timeunit": "hours"
+                    },
+                    {
+                        "time": 1,
+                        "timeunit": "days"
+                    },
+                    {
+                        "time": 3,
+                        "timeunit": "days"
+                    }
+                ]
             },
             "nutritionassessmentformconfiguration":{
                 "appointementinformation":["Reason for appointment","Expectations","Clinical goals","Other information"],
                 "personalandsocialhistory":["Maternal weight gain","Maternal behaviors at pregnancy","Gestational age at birth","Bowel movements","Sleep quality",
                 "Smoker","Alcohol consumption","Marital status","Physical activity","Race","Other information"],
-                "dietaryhistory":["Breastfeeding","Food diversification","Milk and infant formulas","Usual wake up time","Usual bedtime","Usual bedtime","Types of diet",
+                "dietaryhistory":["Breastfeeding","Food diversification","Milk and infant formulas","Usual wake up time","Usual bedtime","Types of diet",
                 "Favorite food","Disliked food","Allergies","Food intolerances","Nutritional deficiencies","Water intake","Other information"],
                 "medicalhistory":["Diseases","Medication","Personal history","Family history","Other information"],
                 "gestationalinformation":["Pregnant","Gestation type","Last menstrual period","Lactating","Beginning of lactation","Observations"],

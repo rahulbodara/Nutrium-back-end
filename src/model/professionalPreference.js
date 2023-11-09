@@ -69,9 +69,20 @@ const professionalPreferenceSchema = new mongoose.Schema({
         status:{
             type: String,
         },
-        appointementnotification:{
-            type: Array
-        }
+        appointementnotification:[
+            {
+                time: Number,
+                timeunit: String,
+            },
+            {
+                time: Number,
+                timeunit: String,
+            },
+            {
+                time: Number,
+                timeunit: String,
+            }
+        ]
     },
     nutritionassessmentformconfiguration:{
 

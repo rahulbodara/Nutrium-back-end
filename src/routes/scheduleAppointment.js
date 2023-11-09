@@ -13,4 +13,10 @@ router.delete("/scheduleApointment/:id",isAuthenticated,scheduleAppointmentContr
 
 router.put("/updateAppointmentStatus/:id",isAuthenticated,scheduleAppointmentController.updateAppointementStatus)
 
+router.get("/getAppointementDescription",isAuthenticated,scheduleAppointmentController.getAppointementDescription)
+
+router.put("/updateEventStatus/:id", isAuthenticated, scheduleAppointmentController.updateStartAppointment)
+
+router.get("/getStartedAppointments", isAuthenticated, scheduleAppointmentController.getStartedAppointments)
+
 module.exports = router;
