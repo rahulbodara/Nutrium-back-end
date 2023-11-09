@@ -15,7 +15,7 @@ router.put("/updateAppointmentStatus/:id",isAuthenticated,scheduleAppointmentCon
 
 router.get("/getAppointementDescription",isAuthenticated,scheduleAppointmentController.getAppointementDescription)
 
-router.put("/updateEventStatus/:id", isAuthenticated, scheduleAppointmentController.updateStartAppointment)
+router.get("/updateEventStatus/:id", isAuthenticated, scheduleAppointmentController.updateStartAppointment)
 
 router.get("/getStartedAppointments", isAuthenticated, scheduleAppointmentController.getStartedAppointments)
 
