@@ -21,6 +21,10 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["confirmed", "not_confirmed", "completed", "canceled"],
     default: "not_confirmed",
   },
+  isStarted:{
+    type: Boolean,
+    default: false
+  },
   videoConsultation: {
     type: String,
     enum: ["without_video_call", "google_meet", "zoom", "other_service"],
@@ -39,7 +43,7 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     default: "Not Yet"
   }
-});
+},{timestamps:true});
 
 const ScheduleApointment = mongoose.model("Appointment", appointmentSchema);
 

@@ -26,8 +26,8 @@ const createAppointment = async (req, res, next) => {
     const appointment = new Appointment({
       userId,
       status,
-      start:start,
-      end:end,
+      start: start,
+      end: end,
       videoConsultation,
       schedulingNotes,
       newStartTime,
@@ -53,10 +53,10 @@ const getAllAppointments = async (req, res, next) => {
 
     const getallappointments = await Appointment.aggregate([
       {
-        $match:{userId: userIdObj},
+        $match: { userId: userIdObj },
       },
       {
-        $lookup:{
+        $lookup: {
           from: "clients",
           localField: "clientId",
           foreignField: "_id",
@@ -64,21 +64,6 @@ const getAllAppointments = async (req, res, next) => {
         }
       }
     ])
-
-    const currentDate = new Date();
-
-    const completedAppointement = getallappointments.filter(appointement => appointement.status === "completed");
-
-    const closestCompletedAppointment = completedAppointement.reduce((closest, appointement) =>{
-      const appointementDate = new Date(appointement.start);
-      if(appointementDate < currentDate && (closest === null || appointmentDate > new Date(closest.start))){
-        return appointement;
-      }
-      return closest;
-    }, null);
-
-    console.log('closestCompletedAppointment-->>',closestCompletedAppointment);
-
 
     return res.status(200).json({
       success: true,
@@ -89,6 +74,43 @@ const getAllAppointments = async (req, res, next) => {
     next(error);
   }
 };
+
+const getAppointementDescription = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const appointments = await Appointment.find({ userId: userId });
+
+    if (!appointments) {
+      return res.status(404).json({ message: "Appointment not found!" });
+    }
+
+    const maxStartDateByClient = appointments.reduce((acc, appointment) => {
+      const { clientId, start } = appointment;
+
+      if (acc[clientId]) {
+        if (new Date(acc[clientId].start) < new Date(start)) {
+          acc[clientId] = appointment;
+        }
+      } else {
+        acc[clientId] = appointment;
+      }
+
+      return acc;
+    }, {});
+
+    const filteredAppointments = Object.values(maxStartDateByClient);
+    console.log('filteredAppointments-->>', filteredAppointments);
+
+    return res.status(200).json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    console.error("Error getting appointment:", error);
+    next(error);
+  }
+}
+
 
 const updateAppointment = async (req, res, next) => {
   try {
@@ -146,12 +168,12 @@ const deleteAppointment = async (req, res, next) => {
   }
 }
 
-const updateAppointementStatus = async(req,res,next) => {
+const updateAppointementStatus = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
-    const {status} = req.body;
+    const { status } = req.body;
 
-    const appointment = await Appointment.findById({_id:appointmentId});
+    const appointment = await Appointment.findById({ _id: appointmentId });
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found!" });
@@ -159,12 +181,62 @@ const updateAppointementStatus = async(req,res,next) => {
     appointment.status = status;
 
     const updatedAppointment = await appointment.save();
-    res.status(200).json({success:true, message: 'Appointment updated successfully',data: updatedAppointment});
+    res.status(200).json({ success: true, message: 'Appointment updated successfully', data: updatedAppointment });
   } catch (error) {
     console.error("Error updating appointment:", error);
     next(error);
   }
 }
+
+const updateStartAppointment = async (req, res, next) => {
+  try {
+    const appointmentId = req.params.id;
+    const appointment = await Appointment.findById({ _id: appointmentId });
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found!" });
+    }
+    appointment.isStarted = true;
+    await appointment.save();
+    res.status(200).json({ success: true, message: 'Appointment updated successfully' });
+  } catch (error) {
+    console.error("Error updating appointment:", error);
+    next(error);
+  }
+}
+
+const getStartedAppointments = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const userIdObj = new mongoose.Types.ObjectId(userId);
+
+    const getStartedAppointments = await Appointment.aggregate([
+      {
+        $match: {
+          userId: userIdObj,
+          status: "not_confirmed",
+          isStarted: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "client",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      getStartedAppointments,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 
 module.exports = {
@@ -173,4 +245,7 @@ module.exports = {
   getAllAppointments,
   deleteAppointment,
   updateAppointementStatus,
+  getAppointementDescription,
+  updateStartAppointment,
+  getStartedAppointments
 };
