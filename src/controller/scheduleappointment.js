@@ -99,11 +99,10 @@ const getAppointementDescription = async (req, res, next) => {
     }, {});
 
     const filteredAppointments = Object.values(maxStartDateByClient);
-    console.log('filteredAppointments-->>', filteredAppointments);
 
     return res.status(200).json({
       success: true,
-      appointments,
+      filteredAppointments,
     });
   } catch (error) {
     console.error("Error getting appointment:", error);
