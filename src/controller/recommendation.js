@@ -30,6 +30,29 @@ const createRecommendation = async (req, res, next) => {
     }
 }
 
+const addPhysicalActivityObject = async (req, res, next) => {
+    try {
+        const userId = req.userId;
+        const clientId = req.params.clientId;
+        const { physicalActivity, indexToPush } = req.body;
+
+        const existingRecord = await client_Recommendation.findOne({clientId: clientId});
+        console.log('existingRecord-->>',existingRecord);
+
+        if (!existingRecord) {
+            return res.status(404).json({ success: false, message: 'Record not found' });
+        }
+
+        existingRecord.physicalActivity[indexToPush].push(...physicalActivity);
+
+        const result = await existingRecord.save();
+
+        res.status(200).json({ success: true, data: result });
+    } catch (err) {
+        next(err);
+    }
+}
+
 const deletePhysicalActivity = async (req, res, next) => {
 
     const { clientId, objectId } = req.params;
@@ -121,5 +144,6 @@ module.exports = {
     deletePhysicalActivity,
     getRecommendations,
     createPhysicalActivity,
-    getPhysicalActivity
+    getPhysicalActivity,
+    addPhysicalActivityObject
 }

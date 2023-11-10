@@ -7,7 +7,8 @@ const {
   deletePhysicalActivity,
   getRecommendations,
   createPhysicalActivity,
-  getPhysicalActivity
+  getPhysicalActivity,
+  addPhysicalActivityObject
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId',isAuthenticated,createRecommendation);
@@ -19,5 +20,7 @@ router.get('/recommendations/:clientId',isAuthenticated,getRecommendations);
 router.post('/createActivity',createPhysicalActivity);
 
 router.get('/activities',getPhysicalActivity);
+
+router.put('/addActivity/:clientId',isAuthenticated,addPhysicalActivityObject);
 
 module.exports = router;                                                             

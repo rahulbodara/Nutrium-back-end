@@ -127,8 +127,33 @@ const updateprofessionPreference = async (req, res, next) => {
                 if (existingPreference.presets.hasOwnProperty(field)) {
                     existingPreference.presets[field] = updateFields[field];
                 }
-                if (existingPreference.appointementreference.hasOwnProperty(field)){
-                    existingPreference.appointementreference[field] = updateFields[field];
+                if (existingPreference.appointementreference.hasOwnProperty(field)) {
+                    const appointementreference = existingPreference.appointementreference;
+                
+                    if (updateFields.hasOwnProperty('status')) {
+                        appointementreference.status = updateFields.status;
+                    }
+                
+                    if (updateFields.hasOwnProperty('appointementnotification')) {
+                        const updatedAppointementNotifications = updateFields.appointementnotification;
+                
+                        if (Array.isArray(appointementreference.appointementnotification)) {
+                            updatedAppointementNotifications.forEach(updatedNotification => {
+                                const indexToUpdate = appointementreference.appointementnotification.findIndex((oldNotification) =>  
+                                    
+                                     {
+                                        if(oldNotification._id.toString() === updatedNotification._id){
+                                            return true
+                                        }
+                                     }
+                                );
+                                if (indexToUpdate !== -1) {
+                                    console.log(indexToUpdate);
+                                    appointementreference.appointementnotification[indexToUpdate] = updatedNotification;
+                                }
+                            });
+                        }
+                    }
                 }
                 if (existingPreference.nutritionassessmentformconfiguration.hasOwnProperty(field)){
                     existingPreference.nutritionassessmentformconfiguration[field] = updateFields[field];
@@ -150,6 +175,7 @@ const updateprofessionPreference = async (req, res, next) => {
             res.status(404).json({ message: "professionPreference not found" });
         }
     } catch (error) {
+        console.log(error);
         next(error);
     }
 };
