@@ -78,7 +78,7 @@ const getAllAppointments = async (req, res, next) => {
 const getAppointementDescription = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const appointments = await Appointment.find({ userId: userId });
+    const appointments = await Appointment.find({ userId: userId,status:'completed' });
 
     if (!appointments) {
       return res.status(404).json({ message: "Appointment not found!" });
