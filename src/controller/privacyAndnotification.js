@@ -1,32 +1,53 @@
 const privacyandnotification = require('../model/privacyAndnotification');
+const User = require('../model/User');
 
-const createPrivacyAndNotification = async (req,res,next) => {
+const createPrivacyAndNotification = async (userId) => {
     try{
-        const userId = req.userId;
-        const {privacy,notifications} = req.body;
-        const existingPrivacyAndNotification = await privacyandnotification.findOne({userId: userId});
-        if(existingPrivacyAndNotification){
-            existingPrivacyAndNotification.privacy = privacy;
-            existingPrivacyAndNotification.notifications = notifications;
-            const result = await existingPrivacyAndNotification.save();
-            return res.status(200).json({
-                success: true,
-                message:'privacy and notification updated successfully',
-                data:result
-            });
+       const user = await User.findOne({_id: userId});
+       const defaultData = {
+        "privacy":{
+            "termsofuse":"I accept the Terms and Conditions",
+            "privacypolicy":"I accept the Privacy Policy"
+        },
+        "notifications":{
+            "marketingcommunications":"I want to receive all communications",
+            "browsernotifications":"I want to receive notifications",
+            "emailswithdailyhighlights":"I want to get emails with daily highlights",
+            "emailswithmymonthlystatistics":"I want to get emails with my monthly statistics"
         }
-        else{
-            const newPrivacyAndNotification = new privacyandnotification({
-                userId: userId,
-                privacy: privacy,
-                notifications: notifications
-            });
-            const result = await newPrivacyAndNotification.save();
-            return res.status(200).json({
-                success: true,
-                message:'privacy and notification created successfully',
-                data:result
-            });
+       }
+
+       const privacy = new privacyandnotification({
+            userId: userId,
+            ...defaultData
+       })
+       const result = await privacy.save();
+    }
+    catch(err){
+        next(err);
+    }
+}
+
+const updatePrivacyAndNotifications = async(req,res, next) => {
+    try {
+
+        const userId = req.userId;
+        const updateFields = req.body;
+        const existingPrivacy = await privacyandnotification.findOne({userId:userId});
+
+        if(existingPrivacy){
+
+            for(let field in updateFields){
+                if(existingPrivacy.privacy.hasOwnProperty(field)){
+                    existingPrivacy.privacy[field] = updateFields[field];
+                }
+                if(existingPrivacy.notifications.hasOwnProperty(field)){
+                    existingPrivacy.notifications[field] = updateFields[field];
+                }
+            }
+
+            const result = await existingPrivacy.save();
+            return res.status(201).json({success:true,message:"privacy and notifications updated successfully",data:result})
         }
 
     }
@@ -61,5 +82,6 @@ const getPrivacyAndNotification = async (req, res, next) => {
 
 module.exports = {
     createPrivacyAndNotification,
-    getPrivacyAndNotification
+    getPrivacyAndNotification,
+    updatePrivacyAndNotifications
 }
