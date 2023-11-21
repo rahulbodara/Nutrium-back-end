@@ -53,49 +53,56 @@ const addFood = async (req, res, next) => {
     } = req.body;
 
     const macronutrients = {
-      energy:energy,
-      fat:fat,
-      carbohydrate:carbohydrate,
-      protein:protein,
+      energy: energy,
+      fat: fat,
+      carbohydrate: carbohydrate,
+      protein: protein,
     }
     const micronutrients = {
-      cholesterol:cholesterol,
-      fiber:fiber,
-      sodium:sodium,
-      water:water,
-      vitaminA:vitaminA,
-      vitaminB6:vitaminB6,
-      vitaminB12:vitaminB12,
-      vitaminC:vitaminC,
-      vitaminD_D2_D3:vitaminD_D2_D3,
-      vitaminE:vitaminE,
-      vitaminK:vitaminK,
-      starch:starch,
-      lactose:lactose,
-      alcohol:alcohol,
-      caffeine:caffeine,
-      sugars:sugars,
-      calcium:calcium,
-      iron:iron,
-      magnesium:magnesium,
-      phosphorus:phosphorus,
-      potassium:potassium,
-      zinc:zinc,
-      copper:copper,
-      fluorlde:fluorlde,
-      manganese:manganese,
-      selenium:selenium,
-      thiamin:thiamin,
-      riboflavin:riboflavin,
-      niacin:niacin,
-      pantothenicAcid:pantothenicAcid,
-      folateTotal:folateTotal,
-      folicAcid:folicAcid,
-      fattyAcidsTotalTrans:fattyAcidsTotalTrans,
-      fattyAcidsTotalSaturated:fattyAcidsTotalSaturated,
-      fattyAcidsTotalMonounsaturated:fattyAcidsTotalMonounsaturated,
-      fattyAcidsTotalPolyunsaturated:fattyAcidsTotalPolyunsaturated,
-      chloride:chloride,
+      cholesterol: cholesterol,
+      fiber: fiber,
+      sodium: sodium,
+      water: water,
+      vitaminA: vitaminA,
+      vitaminB6: vitaminB6,
+      vitaminB12: vitaminB12,
+      vitaminC: vitaminC,
+      vitaminD_D2_D3: vitaminD_D2_D3,
+      vitaminE: vitaminE,
+      vitaminK: vitaminK,
+      starch: starch,
+      lactose: lactose,
+      alcohol: alcohol,
+      caffeine: caffeine,
+      sugars: sugars,
+      calcium: calcium,
+      iron: iron,
+      magnesium: magnesium,
+      phosphorus: phosphorus,
+      potassium: potassium,
+      zinc: zinc,
+      copper: copper,
+      fluorlde: fluorlde,
+      manganese: manganese,
+      selenium: selenium,
+      thiamin: thiamin,
+      riboflavin: riboflavin,
+      niacin: niacin,
+      pantothenicAcid: pantothenicAcid,
+      folateTotal: folateTotal,
+      folicAcid: folicAcid,
+      fattyAcidsTotalTrans: fattyAcidsTotalTrans,
+      fattyAcidsTotalSaturated: fattyAcidsTotalSaturated,
+      fattyAcidsTotalMonounsaturated: fattyAcidsTotalMonounsaturated,
+      fattyAcidsTotalPolyunsaturated: fattyAcidsTotalPolyunsaturated,
+      chloride: chloride,
+    }
+
+    if (!name) {
+      return res.status(400).json({ message: 'name is required' });
+    }
+    if (!group) {
+      return res.status(400).json({ message: 'group is required' });
     }
 
     const newFood = await Food.create({
@@ -211,40 +218,67 @@ const updateFood = async (req, res, next) => {
     const userId = req.userId;
     const updateFields = req.body;
 
-    const existing = await Food.findOne({_id: foodId});
+    const existing = await Food.findOne({ _id: foodId });
 
-    if(!existing) {
-      return res.status(404).json({message: 'food not found'})
+    if (!existing) {
+      return res.status(404).json({ message: 'food not found' })
     }
 
-    if(existing){
-      for(let field in updateFields){
-        if(existing.micronutrients.hasOwnProperty(field)){
+    if (existing) {
+      for (let field in updateFields) {
+        if (existing.micronutrients.hasOwnProperty(field)) {
           existing.micronutrients[field] = updateFields[field]
         }
-        if(existing.macronutrients.hasOwnProperty(field)){
+        if (existing.macronutrients.hasOwnProperty(field)) {
           existing.macronutrients[field] = updateFields[field]
         }
-       
-          existing[field] = updateFields[field];
+        if (existing.macronutrients.hasOwnProperty(field)) {
+          existing.macronutrients[field] = updateFields[field]
+        }
+        const fieldsToUpdate = ["name", "source", "group", "quantity"];
 
-          if (
-            existing.commonMeasures &&
-            Array.isArray(existing.commonMeasures) &&
-            existing.commonMeasures.length > 0 &&
-            updateFields._id
-          ) {
-            const updatedCommonMeasure = existing.commonMeasures.find(
-              (measure) => measure._id.toString() === updateFields._id.toString()
-            );
-      
-            if (updatedCommonMeasure) {
-              updatedCommonMeasure[field] = updateFields[field];
-            }
-          }
-          if (existing.hasOwnProperty(field) && field !== 'commonMeasures') {
+        for (const field of fieldsToUpdate) {
+          if (updateFields.hasOwnProperty(field)) {
             existing[field] = updateFields[field];
           }
+        }
+
+        if (updateFields.hasOwnProperty('commonMeasures')) {
+          const updatedCommonMeasures = updateFields.commonMeasures;
+
+          if (Array.isArray(existing.commonMeasures)) {
+            updatedCommonMeasures.forEach(updatedMeasure => {
+              if (updatedMeasure._id) {
+                const indexToUpdate = existing.commonMeasures.findIndex((oldMeasure) =>
+                  oldMeasure._id.toString() === updatedMeasure._id
+                );
+
+                if (indexToUpdate !== -1) {
+                  if (updatedMeasure.singularName !== undefined) {
+                    existing.commonMeasures[indexToUpdate].singularName = updatedMeasure.singularName;
+                  }
+                  if (updatedMeasure.pluralName !== undefined) {
+                    existing.commonMeasures[indexToUpdate].pluralName = updatedMeasure.pluralName;
+                  }
+                  if (updatedMeasure.quantity !== undefined) {
+                    existing.commonMeasures[indexToUpdate].quantity = updatedMeasure.quantity;
+                  }
+                  if (updatedMeasure.totalGrams !== undefined) {
+                    existing.commonMeasures[indexToUpdate].totalGrams = updatedMeasure.totalGrams;
+                  }
+                  if (updatedMeasure.ediblePortion !== undefined) {
+                    existing.commonMeasures[indexToUpdate].ediblePortion = updatedMeasure.ediblePortion;
+                  }
+
+                }
+              } else {
+                existing.commonMeasures.push(updatedMeasure);
+              }
+            });
+          }
+        }
+
+
       }
     }
 
