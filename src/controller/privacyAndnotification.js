@@ -24,7 +24,7 @@ const createPrivacyAndNotification = async (userId) => {
        const result = await privacy.save();
     }
     catch(err){
-        next(err);
+        console.log(err);
     }
 }
 

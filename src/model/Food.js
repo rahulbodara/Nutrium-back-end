@@ -50,197 +50,195 @@ const FoodSchema = new mongoose.Schema({
   },
   macronutrients: {
     energy: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fat: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     carbohydrate: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     protein: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
   },
   micronutrients: {
     cholesterol: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fiber: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     sodium: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     water: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminA: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminB6: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminB12: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminC: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminD_D2_D3: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminE: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     vitaminK: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     starch: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     lactose: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     alcohol: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     caffeine: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     sugars: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     calcium: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     iron: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     magnesium: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     phosphorus: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     potassium: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     zinc: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     copper: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fluorlde: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     manganese: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     selenium: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     thiamin: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     riboflavin: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     niacin: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     pantothenicAcid: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     folateTotal: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     folicAcid: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fattyAcidsTotalTrans: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fattyAcidsTotalSaturated: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fattyAcidsTotalMonounsaturated: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     fattyAcidsTotalPolyunsaturated: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
     chloride: {
-      value: Number,
-      unit: String,
+      type: Number,
+
     },
   },
   commonMeasures: [
-    [
-      {
-        singularName: {
-          value: Number,
-          unit: String,
-        },
-        pluralName: {
-          value: Number,
-          unit: String,
-        },
-        quantity: {
-          value: Number,
-          unit: String,
-        },
-        totalGrams: {
-          value: Number,
-          unit: String,
-        },
-        ediblePortion: {
-          value: Number,
-          unit: String,
-        },
+    {
+      singularName: {
+        type: Number,
+
       },
-    ],
+      pluralName: {
+        type: Number,
+
+      },
+      quantity: {
+        type: Number,
+
+      },
+      totalGrams: {
+        type: Number,
+
+      },
+      ediblePortion: {
+        type: Number,
+
+      },
+    },
   ],
 });
 

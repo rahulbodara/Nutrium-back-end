@@ -8,10 +8,96 @@ const addFood = async (req, res, next) => {
       source,
       group,
       quantity,
-      macronutrients,
-      micronutrients,
+      energy,
+      fat,
+      carbohydrate,
+      protein,
+      cholesterol,
+      fiber,
+      sodium,
+      water,
+      vitaminA,
+      vitaminB6,
+      vitaminB12,
+      vitaminC,
+      vitaminD_D2_D3,
+      vitaminE,
+      vitaminK,
+      starch,
+      lactose,
+      alcohol,
+      caffeine,
+      sugars,
+      calcium,
+      iron,
+      magnesium,
+      phosphorus,
+      potassium,
+      zinc,
+      copper,
+      fluorlde,
+      manganese,
+      selenium,
+      thiamin,
+      riboflavin,
+      niacin,
+      pantothenicAcid,
+      folateTotal,
+      folicAcid,
+      fattyAcidsTotalTrans,
+      fattyAcidsTotalSaturated,
+      fattyAcidsTotalMonounsaturated,
+      fattyAcidsTotalPolyunsaturated,
+      chloride,
       commonMeasures,
     } = req.body;
+
+    const macronutrients = {
+      energy:energy,
+      fat:fat,
+      carbohydrate:carbohydrate,
+      protein:protein,
+    }
+    const micronutrients = {
+      cholesterol:cholesterol,
+      fiber:fiber,
+      sodium:sodium,
+      water:water,
+      vitaminA:vitaminA,
+      vitaminB6:vitaminB6,
+      vitaminB12:vitaminB12,
+      vitaminC:vitaminC,
+      vitaminD_D2_D3:vitaminD_D2_D3,
+      vitaminE:vitaminE,
+      vitaminK:vitaminK,
+      starch:starch,
+      lactose:lactose,
+      alcohol:alcohol,
+      caffeine:caffeine,
+      sugars:sugars,
+      calcium:calcium,
+      iron:iron,
+      magnesium:magnesium,
+      phosphorus:phosphorus,
+      potassium:potassium,
+      zinc:zinc,
+      copper:copper,
+      fluorlde:fluorlde,
+      manganese:manganese,
+      selenium:selenium,
+      thiamin:thiamin,
+      riboflavin:riboflavin,
+      niacin:niacin,
+      pantothenicAcid:pantothenicAcid,
+      folateTotal:folateTotal,
+      folicAcid:folicAcid,
+      fattyAcidsTotalTrans:fattyAcidsTotalTrans,
+      fattyAcidsTotalSaturated:fattyAcidsTotalSaturated,
+      fattyAcidsTotalMonounsaturated:fattyAcidsTotalMonounsaturated,
+      fattyAcidsTotalPolyunsaturated:fattyAcidsTotalPolyunsaturated,
+      chloride:chloride,
+    }
+
     const newFood = await Food.create({
       userId,
       name,
@@ -123,32 +209,51 @@ const updateFood = async (req, res, next) => {
   try {
     const foodId = req.params.foodId;
     const userId = req.userId;
-    const updateData = req.body;
+    const updateFields = req.body;
 
-    const food = await Food.findById(foodId);
+    const existing = await Food.findOne({_id: foodId});
 
-    if (!food) {
-      return res.status(404).json({
-        success: false,
-        message: 'Food not found',
-      });
+    if(!existing) {
+      return res.status(404).json({message: 'food not found'})
     }
 
-    if (food.userId.toString() !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not authorized to update this food',
-      });
+    if(existing){
+      for(let field in updateFields){
+        if(existing.micronutrients.hasOwnProperty(field)){
+          existing.micronutrients[field] = updateFields[field]
+        }
+        if(existing.macronutrients.hasOwnProperty(field)){
+          existing.macronutrients[field] = updateFields[field]
+        }
+       
+          existing[field] = updateFields[field];
+
+          if (
+            existing.commonMeasures &&
+            Array.isArray(existing.commonMeasures) &&
+            existing.commonMeasures.length > 0 &&
+            updateFields._id
+          ) {
+            const updatedCommonMeasure = existing.commonMeasures.find(
+              (measure) => measure._id.toString() === updateFields._id.toString()
+            );
+      
+            if (updatedCommonMeasure) {
+              updatedCommonMeasure[field] = updateFields[field];
+            }
+          }
+          if (existing.hasOwnProperty(field) && field !== 'commonMeasures') {
+            existing[field] = updateFields[field];
+          }
+      }
     }
 
-    const updatedFood = await Food.findByIdAndUpdate(foodId, updateData, {
-      new: true,
-    });
+    const result = await existing.save();
 
     return res.status(200).json({
       success: true,
       message: 'Food updated successfully',
-      updatedFood,
+      result,
     });
   } catch (error) {
     console.log(error);
