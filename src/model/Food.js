@@ -7,7 +7,7 @@ const FoodSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true,
+    // required: true,
   },
   source: {
     type: String,
@@ -15,7 +15,7 @@ const FoodSchema = new mongoose.Schema({
   },
   group: {
     type: String,
-    required: true,
+    // required: true,
     enum: [
       'Dairy and Egg Products',
       'Spices and Herbs',
@@ -219,11 +219,11 @@ const FoodSchema = new mongoose.Schema({
   commonMeasures: [
     {
       singularName: {
-        type: Number,
+        type: String,
 
       },
       pluralName: {
-        type: Number,
+        type: String,
 
       },
       quantity: {
