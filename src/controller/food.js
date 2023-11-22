@@ -217,7 +217,25 @@ const updateFood = async (req, res, next) => {
     const foodId = req.params.foodId;
     const userId = req.userId;
     const updateFields = req.body;
+    const measureId = req.body.measureId;
 
+    const commonMeasure = await Food.findOne({userId: userId,_id:foodId});
+
+    if(measureId) {
+      const data = commonMeasure.commonMeasures.findIndex((food) => {
+        return measureId.toString() === food._id.toString()
+     })
+ 
+       if(data !== -1){
+         commonMeasure.commonMeasures.splice(data,1);
+       }
+       else{
+         return res.status(404).json({message:'commonMeasure not found'});
+       }
+ 
+       await commonMeasure.save();
+    }
+    
     const existing = await Food.findOne({ _id: foodId });
 
     if (!existing) {
@@ -277,8 +295,6 @@ const updateFood = async (req, res, next) => {
             });
           }
         }
-
-
       }
     }
 
@@ -295,6 +311,35 @@ const updateFood = async (req, res, next) => {
   }
 };
 
+const deleteCommonMeasure = async(req, res, next) => {
+  try {
+
+    const userId = req.userId;
+    const foodId = req.params.foodId;
+    const measureId = req.body.measureId;
+    const commonMeasure = await Food.findOne({userId: userId,_id:foodId});
+    if(!commonMeasure){
+      return res.status(404).json({message: 'food not found'});
+    }
+    const data = commonMeasure.commonMeasures.findIndex((food) => {
+       return measureId.toString() === food._id.toString()
+    })
+
+      if(data !== -1){
+        commonMeasure.commonMeasures.splice(data,1);
+      }
+      else{
+        return res.status(404).json({message:'commonMeasure not fo  und'});
+      }
+
+    const result = await commonMeasure.save();
+    return res.status(200).json({success:true, data:result});
+  }
+  catch (err){
+    next(err);
+  }
+}
+
 module.exports = {
   addFood,
   getAllFood,
@@ -302,4 +347,5 @@ module.exports = {
   getFoodsByUser,
   deleteFood,
   updateFood,
+  deleteCommonMeasure
 };
