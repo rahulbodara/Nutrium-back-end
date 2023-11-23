@@ -1,5 +1,6 @@
 const client_Recommendation = require('../model/Recommendations');
 const physicalActivity = require('../model/Physicalactivity');
+const { default: mongoose } = require('mongoose');
 
 const createRecommendation = async (req, res, next) => {
     try {
@@ -12,23 +13,68 @@ const createRecommendation = async (req, res, next) => {
             clientId: clientId
         };
 
-        const update = {
-            physicalActivity,
-            foodAvoids,
-            waterIntake,
-            recommendation
-        };
+        const existingRecommendation = await client_Recommendation.findOne(filter);
 
-        const result = await client_Recommendation.findOneAndUpdate(filter, update, {
-            upsert: true,
-            new: true,
-        });
+        if (existingRecommendation) {
+            if (physicalActivity && !physicalActivity._id) {
+                console.log('<<---start-->>');
+                existingRecommendation.physicalActivity.push([physicalActivity]);
+            } else if(physicalActivity) {
+                console.log('<<--statrt1-->>');
+                let matchingSubarrayIndex = -1;
 
-        res.status(200).json({ success: true, data: result });
+                existingRecommendation.physicalActivity.some((subarray, index) => {
+                    if (subarray.some(obj => obj._id.toString() === physicalActivity._id)) {
+                        console.log('subarray-->>',subarray);
+                        matchingSubarrayIndex = index;
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (matchingSubarrayIndex !== -1) {
+                    existingRecommendation.physicalActivity[matchingSubarrayIndex].push({...physicalActivity,_id:mongoose.Schema.Types.objectId});
+                } else {
+                    existingRecommendation.physicalActivity.push([physicalActivity]);
+                }
+            }
+
+            if (foodAvoids !== undefined) {
+                existingRecommendation.foodAvoids = foodAvoids;
+            }
+            if (waterIntake !== undefined) {
+                existingRecommendation.waterIntake = waterIntake;
+            }
+            if (recommendation !== undefined) {
+                existingRecommendation.recommendation = recommendation;
+            }
+
+            await existingRecommendation.save();
+
+            res.status(200).json({ success: true, data: existingRecommendation });
+        } else {
+            const newRecommendation = new client_Recommendation({
+                userId,
+                clientId,
+                physicalActivity: physicalActivity ? [[physicalActivity]] : [], 
+                foodAvoids,
+                waterIntake,
+                recommendation
+            });
+
+            await newRecommendation.save();
+
+            res.status(200).json({ success: true, data: newRecommendation });
+        }
     } catch (err) {
+        console.log(err);
         next(err);
     }
-}
+};
+
+
+
+
 
 const addPhysicalActivityObject = async (req, res, next) => {
     try {
