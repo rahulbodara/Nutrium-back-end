@@ -7,30 +7,84 @@ const RecipeInformation = mongoose.Schema({
     ref: "user",
   },
   image: {
-    required: true,
     type: String,
   },
-  name: { type: String, required: true },
+  name: {
+    type: String,
+    default: "Recipe"
+  },
   description: {
-    required: true,
     type: String,
   },
   totalTime: {
-    required: true,
     type: String,
   },
   preparationTime: {
-    required: true,
     type: String,
   },
   finalWeight: {
-    required: true,
     type: Number,
   },
   portions: {
-    required: true,
     type: Number,
   },
+  ingredients: {
+    foods: [
+      {
+        name: {
+          type: String
+        },
+        quantity: {
+          type: String
+        },
+        foodId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'food'
+        },
+        subfoods: [
+          {
+            name: {
+              type: String
+            },
+            quantity: {
+              type: String
+            },
+            foodId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'food'
+            },
+          },
+        ],
+      },
+    ],
+  },
+  cookingMethod: {
+    type: Array
+  },
+  commonMeasures: [
+    {
+      singularName: {
+        type: String,
+
+      },
+      pluralName: {
+        type: String,
+
+      },
+      quantity: {
+        type: Number,
+
+      },
+      totalGrams: {
+        type: Number,
+
+      },
+      ediblePortion: {
+        type: Number,
+
+      },
+    },
+  ]
 });
 
 const RecipeData = mongoose.model("Recipe", RecipeInformation);
