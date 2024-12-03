@@ -10,7 +10,7 @@ const getBillingInformation = async (res, next) => {
     next(error);
   }
 };
-const createBillingInformation = async (userId, billingData) => {
+const createBillingInformation = async (res,userId, billingData) => {
   try {
     const user = await User.findOne({ _id: userId });
     if (!user) {

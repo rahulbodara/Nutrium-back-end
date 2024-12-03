@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema(
       unique: true,
       validate: [validator.isEmail, 'Please enter a valid email'],
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: [true, 'Please enter your password'],
@@ -105,6 +109,14 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     resetTokenExpires: {
+      type: Date,
+      default: null,
+    },
+    verificationEmailToken: {
+      type: String,
+      default: null,
+    },
+    verificationEmailTokenExpires: {
       type: Date,
       default: null,
     },

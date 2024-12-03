@@ -13,6 +13,7 @@ const createBillingInformation =
 const { generateResetToken, sendEmail } = require('../utils/EmailSender');
 const Service = require('../model/Service');
 const Secretaries = require('../model/Secretaries');
+const { generateVerificationToken, sendVerificationEmail } = require('../utils/EmailSender');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -93,6 +94,83 @@ const SignUp = async (req, res, next) => {
       success: true,
       message: 'User Signup successfully',
       token: token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendVerificationEmailHandler = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified.',
+      });
+    }
+
+    const { token, name } = await generateVerificationToken(user);
+
+    await sendVerificationEmail(user.email, token, name);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification email sent successfully. Please check your inbox.',
+    });
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    next(error);
+  }
+};
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required.',
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    if (user.verificationEmailTokenExpires < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token has expired.',
+      });
+    }
+
+    user.isEmailVerified = true;
+    user.verificationEmailToken = undefined; 
+    user.verificationEmailTokenExpires = undefined; 
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your email has been successfully verified.',
     });
   } catch (error) {
     next(error);
@@ -338,4 +416,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   deleteUserProfile,
+  sendVerificationEmailHandler,
+  verifyEmail
 };
