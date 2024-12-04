@@ -16,7 +16,6 @@ const workplaceSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-
     validate: {
       validator: function (value) {
         return /^\d{10}$/.test(value);
@@ -54,8 +53,16 @@ const workplaceSchema = new mongoose.Schema({
         },
         message: 'Invalid zip code format',
       },
-    },
-  }
+    },  
+  },
+  isPublic: {
+    type: Boolean,
+    default: false, 
+  },
+  image: {
+    type: String, 
+    required: false,
+  },
 });
 
 const Workplace = mongoose.model('Workplace', workplaceSchema);

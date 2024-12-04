@@ -1,11 +1,12 @@
 const express = require("express");
 const { isAuthenticated } = require("../middleware/auth");
 const workplaceController = require("../controller/workplace");
+const upload = require("../middleware/imageHandler");
 
 const router = express.Router();
 
 router.post(
-  "/workplaces",
+  "/workplaces", upload.single('image'),
   isAuthenticated,
   workplaceController.createWorkplace
 );
@@ -20,7 +21,7 @@ router.get(
   workplaceController.getWorkplaceById
 );
 router.put(
-  "/workplaces/:id",
+  "/workplaces/:id", upload.single('image'),
   isAuthenticated,
   workplaceController.updateWorkplace
 );
