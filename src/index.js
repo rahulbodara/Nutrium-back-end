@@ -40,15 +40,15 @@ const fs = require('fs');
 const interfaces = os.networkInterfaces();
 let localIp = 'localhost'; // Default to localhost if no IP is found
 
-for (const interfaceName of Object.keys(interfaces)) {
-  const interfaceInfo = interfaces[interfaceName];
-  for (const info of interfaceInfo) {
-    if (info.family === 'IPv4' && !info.internal) {
-      localIp = info.address;
-      break;
-    }
-  }
-}
+// for (const interfaceName of Object.keys(interfaces)) {
+//   const interfaceInfo = interfaces[interfaceName];
+//   for (const info of interfaceInfo) {
+//     if (info.family === 'IPv4' && !info.internal) {
+//       localIp = info.address;
+//       break;
+//     }
+//   }
+// }
 
 // Load your SSL/TLS certificates
 const privateKeyPath = path.join(__dirname, 'public', 'key.pem');
@@ -101,7 +101,7 @@ app.use(notFoundMiddleware);
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(port, localIp, () => {
+app.listen(port, () => {
   ConnectDB();
-  console.log(`Server is running at https://${localIp}:${port}`);
+  console.log(`Server is running at ${port}`);
 });
