@@ -3,6 +3,9 @@ const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
+    googleId:{
+      type: String,
+    },
     fullName: {
       type: String,
       required: [true, 'Please enter your name'],
@@ -21,8 +24,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Please enter your password'],
-      minLength: [8, 'Password should be greater then 8 charaters'],
     },
     image: {
       type: String,

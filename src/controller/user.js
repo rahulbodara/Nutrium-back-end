@@ -34,11 +34,17 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
+      googleId
     } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
+    let hashedPassword;
 
-    const hashedPassword = await bcrypt.hashSync(password, salt);
+    if(googleId){
+      hashedPassword= ""
+    }else{
+      hashedPassword = await bcrypt.hashSync(password, salt);
+    }
 
     const exist = await User.findOne({ email });
 
@@ -65,6 +71,7 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
+      googleId
     });
 
     const savedUser = await userData.save();
@@ -219,6 +226,33 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
+const VerifyExistingUser = async (req, res, next) => {
+  try {
+    const { googleId, email } = req.body;
+
+    const user = await User.findOne({ email, googleId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (googleId === user.googleId) {
+      const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "2h" });
+      return res.status(200).json({
+        token,
+        message: "Login successfully",
+        status: 200,
+        user,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid User", status: 400 });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 
 const getUserProfile = async (req, res, next) => {
   try {
@@ -427,5 +461,6 @@ module.exports = {
   resetPassword,
   deleteUserProfile,
   sendVerificationEmailHandler,
-  verifyEmail
+  verifyEmail,
+  VerifyExistingUser
 };
