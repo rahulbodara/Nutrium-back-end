@@ -324,9 +324,18 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const { token } = req.query;
+    const { token } = req.params;
 
     const password = req.body.password;
+    const confirmPassword = req.body.cpassword;
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ message: "Password and confirmation are required." });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match." });
+    }
 
     const user = await User.findOne({
       resetToken: token,
@@ -354,8 +363,9 @@ const resetPassword = async (req, res, next) => {
 
     await user.save();
 
-    return res.status(200).json({ message: 'Password reset successful.' });
+    return res.status(200).json({ message: 'Password reset successful.',status:true });
   } catch (error) {
+  console.log("🚀 ~ resetPassword ~ error:", error)
   
     next(error.message);
   }

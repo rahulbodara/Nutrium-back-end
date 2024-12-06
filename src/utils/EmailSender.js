@@ -111,7 +111,7 @@ const sendEmail = async (email, resetToken, name) => {
       pass: process.env.MAIL_PASSWORD,
     },
   });
-  const resetUrl = `https://nutrium-back-end-1.onrender.com/api/v1/reset-password?token=${resetToken}`;
+  const resetUrl = `https://nutrium-front-end-six.vercel.app/accounts/changePassword?token=${resetToken}`;
   const mailOptions = {
     from: process.env.GMAIL,
     to: email,

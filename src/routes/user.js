@@ -19,7 +19,7 @@ userRoute.put(
   userController.UpdateProfile
 );
 userRoute.post('/forget-password', userController.forgotPassword);
-userRoute.post('/reset-password', userController.resetPassword);
+userRoute.post('/reset-password/:token', userController.resetPassword);
 userRoute.delete(
   '/delete-account',
   isAuthenticated,
