@@ -12,7 +12,7 @@ const {
 const router = express.Router();
 
 router.post('/foods', isAuthenticated, addFood);
-router.get('/foods', isAuthenticated, getAllFood);
+router.get('/foods', getAllFood);
 router.get('/foods/:foodId', isAuthenticated, getFoodById);
 router.get('/user-foods', isAuthenticated, getFoodsByUser);
 router.delete('/foods/:foodId', isAuthenticated, deleteFood);
