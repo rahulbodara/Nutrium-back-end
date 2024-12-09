@@ -109,7 +109,7 @@ app.use('/api/v1', privacyandnotification);
 app.use(HandleError);
 app.use(notFoundMiddleware);
 
-const httpsServer = https.createServer(credentials, app);
+// const httpsServer = https.createServer(credentials, app);
 
 app.listen(port, () => {
   ConnectDB();
