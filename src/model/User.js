@@ -143,7 +143,7 @@ const userSchema = new mongoose.Schema(
       default: 1,
     },
   },
-  { timestamps: true }
+  { timestamps: true , suppressReservedKeysWarning: true }
 );
 
 module.exports = mongoose.model('users', userSchema);
