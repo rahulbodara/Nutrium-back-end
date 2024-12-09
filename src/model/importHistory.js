@@ -31,7 +31,7 @@ const importHistorySchema = new mongoose.Schema({
         type: String,
         default: "0.0%"
     },
-    errors: {
+    customError: {
         type: Number,
         default: 0
     },
