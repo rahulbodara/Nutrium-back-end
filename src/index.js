@@ -58,10 +58,16 @@ const certificate = fs.readFileSync(certificatePath, 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://nutrium-front-end-six.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type', 'Authorization'],  
+  credentials: true,  
+};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors(corsOptions));
 app.use('/uploads', express.static(__dirname+'/uploads'));
 
 // Catch-all route

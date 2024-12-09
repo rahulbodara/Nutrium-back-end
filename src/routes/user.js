@@ -9,6 +9,9 @@ const upload = multer({ dest: 'src/uploads/' });
 
 userRoute.post('/sign_up', upload.single('image'), userController.SignUp);
 userRoute.post('/sign_in', userController.SignIn);
+userRoute.post('/verify-google', userController.VerifyExistingUser);
+userRoute.post('/send-verification-email', userController.sendVerificationEmailHandler);
+userRoute.get('/verify-email', userController.verifyEmail);
 userRoute.get('/professionals', isAuthenticated, userController.getUserProfile);
 userRoute.put(
   '/professionals',
@@ -17,7 +20,7 @@ userRoute.put(
   userController.UpdateProfile
 );
 userRoute.post('/forget-password', userController.forgotPassword);
-userRoute.post('/reset-password', userController.resetPassword);
+userRoute.post('/reset-password/:token', userController.resetPassword);
 userRoute.delete(
   '/delete-account',
   isAuthenticated,

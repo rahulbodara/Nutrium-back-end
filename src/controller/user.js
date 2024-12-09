@@ -13,6 +13,7 @@ const createBillingInformation =
 const { generateResetToken, sendEmail } = require('../utils/EmailSender');
 const Service = require('../model/Service');
 const Secretaries = require('../model/Secretaries');
+const { generateVerificationToken, sendVerificationEmail } = require('../utils/EmailSender');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -33,11 +34,17 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
+      googleId
     } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
+    let hashedPassword;
 
-    const hashedPassword = await bcrypt.hashSync(password, salt);
+    if(googleId){
+      hashedPassword= ""
+    }else{
+      hashedPassword = await bcrypt.hashSync(password, salt);
+    }
 
     const exist = await User.findOne({ email });
 
@@ -64,6 +71,7 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
+      googleId
     });
 
     const savedUser = await userData.save();
@@ -93,6 +101,83 @@ const SignUp = async (req, res, next) => {
       success: true,
       message: 'User Signup successfully',
       token: token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendVerificationEmailHandler = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified.',
+      });
+    }
+
+    const { token, name } = await generateVerificationToken(user);
+
+    await sendVerificationEmail(user.email, token, name);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification email sent successfully. Please check your inbox.',
+    });
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    next(error);
+  }
+};
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required.',
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    if (user.verificationEmailTokenExpires < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token has expired.',
+      });
+    }
+
+    user.isEmailVerified = true;
+    user.verificationEmailToken = undefined; 
+    user.verificationEmailTokenExpires = undefined; 
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your email has been successfully verified.',
     });
   } catch (error) {
     next(error);
@@ -141,6 +226,33 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
+const VerifyExistingUser = async (req, res, next) => {
+  try {
+    const { googleId, email } = req.body;
+
+    const user = await User.findOne({ email, googleId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (googleId === user.googleId) {
+      const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "2h" });
+      return res.status(200).json({
+        token,
+        message: "Login successfully",
+        status: 200,
+        user,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid User", status: 400 });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 
 const getUserProfile = async (req, res, next) => {
   try {
@@ -246,9 +358,18 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const { token } = req.query;
+    const { token } = req.params;
 
     const password = req.body.password;
+    const confirmPassword = req.body.cpassword;
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ message: "Password and confirmation are required." });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match." });
+    }
 
     const user = await User.findOne({
       resetToken: token,
@@ -276,8 +397,9 @@ const resetPassword = async (req, res, next) => {
 
     await user.save();
 
-    return res.status(200).json({ message: 'Password reset successful.' });
+    return res.status(200).json({ message: 'Password reset successful.',status:true });
   } catch (error) {
+  console.log("🚀 ~ resetPassword ~ error:", error)
   
     next(error.message);
   }
@@ -338,4 +460,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   deleteUserProfile,
+  sendVerificationEmailHandler,
+  verifyEmail,
+  VerifyExistingUser
 };

@@ -1,7 +1,7 @@
 const BillingInformation = require("../model/BillingInformation");
 const User = require("../model/User");
 
-const getBillingInformation = async (res, next) => {
+const getBillingInformation = async (req,res, next) => {
   try {
     const billingInformation = await BillingInformation.findOne();
     res.status(200).json(billingInformation);
@@ -10,7 +10,7 @@ const getBillingInformation = async (res, next) => {
     next(error);
   }
 };
-const createBillingInformation = async (userId, billingData) => {
+const createBillingInformation = async (res,userId, billingData) => {
   try {
     const user = await User.findOne({ _id: userId });
     if (!user) {

@@ -3,6 +3,9 @@ const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
+    googleId:{
+      type: String,
+    },
     fullName: {
       type: String,
       required: [true, 'Please enter your name'],
@@ -15,10 +18,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       validate: [validator.isEmail, 'Please enter a valid email'],
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
-      required: [true, 'Please enter your password'],
-      minLength: [8, 'Password should be greater then 8 charaters'],
     },
     image: {
       type: String,
@@ -44,20 +49,17 @@ const userSchema = new mongoose.Schema(
           if (!dateRegex.test(value)) {
             return false;
           }
-          const parts = value.split('-');
-          const year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10);
-          const day = parseInt(parts[2], 10);
+          const [year, month, day] = value.split('-').map(Number);
           const date = new Date(year, month - 1, day);
           return (
-            date.getDate() === day &&
+            date.getFullYear() === year &&
             date.getMonth() === month - 1 &&
-            date.getFullYear() === year
+            date.getDate() === day
           );
         },
         message: 'Please enter a valid date of birth (YYYY-MM-DD)',
       },
-    },
+    },    
     phoneNumber: {
       type: Number,
       required: [true, 'Please enter a Mobile Number'],
@@ -105,6 +107,14 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     resetTokenExpires: {
+      type: Date,
+      default: null,
+    },
+    verificationEmailToken: {
+      type: String,
+      default: null,
+    },
+    verificationEmailTokenExpires: {
       type: Date,
       default: null,
     },
