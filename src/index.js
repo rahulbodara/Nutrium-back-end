@@ -107,7 +107,7 @@ app.use(notFoundMiddleware);
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(port, () => {
+app.listen(port, () => {
   ConnectDB();
   console.log(`Server is running at ${port}`);
 });
