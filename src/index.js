@@ -3,7 +3,7 @@ require('dotenv').config();
 const cors = require('cors');
 var path = require('path');
 const ConnectDB = require('./db/connection');
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT || 8080;
 const bodyParser = require('body-parser');
 const workplaceRoutes = require('./routes/workplace');
 const subscriptionRoutes = require('./routes/subscription');
@@ -111,7 +111,7 @@ app.use(notFoundMiddleware);
 
 // const httpsServer = https.createServer(credentials, app);
 
-app.listen(port, () => {
-  ConnectDB();
+app.listen(port, async () => {
+  await ConnectDB();
   console.log(`Server is running at ${port}`);
 });
