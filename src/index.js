@@ -76,6 +76,10 @@ app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname + '/views/index.html'));
 });
 
+app.get('/api/hello', (req, res) => {
+  res.status(200).send('Hello, world!');
+});
+
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
 app.use('/api/v1', serviceRoutes);
