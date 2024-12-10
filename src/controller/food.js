@@ -329,7 +329,7 @@ const deleteCommonMeasure = async(req, res, next) => {
         commonMeasure.commonMeasures.splice(data,1);
       }
       else{
-        return res.status(404).json({message:'commonMeasure not fo  und'});
+        return res.status(404).json({message:'commonMeasure not found'});
       }
 
     const result = await commonMeasure.save();

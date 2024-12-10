@@ -6,6 +6,9 @@ const RecipeInformation = mongoose.Schema({
     required: true,
     ref: "user",
   },
+  category:{
+    type: Array
+  },
   image: {
     type: String,
   },
@@ -84,7 +87,15 @@ const RecipeInformation = mongoose.Schema({
 
       },
     },
-  ]
+  ],
+  website:{
+    type: Boolean,
+    default: false
+  },
+  community:{
+    type: Boolean,
+    default: false
+  }
 });
 
 const RecipeData = mongoose.model("Recipe", RecipeInformation);
