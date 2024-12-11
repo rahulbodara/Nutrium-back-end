@@ -40,9 +40,9 @@ const SignUp = async (req, res, next) => {
     const salt = bcrypt.genSaltSync(10);
     let hashedPassword;
 
-    if(googleId){
-      hashedPassword= ""
-    }else{
+    if (googleId) {
+      hashedPassword = ""
+    } else {
       hashedPassword = await bcrypt.hashSync(password, salt);
     }
 
@@ -171,8 +171,8 @@ const verifyEmail = async (req, res, next) => {
     }
 
     user.isEmailVerified = true;
-    user.verificationEmailToken = undefined; 
-    user.verificationEmailTokenExpires = undefined; 
+    user.verificationEmailToken = undefined;
+    user.verificationEmailTokenExpires = undefined;
     await user.save();
 
     return res.status(200).json({
@@ -231,22 +231,28 @@ const VerifyExistingUser = async (req, res, next) => {
   try {
     const { googleId, email } = req.body;
 
-    const user = await User.findOne({ email, googleId });
+    const user = await User.findOne({ email:email });
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    if (googleId === user.googleId) {
-      const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "2h" });
-      return res.status(200).json({
-        token,
-        message: "Login successfully",
-        status: 200,
-        user,
-      });
-    } else {
-      return res.status(400).json({ message: "Invalid User", status: 400 });
+    if (googleId && (!user.googleId || user.googleId !== googleId)) {
+      user.googleId = googleId;
+      await user.save();
     }
+
+    if (googleId && googleId !== user.googleId) {
+      return res.status(400).json({ message: "Invalid Google ID.", status: 400 });
+    }
+
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "2h" });
+
+    return res.status(200).json({
+      token,
+      message: "Login successfully",
+      status: 200,
+      user,
+    });
   } catch (error) {
     console.error(error);
     next(error);
@@ -397,10 +403,10 @@ const resetPassword = async (req, res, next) => {
 
     await user.save();
 
-    return res.status(200).json({ message: 'Password reset successful.',status:true });
+    return res.status(200).json({ message: 'Password reset successful.', status: true });
   } catch (error) {
-  console.log("🚀 ~ resetPassword ~ error:", error)
-  
+    console.log("🚀 ~ resetPassword ~ error:", error)
+
     next(error.message);
   }
 };

@@ -14,6 +14,10 @@ const workplaceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  countryCode: {
+    type: String,
+    required: true,
+  },
   phoneNumber: {
     type: String,
     validate: {

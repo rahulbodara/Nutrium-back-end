@@ -4,17 +4,44 @@ const fs = require("fs");
 
 const createWorkplace = async (req, res, next) => {
   try {
-    const userId = req.userId;
-    const { associateAddress, isPublic } = req.body;
+    const userId = req.userId; 
+    const { associateAddress, isPublic,countryCode, name, country, phoneNumber, address } = req.body;
+
+    if (!name || !country) {
+      return res.status(400).json({ message: 'Name and country are required.' });
+    }
+
+    if (phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
+      return res.status(400).json({ message: 'Invalid phone number format.' });
+    }
+
+    let validatedAddress = {};
+    if (associateAddress === 'true' || associateAddress === true) {
+      if (!address || !address.street || !address.city || !address.zipCode) {
+        return res
+          .status(400)
+          .json({ message: 'Address fields (street, city, zipCode) are required when associateAddress is true.' });
+      }
+
+      if (!/^\d{5}(?:-\d{4})?$/.test(address.zipCode)) {
+        return res.status(400).json({ message: 'Invalid zip code format.' });
+      }
+
+      validatedAddress = address;
+    }
+
     const workplaceData = {
-      ...req.body,
-      userId: userId,
-      isPublic: isPublic || false,
+      userId,
+      name,
+      country,
+      phoneNumber,
+      countryCode,
+      color: req.body.color || null,
+      associateAddress: associateAddress === 'true' || associateAddress === true,
+      address: validatedAddress,
+      isPublic: isPublic === 'true' || isPublic === true,
     };
 
-    if (associateAddress == false) {
-      workplaceData.address = {};
-    }
     if (req.file) {
       workplaceData.image = `/uploads/${req.file.filename}`;
     }
@@ -24,9 +51,12 @@ const createWorkplace = async (req, res, next) => {
 
     res.status(201).json(savedWorkplace);
   } catch (error) {
+    console.error('Error creating workplace:', error);
+    res.status(500).json({ message: 'Internal server error.' });
     next(error);
   }
 };
+
 
 const getAllWorkplaces = async (req, res, next) => {
   try {
