@@ -7,9 +7,6 @@ const createSecretaries = async (req, res, next) => {
     const { name, email, workplace } = req.body;
     const existingSecretary = await Secretaries.findOne({ email });
     if (existingSecretary) {
-      if (req.file && req.file.filename) {
-      fs.unlinkSync(`${__dirname}/../uploads/${req.file.filename}`);
-      }
       return res.status(400).json({ message: 'Email already exists' });
     }
     const secretariesData = {
@@ -18,6 +15,10 @@ const createSecretaries = async (req, res, next) => {
       email,
       workplace,
     };
+
+    if (req.file) {
+      secretariesData.image = `/uploads/${req.file.filename}`;
+    }
 
     const service = new Secretaries(secretariesData);
     if (req.file && req.file.filename) {

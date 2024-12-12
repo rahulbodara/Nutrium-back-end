@@ -34,7 +34,9 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
-      googleId
+      googleId,
+      image,
+      countryCode
     } = req.body;
 
     const salt = bcrypt.genSaltSync(10);
@@ -71,7 +73,8 @@ const SignUp = async (req, res, next) => {
       courseEndDate,
       professionCardNumber,
       zipcode,
-      googleId
+      googleId,
+      image
     });
 
     const savedUser = await userData.save();
@@ -85,11 +88,12 @@ const SignUp = async (req, res, next) => {
       { expiresIn: '2h' }
     );
 
-    if (workplace) {
+    if (workplace && countryCode) {
       const workplaceData = await new Workplace({
         name: workplace,
         userId: savedUser._id,
         country,
+        countryCode,
       });
       await workplaceData.save();
     }
