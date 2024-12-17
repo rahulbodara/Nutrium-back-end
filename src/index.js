@@ -25,6 +25,7 @@ const groupRoutes = require('./routes/group');
 const blogRouter = require('./routes/blog');
 const foodsRoutes = require('./routes/food');
 const mealPlan = require('./routes/mealplan');
+const mealTemplate = require('./routes/mealTemplate');
 const recipe = require('./routes/recipsInformation');
 const dietarySupplements = require('./routes/dietarySupplements');
 const sendInvite = require('./routes/sendInvitaion');
@@ -94,6 +95,7 @@ app.use('/api/v1', groupRoutes);
 app.use('/api/v1', blogRouter);
 app.use('/api/v1', foodsRoutes);
 app.use('/api/v1', mealPlan);
+app.use('/api/v1', mealTemplate);
 app.use('/api/v1', recipe);
 app.use('/api/v1', dietarySupplements);
 app.use('/api/v1', sendInvite);
@@ -101,6 +103,7 @@ app.use('/api/v1', client_Recommendation);
 app.use('/api/v1', dailyplan);
 app.use('/api/v1', professionalPreference);
 app.use('/api/v1', privacyandnotification);
+
 
 app.use(HandleError);
 app.use(notFoundMiddleware);
