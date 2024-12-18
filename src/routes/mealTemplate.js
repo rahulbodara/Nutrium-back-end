@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const {
   createMealTemplate,
-  getMealTemplate
+  createVersion
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
 router.post('/mealPlans', createMealTemplate);
-router.post('/getMealTemplate', getMealTemplate);
+router.post('/createVersion', createVersion);
 
 
 module.exports = router;
