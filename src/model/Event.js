@@ -17,6 +17,22 @@ const eventSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  allDay: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  blockCalendar: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  googleCalendar: {
+    type: Boolean,
+    required: true,
+    default: false
+  }
+
 });
 
 module.exports = mongoose.model("Event", eventSchema);
