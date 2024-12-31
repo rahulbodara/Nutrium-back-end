@@ -1867,7 +1867,7 @@ const createGoal = async (req, res, next) => {
       existingGoal.description = description;
       existingGoal.deadline = deadline;
       const updatedGoal = await existingGoal.save();
-      return res.status(400).json({
+      return res.status(200).json({
         success: true,
         message: 'Goal updated successfully!!!',
         EatingBehaviour: updatedGoal,
