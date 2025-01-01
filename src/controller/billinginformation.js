@@ -40,15 +40,36 @@ const createBillingInformation = async (res,userId, billingData) => {
 const updateBillingInformation = async (req, res, next) => {
   try {
     const billingInformationId = req.params.id;
-    const { name, country, vatIdentificationNumber, address, city, zipcode } =
-      req.body;
+
+    const {
+      name,
+      country,
+      vatIdentificationNumber,
+      address,
+      city,
+      zipcode,
+    } = req.body;
+
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (country) updateFields.country = country;
+    if (vatIdentificationNumber)
+      updateFields.vatIdentificationNumber = vatIdentificationNumber;
+    if (address) updateFields.address = address;
+    if (city) updateFields.city = city;
+    if (zipcode) updateFields.zipcode = zipcode;
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ message: "No fields provided for update" });
+    }
 
     const updatedBillingInformation =
       await BillingInformation.findByIdAndUpdate(
         billingInformationId,
-        { name, country, vatIdentificationNumber, address, city, zipcode },
-        { new: true }
+        { $set: updateFields },
+        { new: true, runValidators: true }
       );
+
     if (!updatedBillingInformation) {
       return res.status(404).json({ message: "Billing information not found" });
     }
