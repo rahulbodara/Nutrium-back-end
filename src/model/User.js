@@ -43,22 +43,6 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: String,
       required: [true, 'Please enter a date of birth'],
-      validate: {
-        validator: function (value) {
-          const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-([12][0-9]|0[1-9]|3[01])$/;
-          if (!dateRegex.test(value)) {
-            return false;
-          }
-          const [year, month, day] = value.split('-').map(Number);
-          const date = new Date(year, month - 1, day);
-          return (
-            date.getFullYear() === year &&
-            date.getMonth() === month - 1 &&
-            date.getDate() === day
-          );
-        },
-        message: 'Please enter a valid date of birth (YYYY-MM-DD)',
-      },
     },    
     phoneNumber: {
       type: Number,
