@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const { isAuthenticated } = require('../middleware/auth');
 const {
   createMealTemplate,
-  createVersion
+  addNewMeal
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
-router.post('/mealPlans', createMealTemplate);
-router.post('/createVersion', createVersion);
-
+router.post('/createMealTemplate',isAuthenticated, createMealTemplate);
+router.post('/addNewMeal', addNewMeal);
 
 module.exports = router;
+
