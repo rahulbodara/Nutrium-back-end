@@ -126,6 +126,12 @@ const addNewMeal = async (req, res) => {
         case "Super":
           newMeal.time = "10:00 PM";
           break;
+        case "Pre-workout snack":
+          newMeal.time = "4:30 PM";
+          break;
+        case "Post-workout snack":
+          newMeal.time = "6:00 PM";
+          break;
         default:
           newMeal.time = "10:00 AM"; 
           break;
