@@ -95,6 +95,9 @@ const clientSchema = new mongoose.Schema(
     isImported:{
       type: Boolean,
       default: false
+    },
+    password:{
+      type: String
     }
   },
   { timestamps: true }

@@ -44,7 +44,9 @@ const {
   updateMeasurementObject,
   getClientInfo,
   updateBmi,
-  updateGoal
+  updateGoal,
+  updateClientPassword,
+  sendClientEmail
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 
@@ -214,5 +216,8 @@ router.get('/client-getWeight/:clientId', isAuthenticated, getClientInfo);
 
 router.put('/client-updateBmi/:clientId', isAuthenticated, updateBmi);
 
+router.put('/setPassword/:clientId',updateClientPassword)
+
+router.get('/sendEmail/:clientId',isAuthenticated,sendClientEmail);
 
 module.exports = router;

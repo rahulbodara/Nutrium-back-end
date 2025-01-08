@@ -14,6 +14,9 @@ const Goals = require('../../model/Goals');
 const Measurements = require('../../model/Measurements');
 const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
+const bcrypt = require('bcrypt');
+const User = require('../../model/User');
+const { clientEmailSend } = require('../../utils/EmailSender');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -2539,11 +2542,79 @@ const updateBmi = async (req, res, next) => {
   }
 }
 
+const updateClientPassword = async (req, res) => {
+  const { clientId } = req.params;
+  const { newPassword, confirmPassword } = req.body;
+
+  if (!newPassword || !confirmPassword) {
+    return res.status(400).json({ message: 'Both new password and confirm password are required.' });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: 'New password and confirm password do not match.' });
+  }
+
+  try {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { password: hashedPassword },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({ message: 'Client not found.' });
+    }
+
+    res.status(200).json({ message: 'Password updated successfully.' });
+  } catch (error) {
+    console.error('Error updating client password:', error);
+    res.status(500).json({ message: 'An error occurred while updating the password.' });
+  }
+};
+
+const sendClientEmail = async(req,res) => {
+  try {
+
+    const {clientId} = req.params;
+
+    const userId = req.userId;
+
+    const user = await User.findOne({ _id:userId });
+        if (!user) {
+          return res.status(404).json({ message: 'User not found.' });
+        }
+
+    const client = await Client.findOne({_id:clientId});
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found.' });
+    }
+
+    await clientEmailSend(user.email,client.email,clientId)
+
+    return res.status(200).json({ message: 'Password update email sent successfully.' });
+    
+  } catch (error) {
+    console.log("🚀 ~ sendClientEmail ~ error:", error)  
+  }
+}
+
+const clientLogin = async(req,res) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+}
 
 
 
 module.exports = {
   registerClient,
+  updateClientPassword,
   addImportHistory,
   deleteClient,
   getClientByID,
@@ -2585,5 +2656,6 @@ module.exports = {
   updateMeasurementObject,
   getClientInfo,
   updateBmi,
-  updateGoal
+  updateGoal,
+  sendClientEmail
 };

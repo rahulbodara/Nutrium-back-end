@@ -162,10 +162,37 @@ const sendInvitationEmail = async (
     await transporter.sendMail(mailOptions);
 };
 
+const clientEmailSend = async (sender,receiver,clientId) => {
+  const transporter = nodemailer.createTransport({
+    service: process.env.SERVICE,
+    auth: {
+      user: process.env.GMAIL,
+      pass: process.env.MAIL_PASSWORD,
+    },
+  });
+
+  const updateUrl = `http://localhost:3000/accounts/clientPassword/resetPassword?clientId=${clientId}`;
+
+  const templatePath = path.join(__dirname, '../view', 'password.ejs');
+  console.log("🚀 ~ clientEmailSend ~ templatePath:", templatePath)
+  const html = await ejs.renderFile(templatePath, { updateUrl });
+
+  const mailOptions = {
+    from: `"Nutrium" <${sender}>`,
+    to: receiver,
+    subject: 'Password Update Request',
+    html,
+  };
+  console.log("🚀 ~ clientEmailSend ~ mailOptions:", mailOptions)
+
+  await transporter.sendMail(mailOptions);
+}
+
 module.exports = {
   generateResetToken,
   sendEmail,
   sendInvitationEmail,
   generateVerificationToken,
-  sendVerificationEmail
+  sendVerificationEmail,
+  clientEmailSend
 };

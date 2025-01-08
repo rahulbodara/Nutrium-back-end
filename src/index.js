@@ -74,6 +74,7 @@ app.use('/uploads', express.static(__dirname+'/uploads'));
 
 // Catch-all route
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../src/view'));
 app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname + '/views/index.html'));
 });
