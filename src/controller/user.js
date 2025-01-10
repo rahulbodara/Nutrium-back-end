@@ -74,7 +74,8 @@ const SignUp = async (req, res, next) => {
       professionCardNumber,
       zipcode,
       googleId,
-      image
+      image,
+      role: "Admin"
     });
 
     const savedUser = await userData.save();
@@ -105,6 +106,7 @@ const SignUp = async (req, res, next) => {
       success: true,
       message: 'User Signup successfully',
       token: token,
+      role: savedUser.role
     });
   } catch (error) {
     next(error);
@@ -235,7 +237,7 @@ const VerifyExistingUser = async (req, res, next) => {
   try {
     const { googleId, email } = req.body;
 
-    const user = await User.findOne({ email:email });
+    const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -256,6 +258,7 @@ const VerifyExistingUser = async (req, res, next) => {
       message: "Login successfully",
       status: 200,
       user,
+      role: user?.role
     });
   } catch (error) {
     console.error(error);

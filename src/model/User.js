@@ -3,7 +3,7 @@ const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
-    googleId:{
+    googleId: {
       type: String,
     },
     fullName: {
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: String,
       required: [true, 'Please enter a date of birth'],
-    },    
+    },
     phoneNumber: {
       type: Number,
       required: [true, 'Please enter a Mobile Number'],
@@ -126,8 +126,13 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    role: {
+      type: String,
+      default: "Admin"
+    }
   },
   { timestamps: true }
+
 );
 
 module.exports = mongoose.model('users', userSchema);
