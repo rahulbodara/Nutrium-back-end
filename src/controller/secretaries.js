@@ -17,12 +17,12 @@ const createSecretaries = async (req, res, next) => {
     };
 
     if (req.file) {
-      secretariesData.image = `/uploads/${req.file.filename}`;
+      secretariesData.image = `${req.file.path}`;
     }
 
     const service = new Secretaries(secretariesData);
-    if (req.file && req.file.filename) {
-      service.image = req.file.filename;
+    if (req.file && req.file.path) {
+      service.image = req.file.path;
     }
     const savedSecretaries = await service.save();
     res.status(200).json(savedSecretaries);
@@ -79,7 +79,7 @@ const updateSecretaries = async (req, res, next) => {
       const existingSecretary = await Secretaries.findOne({ email });
 
       if (existingSecretary) {
-        fs.unlinkSync(`${__dirname}/../uploads/${req.file.filename}`);
+        // fs.unlinkSync(`${req.file.path}`);
         return res.status(400).json({ message: 'Email already exists' });
       }
     }
@@ -89,13 +89,13 @@ const updateSecretaries = async (req, res, next) => {
       workplace
     };
 
-    if (req.file && req.file.filename) {
+    if (req.file && req.file.path) {
       if (secretaries.image) {
-        fs.unlinkSync(
-          `${__dirname}/../uploads/${secretaries.image}`
-        );
+        // fs.unlinkSync(
+        //   `${__dirname}/../uploads/${secretaries.image}`
+        // );
       }
-      updates.image = req.file.filename;
+      updates.image = req.file.path;
     } else {
       updates.image = secretaries.image;
     }

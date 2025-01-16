@@ -4,8 +4,8 @@ const userController = require('../controller/user');
 const multer = require('multer');
 const { isAuthenticated } = require('../middleware/auth');
 const { createPersonalDetail } = require('../controller/personalPage');
+const upload = require('../middleware/imageHandler');
 
-const upload = multer({ dest: 'src/uploads/' });
 
 userRoute.post('/sign_up', upload.single('image'), userController.SignUp);
 userRoute.post('/sign_in', userController.SignIn);

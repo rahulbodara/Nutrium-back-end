@@ -31,6 +31,7 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
+      image
     } = req.body;
 
     const exist = await Client.findOne({ email, userId: { $ne: userId } });
@@ -52,6 +53,7 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
+      image
     });
 
     // await getScheduleAppointmentInfo(client._id);
@@ -397,7 +399,7 @@ const updateClient = async (req, res, next) => {
     };
 
     if (req.file) {
-      updatedFields.image = req.file.filename;
+      updatedFields.image = req.file.path;
     }
 
     const client = await Client.findById(clientId);
@@ -409,7 +411,7 @@ const updateClient = async (req, res, next) => {
       });
     }
 
-    if (client.image && req.file) {
+    if (client.image && req.file.path) {
       fs.unlink(client.image, (err) => {
         if (err) {
           console.error(err);

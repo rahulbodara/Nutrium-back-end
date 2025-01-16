@@ -12,7 +12,8 @@ const {
   copyRecipe,
   deleteMainFood,
   deleteSubFoods,
-  deleteCommonMeasure
+  deleteCommonMeasure,
+  likeRecipe
 } = require("../controller/recipeinformation");
 
 router.post("/recipe-information", isAuthenticated, createRecipe);
@@ -32,5 +33,8 @@ router.delete("/deleteparticularingridents/:recipeId/:objectId",isAuthenticated,
 router.delete("/deleteparticularsubfoods/:recipeId/:objectId",isAuthenticated,deleteSubFoods);
 
 router.delete("/deleteCommonMeasure/:recipeId/:objectId",isAuthenticated,deleteCommonMeasure);
+
+router.post("/generateLike/:recipeId",isAuthenticated,likeRecipe)
+
 
 module.exports = router;

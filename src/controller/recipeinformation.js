@@ -99,9 +99,9 @@ const updateRecipe = async (req, res, next) => {
 
     if (req.file && req.file.filename) {
       if (existingRecipe.image) {
-        fs.unlinkSync(path.join(__dirname, `../uploads/${existingRecipe.image}`))
+        // fs.unlinkSync(path.join(__dirname, `../uploads/${existingRecipe.image}`))
       }
-      updatedData.image = req.file.filename;
+      updatedData.image = req.file.path;
     }
     else {
       updatedData.image = existingRecipe.image;
@@ -146,7 +146,7 @@ const deleteRecipe = async (req, res, next) => {
       return res.status(404).json({ message: 'Recipe not found' });
     }
     if (recipe && recipe?.image) {
-      fs.unlinkSync(path.join(__dirname, `../uploads/${recipe.image}`))
+      // fs.unlinkSync(path.join(__dirname, `../uploads/${recipe.image}`))
     }
 
     const delRecipe = await RecipeData.findByIdAndDelete({ _id: recipeId });
@@ -322,6 +322,38 @@ const deleteCommonMeasure = async(req, res, next) => {
   }
 }
 
+const likeRecipe = async (req, res,next) => {
+  try {
+
+    const userId = req.userId;
+    const { recipeId } = req.params;
+
+    const recipe = await RecipeData.findById(recipeId);
+    if (!recipe) {
+      return res.status(404).json({ message: "Recipe not found" });
+    }
+
+    if (!recipe.likes) {
+      recipe.likes = [];
+    }
+
+    const userIndex = recipe.likes.indexOf(userId);
+
+    if (userIndex === -1) {
+      recipe.likes.push(userId);
+      await recipe.save();
+      return res.status(200).json({ message: 'Recipe liked successfully',likes:recipe.likes});
+    } else {
+      recipe.likes.splice(userIndex,1);
+      await recipe.save();
+      return res.status(200).json({message:"Recipe disliked successfully",likes:recipe.likes });
+    }
+
+  } catch (error) {
+    next(error)
+  }
+}
+
 
 module.exports = {
   createRecipe,
@@ -332,7 +364,8 @@ module.exports = {
   copyRecipe,
   deleteMainFood,
   deleteSubFoods,
-  deleteCommonMeasure
+  deleteCommonMeasure,
+  likeRecipe
 };
   
 

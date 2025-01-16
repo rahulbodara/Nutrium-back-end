@@ -43,7 +43,7 @@ const createWorkplace = async (req, res, next) => {
     };
 
     if (req.file) {
-      workplaceData.image = `/uploads/${req.file.filename}`;
+      workplaceData.image = `${req.file.path}`;
     }
 
     const workplace = new Workplace(workplaceData);
@@ -106,7 +106,7 @@ const updateWorkplace = async (req, res, next) => {
     }
 
     if (req.file) {
-      updates.image = `/uploads/${req.file.filename}`;
+      updates.image = `${req.file.path}`;
 
       if (workplace.image) {
         const oldImagePath = path.join(__dirname, "..", workplace.image);

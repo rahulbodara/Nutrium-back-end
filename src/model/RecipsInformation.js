@@ -19,6 +19,10 @@ const RecipeInformation = mongoose.Schema({
   description: {
     type: String,
   },
+  like:{
+    type:Number,
+    default:0
+  },
   totalTime: {
     type: String,
   },
@@ -95,7 +99,13 @@ const RecipeInformation = mongoose.Schema({
   community:{
     type: Boolean,
     default: false
-  }
+  },
+  likes:[
+    {
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"users"
+    }
+  ]
 });
 
 const RecipeData = mongoose.model("Recipe", RecipeInformation);

@@ -311,9 +311,8 @@ const UpdateProfile = async (req, res, next) => {
       professionCardNumber,
       zipcode,
     };
-
-    if (req.file) {
-      updatedFields.image = req.file.filename;
+    if (req.file.path) {
+      updatedFields.image = req.file.path;
     }
     const user = await User.findById(userId);
 
@@ -323,7 +322,7 @@ const UpdateProfile = async (req, res, next) => {
         message: 'User not found',
       });
     }
-    if (user.image && req.file) {
+    if (user.image && req.file.path) {
       fs.unlink(user.image, (err) => {
         if (err) {
           console.error(err);
