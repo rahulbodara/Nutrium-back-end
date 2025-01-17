@@ -188,9 +188,37 @@ const clientEmailSend = async (sender,receiver,clientId) => {
   await transporter.sendMail(mailOptions);
 }
 
+const EmailForm = async (sender,receiver,client,user,token) => {
+  const transporter = nodemailer.createTransport({
+    service: process.env.SERVICE,
+    auth: {
+      user: process.env.GMAIL,
+      pass: process.env.MAIL_PASSWORD,
+    },
+  });
+
+  const updateUrl = `http://localhost:3000/accounts/assessmentForm?token=${token}`;
+  const clientName = client.fullName;
+  const userName = user.fullName;
+
+  const templatePath = path.join(__dirname, '../view', 'assessment.ejs');
+  const html = await ejs.renderFile(templatePath, { updateUrl,clientName,userName });
+
+  const mailOptions = {
+    from: `"Nutrium" <${sender}>`,
+    to: receiver,
+    subject: 'Client Form',
+    html,
+  };
+  console.log("🚀 ~ clientEmailSend ~ mailOptions:", mailOptions)
+
+  await transporter.sendMail(mailOptions);
+}
+
 module.exports = {
   generateResetToken,
   sendEmail,
+  EmailForm,
   sendInvitationEmail,
   generateVerificationToken,
   sendVerificationEmail,

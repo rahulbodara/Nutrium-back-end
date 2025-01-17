@@ -16,7 +16,7 @@ const pregnancyHistory = require('../../model/pregnancyHistory');
 const importHistory = require('../../model/importHistory');
 const bcrypt = require('bcrypt');
 const User = require('../../model/User');
-const { clientEmailSend } = require('../../utils/EmailSender');
+const { clientEmailSend, EmailForm, generateResetToken } = require('../../utils/EmailSender');
 
 const registerClient = async (req, res, next) => {
   try {
@@ -31,7 +31,7 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
-      image
+      isEmailSend
     } = req.body;
 
     const exist = await Client.findOne({ email, userId: { $ne: userId } });
@@ -53,8 +53,16 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
-      image
+      isEmailSend
     });
+
+    const user = await User.findOne({_id:userId})
+
+    const { token } = await generateResetToken(user);
+
+    if(client && client.isEmailSend === true){
+      await EmailForm(user.email,client.email,client,user,token);
+    }
 
     // await getScheduleAppointmentInfo(client._id);
 

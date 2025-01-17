@@ -98,6 +98,10 @@ const clientSchema = new mongoose.Schema(
     },
     password:{
       type: String
+    },
+    isEmailSend:{
+      type:Boolean,
+      default:false
     }
   },
   { timestamps: true }

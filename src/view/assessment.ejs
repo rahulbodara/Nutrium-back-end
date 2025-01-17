@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: "Times New Roman", serif;
+        font-size: 16px;
+        background-color: #f0f0f0;
+      }
+
+      .main {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+      }
+      .assessmetForm {
+        padding: 30px 20px;
+        max-width: 600px;
+      }
+      p {
+        margin: 20px 0;
+        color: #333;
+      }
+      .user {
+        height: 60px;
+        width: 60px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+      .user img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+      }
+      .clientDetails h5 {
+        font-size: 1rem;
+      }
+      .clientDetails {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px 0 0;
+        margin: 20px 0;
+        padding-bottom: 30px;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.274);
+      }
+      .client {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo {
+        height: 50px;
+        width: 50px;
+      }
+      .logo img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+      }
+      p span {
+        font-family: "Calibri", sans-serif;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+      @media (max-width: 480px) {
+        p span {
+          font-family: "Calibri", sans-serif;
+          font-size: 0.85rem;
+          line-height: 1.3;
+          
+        }
+        .assessmetForm {
+          padding: 15px;
+        }
+        .logo {
+        height: 30px;
+        width: 30px;
+      }
+      .user{
+        height: 40px;
+        width: 40px;
+      }
+       
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <div class="assessmetForm">
+        <p>
+          <span> Hi <%= clientName %>, </span>
+        </p>
+        <p>
+          <span>
+            Before we begin the nutritional counseling, I would like you to
+            answer a few questions regarding your health, lifestyle and eating
+            habits.
+          </span>
+        </p>
+        <p>
+          <span>
+            These answers will be added to your profile so I can better prepare
+            your nutritional counseling and understand your goals and needs.
+          </span>
+        </p>
+        <p>
+          <span
+            >Please fill in this  questionnaire  as soon as possible:
+            <a href="<%= updateUrl %>" style="text-decoration: none; color: #1142e1"
+              ><%= updateUrl %></a
+            ></span
+          >
+        </p>
+        <div class="clientDetails">
+          <div class="client">
+            <div class="user">
+              <img src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737091609/user_madxub.png" />
+            </div>
+            <p style="font-size: 0.98rem;"><span style="font-weight: 700;font-size: 0.95rem;"> <%= userName %> </span> through Nutrium</p>
+          </div>
+          <div class="logo">
+            <img src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737092900/nutrium_n3cssb.png" />
+          </div>
+        </div>
+        <p >
+          <span 
+            >You can reply directly to this message through this email. For a
+            better communication experience with your professional, download
+            Nutrium mobile app available for
+            <a href="#" style="text-decoration: none; color: #1142e1"
+              >Android</a
+            >
+            and <a style="text-decoration: none; color: #1142e1">iOS</a>.</span
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
