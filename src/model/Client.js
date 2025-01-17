@@ -102,6 +102,10 @@ const clientSchema = new mongoose.Schema(
     isEmailSend:{
       type:Boolean,
       default:false
+    },
+    createdByClient:{
+      type:Boolean,
+      default:false
     }
   },
   { timestamps: true }

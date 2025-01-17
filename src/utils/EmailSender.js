@@ -197,7 +197,7 @@ const EmailForm = async (sender,receiver,client,user,token) => {
     },
   });
 
-  const updateUrl = `http://localhost:3000/accounts/assessmentForm?token=${token}`;
+  const updateUrl = `http://localhost:3000/accounts/assessmentForm?token=${token}&&clientId=${client._id}`;
   const clientName = client.fullName;
   const userName = user.fullName;
 

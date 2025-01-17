@@ -28,4 +28,6 @@ userRoute.delete(
 );
 userRoute.put('/professionals/website', isAuthenticated, createPersonalDetail);
 
+userRoute.post('/createClientByForm/:clientId',isAuthenticated,userController.createClientByForm)
+
 module.exports = userRoute;

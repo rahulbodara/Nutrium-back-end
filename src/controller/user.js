@@ -14,6 +14,14 @@ const { generateResetToken, sendEmail } = require('../utils/EmailSender');
 const Service = require('../model/Service');
 const Secretaries = require('../model/Secretaries');
 const { generateVerificationToken, sendVerificationEmail } = require('../utils/EmailSender');
+const AppointmentInformation = require('../model/AppointmentInformation');
+const PersonalHistory = require('../model/PersonalHistory');
+const DietHistory = require('../model/DietHistory');
+const pregnancyHistory = require('../model/pregnancyHistory');
+const Observations = require('../model/Observations');
+const MedicalHistory = require('../model/MedicalHistory');
+const mongoose = require('mongoose');
+const Client = require('../model/Client');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -464,6 +472,163 @@ const deleteUserProfile = async (req, res, next) => {
   }
 };
 
+const createClientByForm = async (req, res, next) => {
+  try {
+    const {clientId} = req.params;
+    const userId = req.userId;
+
+    const {
+      appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfoA,
+      bowelMovements, bowelMovementsInfo, sleepQuality, sleepQualityInfo, smoker,
+      smokerInfo, alcoholConsumption, alcoholConsumptionInfo, maritalStatus,
+      maritalStatusInfo, physicalActivity, race, otherInfoP, wakeupTime, bedTime,
+      typeOfDiet, typeOfDietDetail, favoriteFood, dislikeFood, allergies,
+      allergiesDetail, foodIntolerances, foodIntolerancesDetail, nutritionalDeficiencies,
+      nutritionalDeficienciesDetail, waterTank, otherInfoD, typeOfRecord, gestationType,
+      lastMenstrualPeriod, beginningOfLactation, observations, durationOfLactationInMonths,
+      registrationDate, observation, diseases, diseasesDetail, medication, pesonalhistory,
+      familyHistory, otherInfoM,
+    } = req.body;
+
+    // Validate Client ID
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({ success: false, message: 'Invalid client ID' });
+    }
+
+    // Appointment Information Update
+    const newAppointmentInfo = { userId, appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfoA };
+    await AppointmentInformation.findOneAndUpdate({ clientId }, newAppointmentInfo, { new: true, upsert: true });
+
+    // Personal History Update
+    const newPersonalHistory = {
+      userId, bowelMovements, bowelMovementsInfo, sleepQuality, sleepQualityInfo, smoker,
+      smokerInfo, alcoholConsumption, alcoholConsumptionInfo, maritalStatus, maritalStatusInfo,
+      physicalActivity, race, otherInfoP,
+    };
+    await PersonalHistory.findOneAndUpdate({ clientId }, newPersonalHistory, { new: true, upsert: true });
+
+    // Diet History Update
+    const newDietHistory = {
+      userId, wakeupTime, bedTime, typeOfDiet, typeOfDietDetail, favoriteFood, dislikeFood,
+      allergies, allergiesDetail, foodIntolerances, foodIntolerancesDetail,
+      nutritionalDeficiencies, nutritionalDeficienciesDetail, waterTank, otherInfoD,
+    };
+    await DietHistory.findOneAndUpdate({ clientId }, newDietHistory, { new: true, upsert: true });
+
+    // Format Date Helper
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}-${date.getFullYear()}`;
+    };
+
+    // Process Pregnancy History if typeOfRecord exists
+    if (typeOfRecord) {
+      let currentPregnancyTrimester = null;
+      let currentPregnancyWeek = null;
+      let lactating = null;
+      let status = '';
+
+      const lmpDate = lastMenstrualPeriod ? new Date(lastMenstrualPeriod) : null;
+      const lactationStartDate = beginningOfLactation ? new Date(beginningOfLactation) : null;
+      const currentDate = new Date();
+
+      if (typeOfRecord === 'Pregnancy and lactation') {
+        if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths || durationOfLactationInMonths < 1) {
+          return res.status(400).send({ message: 'Please provide all required fields for Pregnancy and Lactation with valid values.' });
+        }
+
+        const gestationalAgeInWeeks = (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+        currentPregnancyTrimester = gestationalAgeInWeeks <= 13
+          ? 'Trimester 1'
+          : gestationalAgeInWeeks <= 26
+            ? 'Trimester 2'
+            : 'Trimester 3';
+
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+
+        if (gestationalAgeInWeeks >= 40 && lactationStartDate) {
+          const diffInMonths = (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 + (currentDate.getMonth() - lactationStartDate.getMonth());
+          const lactationMonthsRemaining = durationOfLactationInMonths - diffInMonths;
+          status = lactationMonthsRemaining <= 0 ? 'completed' : '';
+          lactating = lactationMonthsRemaining > 0 ? `month ${durationOfLactationInMonths - lactationMonthsRemaining}` : null;
+        }
+      }
+
+      if (typeOfRecord === 'Pregnancy') {
+        if (!lastMenstrualPeriod) return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
+        const gestationalAgeInWeeks = (currentDate - lmpDate) / (1000 * 60 * 60 * 24 * 7);
+        currentPregnancyTrimester = gestationalAgeInWeeks <= 13
+          ? 'Trimester 1'
+          : gestationalAgeInWeeks <= 26
+            ? 'Trimester 2'
+            : 'Trimester 3';
+        currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
+        status = gestationalAgeInWeeks >= 40 ? 'completed' : '';
+      }
+
+      if (typeOfRecord === 'Lactation') {
+        if (!beginningOfLactation || !durationOfLactationInMonths) {
+          return res.status(400).json({ message: 'beginningOfLactation and durationOfLactationInMonths are required' });
+        }
+        const diffInMonths = (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 + (currentDate.getMonth() - lactationStartDate.getMonth());
+        const lactationMonthsRemaining = durationOfLactationInMonths - diffInMonths;
+        status = lactationMonthsRemaining <= 0 ? 'completed' : '';
+        lactating = lactationMonthsRemaining > 0 ? `month ${durationOfLactationInMonths - lactationMonthsRemaining}` : null;
+      }
+
+      // Save Pregnancy History
+      const newPregnancyHistory = new pregnancyHistory({
+        userId,
+        clientId,
+        typeOfRecord,
+        gestationType,
+        lastMenstrualPeriod: formatDate(lastMenstrualPeriod),
+        beginningOfLactation: formatDate(beginningOfLactation),
+        durationOfLactationInMonths,
+        observations,
+        status,
+        currentPregnancyTrimester,
+        currentPregnancyWeek,
+        lactating,
+      });
+
+      await newPregnancyHistory.save();
+    }
+
+    // Observation
+    if(observation){
+      const formatDate = (date) => {
+        const d = new Date(date);
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const registrationDates = registrationDate ? registrationDate : formatDate(new Date())
+
+      const newObservation = new Observations({ userId, registrationDate:registrationDates, observation, clientId });
+      await newObservation.save();
+    }
+
+    // Medical History Update
+    const newMedicalHistory = { userId, diseases, diseasesDetail, medication, pesonalhistory, familyHistory, otherInfoM };
+    await MedicalHistory.findOneAndUpdate({ clientId }, newMedicalHistory, { new: true, upsert: true });
+
+    await Client.findOneAndUpdate(
+      { _id: clientId }, 
+      { $set: { createdByClient: true } }, 
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ success: true, message: 'Client data processed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 module.exports = {
   SignUp,
   SignIn,
@@ -474,5 +639,6 @@ module.exports = {
   deleteUserProfile,
   sendVerificationEmailHandler,
   verifyEmail,
-  VerifyExistingUser
+  VerifyExistingUser,
+  createClientByForm
 };
