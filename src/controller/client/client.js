@@ -1,22 +1,26 @@
-const Client = require('../../model/Client');
-const fs = require('fs');
-const mongoose = require('mongoose');
-const AppointmentInformation = require('../../model/AppointmentInformation');
-const PersonalHistory = require('../../model/PersonalHistory');
-const Observations = require('../../model/Observations');
-const MedicalHistory = require('../../model/MedicalHistory');
-const DietHistory = require('../../model/DietHistory');
-const createAppointment = require('../../model/ScheduleApointment');
-const eatingBehaviour = require('../../model/eatingBehaviour');
-const ClientFile = require('../../model/ClientFile');
-const FoodDiares = require('../../model/FoodDiares');
-const Goals = require('../../model/Goals');
-const Measurements = require('../../model/Measurements');
-const pregnancyHistory = require('../../model/pregnancyHistory');
-const importHistory = require('../../model/importHistory');
-const bcrypt = require('bcrypt');
-const User = require('../../model/User');
-const { clientEmailSend, EmailForm, generateResetToken } = require('../../utils/EmailSender');
+const Client = require("../../model/Client");
+const fs = require("fs");
+const mongoose = require("mongoose");
+const AppointmentInformation = require("../../model/AppointmentInformation");
+const PersonalHistory = require("../../model/PersonalHistory");
+const Observations = require("../../model/Observations");
+const MedicalHistory = require("../../model/MedicalHistory");
+const DietHistory = require("../../model/DietHistory");
+const createAppointment = require("../../model/ScheduleApointment");
+const eatingBehaviour = require("../../model/eatingBehaviour");
+const ClientFile = require("../../model/ClientFile");
+const FoodDiares = require("../../model/FoodDiares");
+const Goals = require("../../model/Goals");
+const Measurements = require("../../model/Measurements");
+const pregnancyHistory = require("../../model/pregnancyHistory");
+const importHistory = require("../../model/importHistory");
+const bcrypt = require("bcrypt");
+const User = require("../../model/User");
+const {
+  clientEmailSend,
+  EmailForm,
+  generateResetToken,
+} = require("../../utils/EmailSender");
 
 const registerClient = async (req, res, next) => {
   try {
@@ -31,7 +35,7 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
-      isEmailSend
+      isEmailSend,
     } = req.body;
 
     const exist = await Client.findOne({ email, userId: { $ne: userId } });
@@ -39,7 +43,7 @@ const registerClient = async (req, res, next) => {
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: 'This email already exists',
+        message: "This email already exists",
       });
     }
     const client = await Client.create({
@@ -53,22 +57,22 @@ const registerClient = async (req, res, next) => {
       occupation,
       country,
       zipcode,
-      isEmailSend
+      isEmailSend,
     });
 
-    const user = await User.findOne({_id:userId})
+    const user = await User.findOne({ _id: userId });
 
     const { token } = await generateResetToken(user);
 
-    if(client && client.isEmailSend === true){
-      await EmailForm(user.email,client.email,client,user,token);
+    if (client && client.isEmailSend === true) {
+      await EmailForm(user.email, client.email, client, user, token);
     }
 
     // await getScheduleAppointmentInfo(client._id);
 
     return res.status(200).json({
       success: true,
-      message: 'Client added successfully',
+      message: "Client added successfully",
       client,
     });
   } catch (error) {
@@ -94,7 +98,6 @@ const registerClient = async (req, res, next) => {
 //     const invalidEmails = [];
 //     const importedHistory = [];
 //     let importHistoryCreated = false;
-
 
 //     for (const clientData of clientsData) {
 //       const {
@@ -123,7 +126,6 @@ const registerClient = async (req, res, next) => {
 //       }
 //       if (isImported === true) {
 
-
 //         await Client.updateMany({ email, userId, isImported: true }, {
 //           fullName,
 //           gender,
@@ -143,7 +145,6 @@ const registerClient = async (req, res, next) => {
 //           isImported,
 //         },
 //           { upsert: true });
-
 
 //         const updatedData = await Client.find({ email, userId });
 //         updatedClients.push(...updatedData);
@@ -222,10 +223,8 @@ const registerClient = async (req, res, next) => {
 // };
 
 const addImportHistory = async (req, res, next) => {
-
   try {
-    const { status, importedIn, file, clients, new_client, updated, success, errors, line, value, associatedField, typeOfError } = req.body;
-    const history = await importHistory.findByIdAndUpdate({ _id: req.params.id }, {
+    const {
       status,
       importedIn,
       file,
@@ -237,23 +236,37 @@ const addImportHistory = async (req, res, next) => {
       line,
       value,
       associatedField,
-      typeOfError
-    }, { new: true }, { upsert: true });
+      typeOfError,
+    } = req.body;
+    const history = await importHistory.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        status,
+        importedIn,
+        file,
+        clients,
+        new_client,
+        updated,
+        success,
+        errors,
+        line,
+        value,
+        associatedField,
+        typeOfError,
+      },
+      { new: true },
+      { upsert: true }
+    );
     return res.status(200).json({
       success: true,
-      message: 'Import history added successfully',
+      message: "Import history added successfully",
       history,
     });
-
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error);
     next(error);
   }
-
-}
-
-
+};
 
 const getAllClient = async (req, res, next) => {
   try {
@@ -263,7 +276,7 @@ const getAllClient = async (req, res, next) => {
     };
     const client = await Client.find(query);
     if (!client) {
-      return res.status(404).json({ message: 'client Not Found!' });
+      return res.status(404).json({ message: "client Not Found!" });
     }
     res.status(200).json(client);
   } catch (error) {
@@ -282,7 +295,7 @@ const getClientByID = async (req, res, next) => {
     };
     const client = await Client.findOne(query);
     if (!client) {
-      return res.status(404).json({ message: 'Client Not Found!' });
+      return res.status(404).json({ message: "Client Not Found!" });
     }
 
     const aggregate = [
@@ -296,67 +309,67 @@ const getClientByID = async (req, res, next) => {
 
     aggregate.push({
       $lookup: {
-        from: 'appointmentinformations',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'appointmentInformation',
+        from: "appointmentinformations",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "appointmentInformation",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'personalhistories',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'Personalandsocialhistory',
+        from: "personalhistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Personalandsocialhistory",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'diethistories',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'Dietaryhistory',
+        from: "diethistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Dietaryhistory",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'medicalhistories',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'Medicalhistory',
+        from: "medicalhistories",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "Medicalhistory",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'observations',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'observations',
+        from: "observations",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "observations",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'appointments',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'scheduleappointment',
+        from: "appointments",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "scheduleappointment",
       },
     });
     aggregate.push({
       $lookup: {
-        from: 'clientfiles',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'files',
+        from: "clientfiles",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "files",
       },
     });
 
     aggregate.push({
       $lookup: {
-        from: 'eatingbehaviours',
-        localField: '_id',
-        foreignField: 'clientId',
-        as: 'EatingBehaviours',
+        from: "eatingbehaviours",
+        localField: "_id",
+        foreignField: "clientId",
+        as: "EatingBehaviours",
       },
     });
 
@@ -415,7 +428,7 @@ const updateClient = async (req, res, next) => {
     if (!client) {
       return res.status(404).json({
         success: false,
-        message: 'Client not found',
+        message: "Client not found",
       });
     }
 
@@ -436,42 +449,42 @@ const updateClient = async (req, res, next) => {
     if (!updatedClient) {
       return res.status(404).json({
         success: false,
-        message: 'Client1 not found',
+        message: "Client1 not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Client details updated successfully',
+      message: "Client details updated successfully",
       client: updatedClient,
     });
   } catch (error) {
-    console.log('error', error);
+    console.log("error", error);
     next(error);
   }
 };
 
 const getScheduleAppointmentInfo = async (clientId) => {
   const videoConsultationValues = {
-    without_video_call: 'Not available in this option',
-    google_meet: 'Generated after saving appointment',
-    zoom: 'Generated after saving appointment',
+    without_video_call: "Not available in this option",
+    google_meet: "Generated after saving appointment",
+    zoom: "Generated after saving appointment",
   };
   try {
     const client = await Client.findById(clientId);
 
     if (!client) {
-      throw new Error('Client not found');
+      throw new Error("Client not found");
     }
 
     const start = new Date();
     const end = new Date(start.getTime() + 30 * 60 * 1000);
-    const videoConsultation = 'without_video_call';
+    const videoConsultation = "without_video_call";
 
-    let updatedVideoLink = '';
+    let updatedVideoLink = "";
 
-    if (videoConsultation === 'other_service') {
-      updatedVideoLink = 'Add here the video call link';
+    if (videoConsultation === "other_service") {
+      updatedVideoLink = "Add here the video call link";
     } else {
       updatedVideoLink = videoConsultationValues[videoConsultation];
     }
@@ -483,11 +496,11 @@ const getScheduleAppointmentInfo = async (clientId) => {
       clientId: client._id,
       clientName,
       start,
-      status: 'not_confirmed',
+      status: "not_confirmed",
       videoConsultation,
       end,
       workplace: clientWorkplace,
-      schedulingNotes: 'Add scheduling notes here if needed',
+      schedulingNotes: "Add scheduling notes here if needed",
       videoLink: updatedVideoLink,
     };
 
@@ -496,7 +509,7 @@ const getScheduleAppointmentInfo = async (clientId) => {
 
     return savedAppointment;
   } catch (error) {
-    console.error('Error creating appointment:', error);
+    console.error("Error creating appointment:", error);
     throw error;
   }
 };
@@ -510,9 +523,9 @@ const deleteClient = async (req, res, next) => {
     );
 
     if (deletedClient) {
-      res.status(200).json({ message: 'Client deleted successfully' });
+      res.status(200).json({ message: "Client deleted successfully" });
     } else {
-      res.status(404).json({ message: 'Client not found' });
+      res.status(404).json({ message: "Client not found" });
     }
   } catch (error) {
     console.log(error);
@@ -523,13 +536,18 @@ const deleteClient = async (req, res, next) => {
 const updateAppointmentInfo = async (req, res, next) => {
   try {
     const clientId = req.params.id;
-    const { appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfo } =
-      req.body;
+    const {
+      appointmentReason,
+      expectations,
+      clinicGoals,
+      clinicGoalsInfo,
+      otherInfo,
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid appointment ID',
+        message: "Invalid appointment ID",
       });
     }
 
@@ -551,8 +569,8 @@ const updateAppointmentInfo = async (req, res, next) => {
       );
 
     const message = updatedAppointmentInfo._id
-      ? 'Appointment Information updated successfully'
-      : 'New Appointment Information created';
+      ? "Appointment Information updated successfully"
+      : "New Appointment Information created";
 
     return res.status(200).json({
       success: true,
@@ -688,7 +706,6 @@ const updateAppointmentInfo = async (req, res, next) => {
 //   }
 // };
 
-
 const createPregnancyHistory = async (req, res, next) => {
   try {
     let {
@@ -704,8 +721,8 @@ const createPregnancyHistory = async (req, res, next) => {
     const formatDate = (dateString) => {
       if (!dateString) return null;
       const date = new Date(dateString);
-      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-      const dd = date.getDate().toString().padStart(2, '0');
+      const mm = (date.getMonth() + 1).toString().padStart(2, "0");
+      const dd = date.getDate().toString().padStart(2, "0");
       const yyyy = date.getFullYear();
       return `${mm}-${dd}-${yyyy}`;
     };
@@ -713,35 +730,41 @@ const createPregnancyHistory = async (req, res, next) => {
     lastMenstrualPeriod = formatDate(lastMenstrualPeriod);
     beginningOfLactation = formatDate(beginningOfLactation);
 
-
     const userId = req.userId;
     const lmpDate = new Date(lastMenstrualPeriod);
     const currentDate = new Date();
 
     const gestationalAgeInMilliseconds = currentDate - lmpDate;
-    const gestationalAgeInWeeks = gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
+    const gestationalAgeInWeeks =
+      gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
 
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
     let lactating = null;
     let status = "";
 
-    if (typeOfRecord === 'Pregnancy and lactation') {
+    if (typeOfRecord === "Pregnancy and lactation") {
       if (durationOfLactationInMonths === 0) {
-        return res.status(400).send({ message: 'Please enter a value greater than or equal to 1.' });
+        return res.status(400).send({
+          message: "Please enter a value greater than or equal to 1.",
+        });
       }
-      if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).send({ message: 'These fields are required.' });
+      if (
+        !lastMenstrualPeriod ||
+        !beginningOfLactation ||
+        !durationOfLactationInMonths
+      ) {
+        return res.status(400).send({ message: "These fields are required." });
       }
       let trimester;
       let lactationMonthsRemaining = null;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = ' Trimester 1';
+        trimester = " Trimester 1";
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = ' Trimester 2';
+        trimester = " Trimester 2";
       } else {
-        trimester = ' Trimester 3';
+        trimester = " Trimester 3";
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -760,7 +783,8 @@ const createPregnancyHistory = async (req, res, next) => {
           const lactationStartDate = new Date(beginningOfLactation);
           if (!isNaN(lactationStartDate.getTime())) {
             const diffInMonths =
-              (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+              (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
+                12 +
               (currentDate.getMonth() - lactationStartDate.getMonth());
 
             const lactationMonthsRemaining =
@@ -777,10 +801,12 @@ const createPregnancyHistory = async (req, res, next) => {
 
             if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
               lactating = null;
-              status = 'completed';
+              status = "completed";
             } else {
               if (remainingDays > 0) {
-                const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+                const currentLactatingMonth = Math.ceil(
+                  durationOfLactationInMonths - lactationMonthsRemaining
+                );
                 lactating = `month ${currentLactatingMonth}`;
               } else {
                 lactating = `month ${lactationMonthsRemaining}`;
@@ -789,18 +815,20 @@ const createPregnancyHistory = async (req, res, next) => {
           }
         }
       }
-    } else if (typeOfRecord === 'Pregnancy') {
+    } else if (typeOfRecord === "Pregnancy") {
       if (!lastMenstrualPeriod) {
-        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
+        return res
+          .status(400)
+          .json({ message: "lastMenstrualPeriod is required" });
       }
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = ' Trimester 1';
+        trimester = " Trimester 1";
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = ' Trimester 2';
+        trimester = " Trimester 2";
       } else {
-        trimester = ' Trimester 3';
+        trimester = " Trimester 3";
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -808,17 +836,21 @@ const createPregnancyHistory = async (req, res, next) => {
         currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
       }
       if (gestationalAgeInWeeks >= 40) {
-        status = 'completed';
+        status = "completed";
       }
-    } else if (typeOfRecord === 'Lactation') {
+    } else if (typeOfRecord === "Lactation") {
       if (!beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).json({ message: 'beginningOfLactation and durationOfLactationInMonths are required' });
+        return res.status(400).json({
+          message:
+            "beginningOfLactation and durationOfLactationInMonths are required",
+        });
       }
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
           const diffInMonths =
-            (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+            (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
+              12 +
             (currentDate.getMonth() - lactationStartDate.getMonth());
 
           const lactationMonthsRemaining =
@@ -834,10 +866,12 @@ const createPregnancyHistory = async (req, res, next) => {
           );
 
           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
-            status = 'completed';
+            status = "completed";
           } else {
             if (remainingDays > 0) {
-              const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+              const currentLactatingMonth = Math.ceil(
+                durationOfLactationInMonths - lactationMonthsRemaining
+              );
               lactating = `month ${currentLactatingMonth}`;
             } else {
               lactating = `month ${lactationMonthsRemaining}`;
@@ -848,7 +882,9 @@ const createPregnancyHistory = async (req, res, next) => {
     }
 
     const lastMenstrualPeriodFormatted = formatDate(lmpDate);
-    const beginningOfLactationFormatted = formatDate(new Date(beginningOfLactation));
+    const beginningOfLactationFormatted = formatDate(
+      new Date(beginningOfLactation)
+    );
 
     const newPregnancyHistory = new pregnancyHistory({
       userId: userId,
@@ -869,7 +905,7 @@ const createPregnancyHistory = async (req, res, next) => {
 
     const response = {
       success: true,
-      message: 'Pregnancy History added successfully',
+      message: "Pregnancy History added successfully",
       data: {
         ...data._doc,
         lastMenstrualPeriod: lastMenstrualPeriodFormatted,
@@ -892,7 +928,7 @@ const updatePregnancyHistory = async (req, res, next) => {
     if (!pregnancy) {
       return res.status(404).json({
         success: false,
-        message: 'Pregnancy History not found',
+        message: "Pregnancy History not found",
       });
     }
     let {
@@ -907,8 +943,8 @@ const updatePregnancyHistory = async (req, res, next) => {
     const formatDate = (dateString) => {
       if (!dateString) return null;
       const date = new Date(dateString);
-      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-      const dd = date.getDate().toString().padStart(2, '0');
+      const mm = (date.getMonth() + 1).toString().padStart(2, "0");
+      const dd = date.getDate().toString().padStart(2, "0");
       const yyyy = date.getFullYear();
       return `${mm}-${dd}-${yyyy}`;
     };
@@ -920,27 +956,34 @@ const updatePregnancyHistory = async (req, res, next) => {
     const currentDate = new Date();
 
     const gestationalAgeInMilliseconds = currentDate - lmpDate;
-    const gestationalAgeInWeeks = gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
-
+    const gestationalAgeInWeeks =
+      gestationalAgeInMilliseconds / (1000 * 60 * 60 * 24 * 7);
 
     let currentPregnancyTrimester = null;
     let currentPregnancyWeek = null;
     let lactating = null;
     let status = "";
 
-    if (typeOfRecord === 'Pregnancy and lactation') {
-      if (!lastMenstrualPeriod || !beginningOfLactation || !durationOfLactationInMonths) {
-        return res.status(400).send({ message: 'lastMenstrualPeriod,beginningOfLactation,durationOfLactationInMonths are required fields.' });
+    if (typeOfRecord === "Pregnancy and lactation") {
+      if (
+        !lastMenstrualPeriod ||
+        !beginningOfLactation ||
+        !durationOfLactationInMonths
+      ) {
+        return res.status(400).send({
+          message:
+            "lastMenstrualPeriod,beginningOfLactation,durationOfLactationInMonths are required fields.",
+        });
       }
       let trimester;
-      let lactationMonthsRemaining = null
+      let lactationMonthsRemaining = null;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = ' Trimester 1';
+        trimester = " Trimester 1";
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = ' Trimester 2';
+        trimester = " Trimester 2";
       } else {
-        trimester = ' Trimester 3';
+        trimester = " Trimester 3";
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -954,13 +997,13 @@ const updatePregnancyHistory = async (req, res, next) => {
         currentPregnancyWeek = null;
       }
 
-
       if (gestationalAgeInWeeks >= 40) {
         if (beginningOfLactation) {
           const lactationStartDate = new Date(beginningOfLactation);
           if (!isNaN(lactationStartDate.getTime())) {
             const diffInMonths =
-              (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+              (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
+                12 +
               (currentDate.getMonth() - lactationStartDate.getMonth());
 
             const lactationMonthsRemaining =
@@ -977,10 +1020,12 @@ const updatePregnancyHistory = async (req, res, next) => {
 
             if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
               lactating = null;
-              status = 'completed';
+              status = "completed";
             } else {
               if (remainingDays > 0) {
-                const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+                const currentLactatingMonth = Math.ceil(
+                  durationOfLactationInMonths - lactationMonthsRemaining
+                );
                 lactating = `month ${currentLactatingMonth}`;
               } else {
                 lactating = `month ${lactationMonthsRemaining}`;
@@ -989,18 +1034,20 @@ const updatePregnancyHistory = async (req, res, next) => {
           }
         }
       }
-    } else if (typeOfRecord === 'Pregnancy') {
+    } else if (typeOfRecord === "Pregnancy") {
       if (!lastMenstrualPeriod) {
-        return res.status(400).json({ message: 'lastMenstrualPeriod is required' });
+        return res
+          .status(400)
+          .json({ message: "lastMenstrualPeriod is required" });
       }
       let trimester;
 
       if (gestationalAgeInWeeks <= 13) {
-        trimester = ' Trimester 1';
+        trimester = " Trimester 1";
       } else if (gestationalAgeInWeeks <= 26) {
-        trimester = ' Trimester 2';
+        trimester = " Trimester 2";
       } else {
-        trimester = ' Trimester 3';
+        trimester = " Trimester 3";
       }
 
       if (gestationalAgeInWeeks < 40) {
@@ -1008,15 +1055,15 @@ const updatePregnancyHistory = async (req, res, next) => {
         currentPregnancyWeek = Math.ceil(gestationalAgeInWeeks);
       }
       if (gestationalAgeInWeeks >= 40) {
-        status = 'completed';
+        status = "completed";
       }
-    } else if (typeOfRecord === 'Lactation') {
-
+    } else if (typeOfRecord === "Lactation") {
       if (beginningOfLactation) {
         const lactationStartDate = new Date(beginningOfLactation);
         if (!isNaN(lactationStartDate.getTime())) {
           const diffInMonths =
-            (currentDate.getFullYear() - lactationStartDate.getFullYear()) * 12 +
+            (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
+              12 +
             (currentDate.getMonth() - lactationStartDate.getMonth());
 
           const lactationMonthsRemaining =
@@ -1031,13 +1078,13 @@ const updatePregnancyHistory = async (req, res, next) => {
             (lastLactationMonthEndDate - currentDate) / (1000 * 60 * 60 * 24)
           );
 
-
-
           if (lactationMonthsRemaining <= 0 && remainingDays < 0) {
-            status = 'completed';
+            status = "completed";
           } else {
             if (remainingDays > 0) {
-              const currentLactatingMonth = Math.ceil(durationOfLactationInMonths - lactationMonthsRemaining);
+              const currentLactatingMonth = Math.ceil(
+                durationOfLactationInMonths - lactationMonthsRemaining
+              );
               lactating = `month ${currentLactatingMonth}`;
             } else {
               lactating = `month ${lactationMonthsRemaining}`;
@@ -1046,7 +1093,6 @@ const updatePregnancyHistory = async (req, res, next) => {
         }
       }
     }
-
 
     const updatePregnancyHistory = {
       typeOfRecord,
@@ -1061,11 +1107,15 @@ const updatePregnancyHistory = async (req, res, next) => {
       lactating,
     };
 
-    const data = await pregnancyHistory.findByIdAndUpdate({ _id: id }, updatePregnancyHistory, { new: true });
+    const data = await pregnancyHistory.findByIdAndUpdate(
+      { _id: id },
+      updatePregnancyHistory,
+      { new: true }
+    );
 
     return res.status(200).json({
       success: true,
-      message: 'Pregnancy History updated successfully',
+      message: "Pregnancy History updated successfully",
       data: data,
     });
   } catch (error) {
@@ -1074,7 +1124,6 @@ const updatePregnancyHistory = async (req, res, next) => {
   }
 };
 
-
 const getPregnancyHistory = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
@@ -1082,7 +1131,7 @@ const getPregnancyHistory = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1096,33 +1145,33 @@ const getPregnancyHistory = async (req, res, next) => {
     if (!pregnancyhistory) {
       return res.status(404).json({
         success: false,
-        message: 'No pregnancy history found',
+        message: "No pregnancy history found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'pregnancy history retrieved successfully',
+      message: "pregnancy history retrieved successfully",
       data: pregnancyhistory,
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
-
-}
+};
 
 const deletePregnancyHistory = async (req, res, next) => {
-
   try {
     const pregnancyId = req.params.pregnancyId;
 
-    const pregnancyhistory = await pregnancyHistory.findOne({ _id: pregnancyId });
+    const pregnancyhistory = await pregnancyHistory.findOne({
+      _id: pregnancyId,
+    });
 
     if (!pregnancyhistory) {
       return res.status(404).json({
         success: false,
-        message: 'No pregnancy history found',
+        message: "No pregnancy history found",
       });
     }
 
@@ -1130,17 +1179,16 @@ const deletePregnancyHistory = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'pregnancy history deleted successfully',
+      message: "pregnancy history deleted successfully",
     });
-
-  }
-  catch (error) {
+  } catch (error) {
     next(error);
   }
-
-}
+};
 
 const updatePersonalHistory = async (req, res, next) => {
+  console.log("first");
+  console.log("req.file.path", req.files);
   try {
     const clientId = req.params.id;
     const {
@@ -1156,13 +1204,51 @@ const updatePersonalHistory = async (req, res, next) => {
       maritalStatusInfo,
       physicalActivity,
       race,
+      bmr,
+      bloodGroup,
+      caloriesReq,
+      overWeight,
+      underWeight,
+      idealBodyWeight,
+      targetWeight,
+      pa_h,
+      F_H,
+      sCholesterol,
+      sTriglyceride,
+      hdl,
+      ldl,
+      vldl,
+      sTSH,
+      sT3,
+      sT4,
+      sB12,
+      svitD3,
+      hb,
+      bp,
+      hb1ac,
+      validityDate,
+      rbs,
+      fbs,
+      pp2bs,
+      selectProgram,
+      session,
+      months,
+      occupation,
+      time,
+      milk,
+      oil,
+      salt,
+      fastingDay,
+      fastFood,
+      hotelFood,
+      AnythingElse,
+      Habit,
       otherInfo,
     } = req.body;
-
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1181,6 +1267,45 @@ const updatePersonalHistory = async (req, res, next) => {
       maritalStatusInfo,
       physicalActivity,
       race,
+      bmr,
+      bloodGroup,
+      caloriesReq,
+      overWeight,
+      underWeight,
+      idealBodyWeight,
+      targetWeight,
+      pa_h,
+      F_H,
+      sCholesterol,
+      sTriglyceride,
+      hdl,
+      ldl,
+      vldl,
+      sTSH,
+      sT3,
+      sT4,
+      sB12,
+      svitD3,
+      hb,
+      bp,
+      hb1ac,
+      validityDate,
+      rbs,
+      fbs,
+      pp2bs,
+      selectProgram,
+      session,
+      months,
+      occupation,
+      time,
+      milk,
+      oil,
+      salt,
+      fastingDay,
+      fastFood,
+      hotelFood,
+      AnythingElse,
+      Habit,
       otherInfo,
     };
 
@@ -1191,8 +1316,8 @@ const updatePersonalHistory = async (req, res, next) => {
     );
 
     const message = updatedPersonalHistory._id
-      ? 'Personal History updated successfully'
-      : 'New Personal History created';
+      ? "Personal History updated successfully"
+      : "New Personal History created";
 
     return res.status(200).json({
       success: true,
@@ -1211,7 +1336,7 @@ const addObservation = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
     const userId = req.userId;
@@ -1220,21 +1345,20 @@ const addObservation = async (req, res, next) => {
       userId: userId,
       registrationDate,
       observation,
-      clientId
+      clientId,
     });
 
     const result = await newObservation.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Observation added successfully',
+      message: "Observation added successfully",
       data: result,
     });
   } catch (error) {
     next(error);
   }
-
-}
+};
 
 const updateObservation = async (req, res, next) => {
   try {
@@ -1245,7 +1369,7 @@ const updateObservation = async (req, res, next) => {
     if (!observ || observ.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'observation not found',
+        message: "observation not found",
       });
     }
     const newObservation = {
@@ -1260,7 +1384,7 @@ const updateObservation = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Observation updated successfully',
+      message: "Observation updated successfully",
       observation: updatedObservation,
     });
   } catch (error) {
@@ -1276,7 +1400,7 @@ const deleteObservation = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(observationId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid observation ID',
+        message: "Invalid observation ID",
       });
     }
 
@@ -1287,13 +1411,13 @@ const deleteObservation = async (req, res, next) => {
     if (!deletedObservation) {
       return res.status(404).json({
         success: false,
-        message: 'Observation not found',
+        message: "Observation not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Observation deleted successfully',
+      message: "Observation deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -1309,21 +1433,20 @@ const getObservation = async (req, res, next) => {
     if (!observation || observation.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Observation not found',
+        message: "Observation not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Observation found successfully',
+      message: "Observation found successfully",
       observation: observation,
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
-}
-
+};
 
 const updateMedicalHistory = async (req, res, next) => {
   try {
@@ -1355,8 +1478,8 @@ const updateMedicalHistory = async (req, res, next) => {
     );
 
     const message = updatedMedicalHistory._id
-      ? 'Medical History updated successfully'
-      : 'New Medical History created';
+      ? "Medical History updated successfully"
+      : "New Medical History created";
 
     return res.status(200).json({
       success: true,
@@ -1414,8 +1537,8 @@ const updateDietHistory = async (req, res, next) => {
     );
 
     const message = updatedDietHistory._id
-      ? 'Diet History updated successfully'
-      : 'New Diet History created';
+      ? "Diet History updated successfully"
+      : "New Diet History created";
 
     return res.status(200).json({
       success: true,
@@ -1436,7 +1559,7 @@ const createFileDetail = async (req, res, next) => {
     if (!file) {
       return res.status(400).json({
         success: false,
-        message: 'You need to choose a file',
+        message: "You need to choose a file",
       });
     }
 
@@ -1454,11 +1577,11 @@ const createFileDetail = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'File created successfully',
+      message: "File created successfully",
       file: createdFile,
     });
   } catch (error) {
-    console.log('error-------->', error);
+    console.log("error-------->", error);
     next(error);
   }
 };
@@ -1487,7 +1610,7 @@ const updateFileDetail = async (req, res, next) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid user, client, or behaviourId',
+        message: "Invalid user, client, or behaviourId",
       });
     }
 
@@ -1498,8 +1621,8 @@ const updateFileDetail = async (req, res, next) => {
     );
 
     const message = updatedFile._id
-      ? 'File updated successfully'
-      : 'New File created';
+      ? "File updated successfully"
+      : "New File created";
 
     return res.status(200).json({
       success: true,
@@ -1527,7 +1650,7 @@ const deleteFileDetail = async (req, res, next) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid userId or clientId or fileId',
+        message: "Invalid userId or clientId or fileId",
       });
     }
 
@@ -1540,16 +1663,16 @@ const deleteFileDetail = async (req, res, next) => {
     if (!deletedFile) {
       return res.status(404).json({
         success: false,
-        message: 'File not found',
+        message: "File not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'File deleted successfully',
+      message: "File deleted successfully",
     });
   } catch (error) {
-    console.log('error--------->', error);
+    console.log("error--------->", error);
     next(error);
   }
 };
@@ -1561,7 +1684,7 @@ const getAllFileDetail = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1570,17 +1693,17 @@ const getAllFileDetail = async (req, res, next) => {
     if (files.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Files not found for the client',
+        message: "Files not found for the client",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Files retrieved successfully',
+      message: "Files retrieved successfully",
       files: files,
     });
   } catch (error) {
-    console.log('error--------->', error);
+    console.log("error--------->", error);
     next(error);
   }
 };
@@ -1599,7 +1722,7 @@ const createEatingBehaviour = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Behaviour added successfully!!!',
+      message: "Behaviour added successfully!!!",
       EatingBehaviour: createdBehaviour,
     });
   } catch (error) {
@@ -1619,7 +1742,7 @@ const deleteEatingBehaviour = async (req, res, next) => {
     ) {
       return res
         .status(400)
-        .json({ success: false, message: 'Invalid userId or clientId' });
+        .json({ success: false, message: "Invalid userId or clientId" });
     }
 
     const deletedBehaviour = await eatingBehaviour.findOneAndDelete({
@@ -1631,13 +1754,13 @@ const deleteEatingBehaviour = async (req, res, next) => {
     if (!deletedBehaviour) {
       return res.status(404).json({
         success: false,
-        message: 'Eating Behaviour not found!',
+        message: "Eating Behaviour not found!",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Behaviour deleted successfully!!!',
+      message: "Behaviour deleted successfully!!!",
     });
   } catch (error) {
     next(error);
@@ -1658,7 +1781,7 @@ const updateEatingBehaviour = async (req, res, next) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid user, client, or behaviourId',
+        message: "Invalid user, client, or behaviourId",
       });
     }
 
@@ -1672,8 +1795,8 @@ const updateEatingBehaviour = async (req, res, next) => {
       { new: true }
     );
     const message = updatedBehaviour._id
-      ? 'Behaviour updated successfully'
-      : 'New Behaviour created';
+      ? "Behaviour updated successfully"
+      : "New Behaviour created";
 
     return res.status(200).json({
       success: true,
@@ -1692,7 +1815,7 @@ const getAllEatingBehaviour = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1701,13 +1824,13 @@ const getAllEatingBehaviour = async (req, res, next) => {
     if (behaviours.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Behaviours not found for the client',
+        message: "Behaviours not found for the client",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Behaviours retrieved successfully',
+      message: "Behaviours retrieved successfully",
       behaviours: behaviours,
     });
   } catch (error) {
@@ -1729,7 +1852,7 @@ const createFoodDiary = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'createdFoodDiary added successfully!!!',
+      message: "createdFoodDiary added successfully!!!",
       EatingBehaviour: createdFoodDiary,
     });
   } catch (error) {
@@ -1749,7 +1872,7 @@ const deleteFoodDiary = async (req, res, next) => {
     ) {
       return res
         .status(400)
-        .json({ success: false, message: 'Invalid userId or clientId' });
+        .json({ success: false, message: "Invalid userId or clientId" });
     }
 
     const deletedFoodDiary = await FoodDiares.findOneAndDelete({
@@ -1761,13 +1884,13 @@ const deleteFoodDiary = async (req, res, next) => {
     if (!deletedFoodDiary) {
       return res.status(404).json({
         success: false,
-        message: 'Food Diaries not found!',
+        message: "Food Diaries not found!",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Food Diaries deleted successfully!!!',
+      message: "Food Diaries deleted successfully!!!",
     });
   } catch (error) {
     next(error);
@@ -1790,7 +1913,7 @@ const updateFoodDiary = async (req, res, next) => {
     if (!foodDiary) {
       return res.status(404).json({
         success: false,
-        message: 'Food diary entry not found or not authorized for update.',
+        message: "Food diary entry not found or not authorized for update.",
       });
     }
 
@@ -1829,7 +1952,7 @@ const updateFoodDiary = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Food diary entry updated successfully!',
+      message: "Food diary entry updated successfully!",
       EatingBehaviour: updatedFoodDiary,
     });
   } catch (error) {
@@ -1844,7 +1967,7 @@ const getAllFoodDiary = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1853,28 +1976,30 @@ const getAllFoodDiary = async (req, res, next) => {
     if (foodDiaries.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Food diaries not found for the client',
+        message: "Food diaries not found for the client",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Food diaries retrieved successfully',
+      message: "Food diaries retrieved successfully",
       foodDiaries: foodDiaries,
     });
   } catch (error) {
     next(error);
   }
-}
+};
 
 const createGoal = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.id;
-    const { goals, description, deadline } =
-      req.body;
+    const { goals, description, deadline } = req.body;
 
-    const existingGoal = await Goals.findOne({ userId: userId, clientId: clientId });
+    const existingGoal = await Goals.findOne({
+      userId: userId,
+      clientId: clientId,
+    });
     if (existingGoal) {
       existingGoal.goals = goals;
       existingGoal.description = description;
@@ -1882,27 +2007,25 @@ const createGoal = async (req, res, next) => {
       const updatedGoal = await existingGoal.save();
       return res.status(200).json({
         success: true,
-        message: 'Goal updated successfully!!!',
+        message: "Goal updated successfully!!!",
         EatingBehaviour: updatedGoal,
       });
-    }
-    else {
+    } else {
       const newGoalData = {
         userId: userId,
         clientId: clientId,
         goals,
         description,
-        deadline
+        deadline,
       };
       const createGoal = await Goals.create(newGoalData);
 
       return res.status(201).json({
         success: true,
-        message: 'Goal created successfully!!!',
+        message: "Goal created successfully!!!",
         EatingBehaviour: createGoal,
       });
     }
-
   } catch (error) {
     next(error);
   }
@@ -1916,7 +2039,7 @@ const deleteGoal = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -1927,7 +2050,7 @@ const deleteGoal = async (req, res, next) => {
     if (!goalsData) {
       return res.status(404).json({
         success: false,
-        message: 'Goals not found for the client',
+        message: "Goals not found for the client",
       });
     }
 
@@ -1940,19 +2063,19 @@ const deleteGoal = async (req, res, next) => {
 
       if (
         goal._id.toString() === idToDelete &&
-        goal.goalType === 'Generic (Sports and food routines, among others)'
+        goal.goalType === "Generic (Sports and food routines, among others)"
       ) {
         goalsData.goals = goalsData.goals.filter(
           (goal) => goal._id.toString() !== idToDelete
         );
       }
     });
-    9
+    9;
     await goalsData.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Goal deleted successfully',
+      message: "Goal deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -1960,9 +2083,7 @@ const deleteGoal = async (req, res, next) => {
 };
 
 const updateGoal = async (req, res, next) => {
-
   try {
-
     const clientId = req.params.clientId;
     const idToUpdate = req.params.entryId;
     const newValue = req.body.value;
@@ -1970,7 +2091,7 @@ const updateGoal = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
     const goalsData = await Goals.findOne({
@@ -1980,7 +2101,7 @@ const updateGoal = async (req, res, next) => {
     if (!goalsData) {
       return res.status(404).json({
         success: false,
-        message: 'Goals not found for the client',
+        message: "Goals not found for the client",
       });
     }
 
@@ -1995,20 +2116,16 @@ const updateGoal = async (req, res, next) => {
           await goalsData.save();
           return res.status(200).json({
             success: true,
-            message: 'Entry value updated successfully',
-            data: goalsData
+            message: "Entry value updated successfully",
+            data: goalsData,
           });
         }
       }
     }
-
-
   } catch (error) {
     next(error);
   }
-
-
-}
+};
 
 const getGoalByMeasurementType = async (req, res, next) => {
   try {
@@ -2018,7 +2135,7 @@ const getGoalByMeasurementType = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -2029,7 +2146,7 @@ const getGoalByMeasurementType = async (req, res, next) => {
     if (goal.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Goals not found for the client',
+        message: "Goals not found for the client",
       });
     }
 
@@ -2047,14 +2164,13 @@ const getGoalByMeasurementType = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Goals retrieved successfully',
+      message: "Goals retrieved successfully",
       goals: measurements,
     });
   } catch (error) {
     next(error);
   }
-}
-
+};
 
 const getAllGoals = async (req, res, next) => {
   try {
@@ -2063,7 +2179,7 @@ const getAllGoals = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid client ID',
+        message: "Invalid client ID",
       });
     }
 
@@ -2074,7 +2190,7 @@ const getAllGoals = async (req, res, next) => {
     if (goalsData.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Goals not found for the client',
+        message: "Goals not found for the client",
       });
     }
 
@@ -2084,8 +2200,8 @@ const getAllGoals = async (req, res, next) => {
           if (goal.measurements && Array.isArray(goal.measurements)) {
             goal.measurements.forEach((allMeasurement) => {
               allMeasurement.entries.sort((a, b) => {
-                const datePartsA = a.deadline.split('-');
-                const datePartsB = b.deadline.split('-');
+                const datePartsA = a.deadline.split("-");
+                const datePartsB = b.deadline.split("-");
 
                 const currentDate = new Date(); // Get current date
 
@@ -2111,26 +2227,22 @@ const getAllGoals = async (req, res, next) => {
       }
     });
 
-
     return res.status(200).json({
       success: true,
-      message: 'Goals retrieved successfully',
+      message: "Goals retrieved successfully",
       allGoals: goalsData,
     });
   } catch (error) {
     console.log(error);
     next(error);
   }
-}
+};
 
 const registerMeasurement = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.id;
-    const {
-      measurementsdate,
-      measurements,
-    } = req.body;
+    const { measurementsdate, measurements } = req.body;
 
     const existingMeasurement = await Measurements.findOne({
       userId: userId,
@@ -2144,7 +2256,7 @@ const registerMeasurement = async (req, res, next) => {
       await existingMeasurement.save();
       return res.status(200).json({
         success: true,
-        message: 'Measurement updated successfully',
+        message: "Measurement updated successfully",
         measurement: existingMeasurement,
       });
     } else {
@@ -2157,7 +2269,7 @@ const registerMeasurement = async (req, res, next) => {
       const createdMeasurement = await Measurements.create(newMeasurement);
       return res.status(200).json({
         success: true,
-        message: 'Measurement added successfully',
+        message: "Measurement added successfully",
         measurement: createdMeasurement,
       });
     }
@@ -2166,7 +2278,6 @@ const registerMeasurement = async (req, res, next) => {
     next(error);
   }
 };
-
 
 const addNewMeasurement = async (req, res, next) => {
   try {
@@ -2178,19 +2289,23 @@ const addNewMeasurement = async (req, res, next) => {
     if (!existingMeasurement) {
       return res.status(404).json({
         success: false,
-        message: 'Measurement not found',
+        message: "Measurement not found",
       });
     }
 
-    const updatedMeasurement = await Measurements.findByIdAndUpdate({ _id: measurementId }, { measurements }, { new: true });
+    const updatedMeasurement = await Measurements.findByIdAndUpdate(
+      { _id: measurementId },
+      { measurements },
+      { new: true }
+    );
 
     return res.status(200).json({
       success: true,
-      message: 'New measurements added to existing Measurement record',
+      message: "New measurements added to existing Measurement record",
       measurement: updatedMeasurement,
     });
   } catch (error) {
-    console.log('error------------->', error);
+    console.log("error------------->", error);
     next(error);
   }
 };
@@ -2203,7 +2318,7 @@ const getMeasurementById = async (req, res, next) => {
     if (!measurement) {
       return res.status(400).json({
         success: false,
-        message: 'measurement not found',
+        message: "measurement not found",
       });
     }
     const allMeasurement = await Measurements.findOne({
@@ -2212,8 +2327,8 @@ const getMeasurementById = async (req, res, next) => {
 
     allMeasurement.measurements.forEach((measurementType) => {
       measurementType.entries.sort((a, b) => {
-        const datePartsA = a.date.split('-');
-        const datePartsB = b.date.split('-');
+        const datePartsA = a.date.split("-");
+        const datePartsB = b.date.split("-");
 
         const dayA = parseInt(datePartsA[0]);
         const monthA = parseInt(datePartsA[1]);
@@ -2235,13 +2350,13 @@ const getMeasurementById = async (req, res, next) => {
         if (dayA - dayB !== 0) {
           return dayB - dayA;
         } else {
-          return measurementType.entries.findIndex(e => e._id === b._id) - measurementType.entries.findIndex(e => e._id === a._id);
+          return (
+            measurementType.entries.findIndex((e) => e._id === b._id) -
+            measurementType.entries.findIndex((e) => e._id === a._id)
+          );
         }
-
       });
     });
-
-
 
     return res.status(200).json({
       success: true,
@@ -2259,7 +2374,7 @@ const deleteMeasurementObject = async (req, res, next) => {
 
     const measurement = await Measurements.findOne({ clientId: clientId });
     if (!measurement) {
-      return res.status(404).json({ message: 'Measurement not found' });
+      return res.status(404).json({ message: "Measurement not found" });
     }
     let entryDeleted = false;
 
@@ -2274,12 +2389,17 @@ const deleteMeasurementObject = async (req, res, next) => {
     }
 
     if (!entryDeleted) {
-      return res.status(404).json({ message: 'Entry not found within the measurement' });
+      return res
+        .status(404)
+        .json({ message: "Entry not found within the measurement" });
     }
 
     await measurement.save();
 
-    return res.status(200).json({ message: 'Entry deleted successfully', measurement: measurement });
+    return res.status(200).json({
+      message: "Entry deleted successfully",
+      measurement: measurement,
+    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -2295,7 +2415,7 @@ const updateMeasurementObject = async (req, res, next) => {
     const measurement = await Measurements.findOne({ clientId: clientId });
 
     if (!measurement) {
-      return res.status(404).json({ message: 'Measurement not found' });
+      return res.status(404).json({ message: "Measurement not found" });
     }
 
     let entryUpdated = false;
@@ -2312,12 +2432,17 @@ const updateMeasurementObject = async (req, res, next) => {
     }
 
     if (!entryUpdated) {
-      return res.status(404).json({ message: 'Entry not found within the measurement' });
+      return res
+        .status(404)
+        .json({ message: "Entry not found within the measurement" });
     }
 
     await measurement.save();
 
-    return res.status(200).json({ message: 'Entry updated successfully', measurement: measurement });
+    return res.status(200).json({
+      message: "Entry updated successfully",
+      measurement: measurement,
+    });
   } catch (error) {
     next(error);
   }
@@ -2333,8 +2458,8 @@ const getClientInfo = async (req, res, next) => {
       clientWeight.forEach((measurement) => {
         measurement.measurements.forEach((measurementType) => {
           measurementType.entries.sort((a, b) => {
-            const datePartsA = a.date.split('-');
-            const datePartsB = b.date.split('-');
+            const datePartsA = a.date.split("-");
+            const datePartsB = b.date.split("-");
 
             const dayA = parseInt(datePartsA[0]);
             const monthA = parseInt(datePartsA[1]) - 1;
@@ -2358,34 +2483,31 @@ const getClientInfo = async (req, res, next) => {
     const measurement = goal.forEach((item) => {
       item.goals?.forEach((goal) => {
         goal.measurements?.forEach((measurement) => {
-          if (measurement.measurementtype === 'Weight') {
+          if (measurement.measurementtype === "Weight") {
             measurement.entries?.forEach((entry) => {
-              measurements.push(entry)
+              measurements.push(entry);
             });
           }
         });
       });
     });
-
 
     const goalFatMeasurements = [];
 
     const goalFat = goal.forEach((item) => {
       item.goals?.forEach((goal) => {
         goal.measurements?.forEach((measurement) => {
-          if (measurement.measurementtype === 'Body fat percentage') {
+          if (measurement.measurementtype === "Body fat percentage") {
             measurement.entries?.forEach((entry) => {
-              goalFatMeasurements.push(entry)
+              goalFatMeasurements.push(entry);
             });
           }
         });
       });
     });
 
-
-
     measurements.forEach((measurement) => {
-      const deadlineParts = measurement.deadline.split('-');
+      const deadlineParts = measurement.deadline.split("-");
       const year = parseInt(deadlineParts[2]);
       const month = parseInt(deadlineParts[1]) - 1; // Months are zero-based
       const day = parseInt(deadlineParts[0]);
@@ -2395,12 +2517,9 @@ const getClientInfo = async (req, res, next) => {
 
     measurements.sort((a, b) => a.deadlineDate - b.deadlineDate);
 
-
-
     if (!goal) {
-      return res.status(404).json({ message: 'weight not found' });
+      return res.status(404).json({ message: "weight not found" });
     }
-
 
     let lastWeight = null;
     let goalWeight = null;
@@ -2410,16 +2529,21 @@ const getClientInfo = async (req, res, next) => {
 
     if (clientWeight.length > 0) {
       const weightData = clientWeight.map((measurement) => ({
-        weight: measurement.measurements.filter((entry) => entry.measurementtype === 'Weight')[0]?.entries
+        weight: measurement.measurements.filter(
+          (entry) => entry.measurementtype === "Weight"
+        )[0]?.entries,
       }));
 
-
       const heightData = clientWeight.map((measurement) => ({
-        height: measurement.measurements.filter((entry) => entry.measurementtype === "Height")[0]?.entries,
+        height: measurement.measurements.filter(
+          (entry) => entry.measurementtype === "Height"
+        )[0]?.entries,
       }));
 
       const lastBodyFatData = clientWeight.map((measurement) => ({
-        BodyFat: measurement.measurements.filter((entry) => entry.measurementtype === 'Body fat percentage')[0]?.entries
+        BodyFat: measurement.measurements.filter(
+          (entry) => entry.measurementtype === "Body fat percentage"
+        )[0]?.entries,
       }));
 
       const weight = weightData[0]?.weight;
@@ -2444,35 +2568,38 @@ const getClientInfo = async (req, res, next) => {
     }
     if (goalFatMeasurements.length > 0) {
       goalBodyFat = goalFatMeasurements[0];
-    }
-
-
-
-
-    else {
-      return res.status(404).json({ message: 'weight or BodyFat not found' });
+    } else {
+      return res.status(404).json({ message: "weight or BodyFat not found" });
     }
 
     const heightInMeters = lastHeight ? lastHeight.value / 100 : null;
 
-    const bmiLastWeight = lastWeight ? lastWeight.value / (heightInMeters * heightInMeters) : null;
+    const bmiLastWeight = lastWeight
+      ? lastWeight.value / (heightInMeters * heightInMeters)
+      : null;
     const heightInInches = lastHeight ? lastHeight.value / 2.54 : null;
     const idealWeight = lastHeight ? 52 + 1.9 * (heightInInches - 60) : null;
-    const bmiIdealWeight = lastHeight ? idealWeight / (heightInMeters * heightInMeters) : null;
-    let bmiGoalWeight = goalWeight ? goalWeight?.value / (heightInMeters * heightInMeters) : null;
-    console.log("goalWeight?.value------->", goalWeight?.value)
+    const bmiIdealWeight = lastHeight
+      ? idealWeight / (heightInMeters * heightInMeters)
+      : null;
+    let bmiGoalWeight = goalWeight
+      ? goalWeight?.value / (heightInMeters * heightInMeters)
+      : null;
+    console.log("goalWeight?.value------->", goalWeight?.value);
 
-    console.log('bmiGoalWeight--->>', bmiGoalWeight);
+    console.log("bmiGoalWeight--->>", bmiGoalWeight);
 
     if (goalWeight === null) {
       goalWeight = idealWeight;
-      bmiGoalWeight = goalWeight !== null ? goalWeight / (heightInMeters * heightInMeters) : null;
+      bmiGoalWeight =
+        goalWeight !== null
+          ? goalWeight / (heightInMeters * heightInMeters)
+          : null;
     }
-
 
     let bmi = await Measurements.findOne({ clientId: clientId });
     if (!bmi) {
-      return res.status(404).json({ message: 'record not found' });
+      return res.status(404).json({ message: "record not found" });
     }
 
     if (bmi && bmi.bmiFlag === false) {
@@ -2484,7 +2611,6 @@ const getClientInfo = async (req, res, next) => {
     }
 
     if (bmi && bmi.bmiFlag === false) {
-
       return res.status(200).json({
         success: true,
         data: {
@@ -2497,7 +2623,7 @@ const getClientInfo = async (req, res, next) => {
           bmiLastWeight: bmiLastWeight,
           bmiGoalWeight: bmiGoalWeight,
           bmiIdealWeight: bmiIdealWeight,
-        }
+        },
       });
     } else {
       return res.status(200).json({
@@ -2512,18 +2638,14 @@ const getClientInfo = async (req, res, next) => {
           bmiLastWeight: bmiLastWeight,
           bmiGoalWeight: bmi ? bmi.bmiGoalWeight : null,
           bmiIdealWeight: bmiIdealWeight,
-        }
+        },
       });
     }
-
-
-
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
-
 
 const updateBmi = async (req, res, next) => {
   try {
@@ -2532,13 +2654,13 @@ const updateBmi = async (req, res, next) => {
     const bmi = await Measurements.findOneAndUpdate(
       { clientId: clientId },
       {
-        bmiGoalWeight: bmiGoalWeight
+        bmiGoalWeight: bmiGoalWeight,
       },
       { new: true }
     );
 
     if (!bmi) {
-      return res.status(404).json({ message: 'BMI not found' });
+      return res.status(404).json({ message: "BMI not found" });
     }
     bmi.bmiFlag = true;
     await bmi.save();
@@ -2550,18 +2672,22 @@ const updateBmi = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
 
 const updateClientPassword = async (req, res) => {
   const { clientId } = req.params;
   const { newPassword, confirmPassword } = req.body;
 
   if (!newPassword || !confirmPassword) {
-    return res.status(400).json({ message: 'Both new password and confirm password are required.' });
+    return res.status(400).json({
+      message: "Both new password and confirm password are required.",
+    });
   }
 
   if (newPassword !== confirmPassword) {
-    return res.status(400).json({ message: 'New password and confirm password do not match.' });
+    return res
+      .status(400)
+      .json({ message: "New password and confirm password do not match." });
   }
 
   try {
@@ -2575,54 +2701,49 @@ const updateClientPassword = async (req, res) => {
     );
 
     if (!updatedClient) {
-      return res.status(404).json({ message: 'Client not found.' });
+      return res.status(404).json({ message: "Client not found." });
     }
 
-    res.status(200).json({ message: 'Password updated successfully.' });
+    res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
-    console.error('Error updating client password:', error);
-    res.status(500).json({ message: 'An error occurred while updating the password.' });
+    console.error("Error updating client password:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while updating the password." });
   }
 };
 
-const sendClientEmail = async(req,res) => {
+const sendClientEmail = async (req, res) => {
   try {
-
-    const {clientId} = req.params;
+    const { clientId } = req.params;
 
     const userId = req.userId;
 
-    const user = await User.findOne({ _id:userId });
-        if (!user) {
-          return res.status(404).json({ message: 'User not found.' });
-        }
-
-    const client = await Client.findOne({_id:clientId});
-
-    if (!client) {
-      return res.status(404).json({ message: 'Client not found.' });
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
     }
 
-    await clientEmailSend(user.email,client.email,clientId)
+    const client = await Client.findOne({ _id: clientId });
 
-    return res.status(200).json({ message: 'Password update email sent successfully.' });
-    
+    if (!client) {
+      return res.status(404).json({ message: "Client not found." });
+    }
+
+    await clientEmailSend(user.email, client.email, clientId);
+
+    return res
+      .status(200)
+      .json({ message: "Password update email sent successfully." });
   } catch (error) {
-    console.log("🚀 ~ sendClientEmail ~ error:", error)  
+    console.log("🚀 ~ sendClientEmail ~ error:", error);
   }
-}
+};
 
-const clientLogin = async(req,res) => {
+const clientLogin = async (req, res) => {
   try {
-
-    
-    
-  } catch (error) {
-    
-  }
-}
-
-
+  } catch (error) {}
+};
 
 module.exports = {
   registerClient,
@@ -2669,5 +2790,5 @@ module.exports = {
   getClientInfo,
   updateBmi,
   updateGoal,
-  sendClientEmail
+  sendClientEmail,
 };
