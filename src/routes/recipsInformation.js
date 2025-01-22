@@ -13,7 +13,8 @@ const {
   deleteMainFood,
   deleteSubFoods,
   deleteCommonMeasure,
-  likeRecipe
+  likeRecipe,
+  getAllUserRecipe
 } = require("../controller/recipeinformation");
 
 router.post("/recipe-information", isAuthenticated, createRecipe);
@@ -25,6 +26,9 @@ router.get("/get-recipeById/:recipeId", isAuthenticated, getRecipeById)
 router.delete("/delete-recipe/:recipeId", isAuthenticated, deleteRecipe);
 
 router.get("/getAll-recipe",isAuthenticated,getAllRecipe);
+
+router.get("/getAll-User-recipe",isAuthenticated,getAllUserRecipe);
+
 
 router.get("/copy-recipe/:recipeId",isAuthenticated,copyRecipe);
 

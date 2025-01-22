@@ -122,7 +122,7 @@ const getRecipeById = async (req, res, next) => {
     const recipeId = req.params.recipeId;
     const userId = req.userId;
 
-    const recipe = await RecipeData.findOne({ userId: userId, _id: recipeId });
+    const recipe = await RecipeData.findOne({ _id: recipeId });
     if (!recipe) {
       return res.status(404).json({ message: 'Recipe not found' });
     }
@@ -173,11 +173,27 @@ const getAllRecipe = async (req, res, next) => {
   }
 }
 
+
+const getAllUserRecipe = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const recipe = await RecipeData.find();
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    return res.status(200).json({ data: recipe });
+
+  }
+  catch (err) {
+    next(err);
+  }
+}
+
 const copyRecipe = async (req, res, next) => {
   try {
     const userId = req.userId;
     const recipeId = req.params.recipeId;
-    const recipe = await RecipeData.findOne({ userId: userId, _id: recipeId });
+    const recipe = await RecipeData.findOne({ _id: recipeId });
     if (!recipe) {
       return res.status(404).json({ message: 'recipe not found' });
     }
@@ -265,10 +281,10 @@ const deleteSubFoods = async (req, res, next) => {
 
     const subFoodExists = recipe.ingredients.foods.some((mainfood) => {
       mainfood.subfoods = mainfood.subfoods.filter((subfood) => subfood._id.toString() === objectId);
-    
+
       return mainfood.subfoods.length > 0;
     });
-    
+
     if (!subFoodExists) {
       return res.status(404).json({ message: 'Food not found' });
     }
@@ -287,42 +303,42 @@ const deleteSubFoods = async (req, res, next) => {
   }
 }
 
-const deleteCommonMeasure = async(req, res, next) => {
+const deleteCommonMeasure = async (req, res, next) => {
   try {
     const userId = req.userId;
     const recipeId = req.params.recipeId;
     const objectId = req.params.objectId;
 
-    let recipe = await RecipeData.findOne({userId:userId, _id:recipeId});
-    if(!recipe) {
-      return res.status(404).json({message:'Recipe not found'});
+    let recipe = await RecipeData.findOne({ userId: userId, _id: recipeId });
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
     }
 
     const commonMeasureExists = recipe.commonMeasures.filter((measure) => {
       return measure._id.toString() === objectId;
     });
-    
+
     if (commonMeasureExists.length === 0) {
       return res.status(404).json({ message: 'No common measures found' });
     }
 
-    recipe.commonMeasures = recipe.commonMeasures.filter((measure) =>{
-      if( measure._id.toString() !== objectId) {
+    recipe.commonMeasures = recipe.commonMeasures.filter((measure) => {
+      if (measure._id.toString() !== objectId) {
         return measure
       }
     })
 
     recipe.save()
-    .then(()=> {
-      return res.status(200).json({ success: true, message: 'commonMeasure deleted successfully', data: recipe });
-    })
+      .then(() => {
+        return res.status(200).json({ success: true, message: 'commonMeasure deleted successfully', data: recipe });
+      })
 
-  }catch(err) {
+  } catch (err) {
     next(err);
   }
 }
 
-const likeRecipe = async (req, res,next) => {
+const likeRecipe = async (req, res, next) => {
   try {
 
     const userId = req.userId;
@@ -342,11 +358,11 @@ const likeRecipe = async (req, res,next) => {
     if (userIndex === -1) {
       recipe.likes.push(userId);
       await recipe.save();
-      return res.status(200).json({ message: 'Recipe liked successfully',likes:recipe.likes});
+      return res.status(200).json({ message: 'Recipe liked successfully', likes: recipe.likes });
     } else {
-      recipe.likes.splice(userIndex,1);
+      recipe.likes.splice(userIndex, 1);
       await recipe.save();
-      return res.status(200).json({message:"Recipe disliked successfully",likes:recipe.likes });
+      return res.status(200).json({ message: "Recipe disliked successfully", likes: recipe.likes });
     }
 
   } catch (error) {
@@ -365,8 +381,9 @@ module.exports = {
   deleteMainFood,
   deleteSubFoods,
   deleteCommonMeasure,
-  likeRecipe
+  likeRecipe,
+  getAllUserRecipe
 };
-  
+
 
 

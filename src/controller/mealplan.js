@@ -408,6 +408,22 @@ const getMealPlan = async (req, res, next) => {
   }
 };
 
+// all users mealplan show
+
+const getAllMealPlan = async (req, res, next) => {
+  try {
+    const mealPlan = await MealPlan.find();
+    if (mealPlan.length === 0) {
+      return res.status(404).json({ message: "Meal plan not found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Meal plan retrieved successfully", mealPlan });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //update meal plan
 
 // const updateMealPlan = async (req, res, next) => {
@@ -859,7 +875,7 @@ const getMealData = async (req, res, next) => {
     if (data.length === 0) {
       return res
         .status(400)
-        .json({ message: "we have not created any meal data", success:false });
+        .json({ message: "we have not created any meal data", success: false });
     }
     return res.status(200).json({
       success: true,
@@ -876,6 +892,7 @@ const getMealData = async (req, res, next) => {
 module.exports = {
   createMealPlan,
   getMealPlan,
+  getAllMealPlan,
   updateMealPlan,
   deleteMealPlan,
   deleteFoods,
