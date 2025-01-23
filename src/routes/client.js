@@ -74,6 +74,17 @@ router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
 //===================Personal and social history===================//
 router.put(
   '/client/personal-history/:id',
+  upload.fields([
+    { name: 'beforePicture1', maxCount: 1 },
+    { name: 'beforePicture2', maxCount: 1 },
+    { name: 'beforePicture3', maxCount: 1 },
+    { name: 'beforePicture4', maxCount: 1 },
+    { name: 'beforePicture5', maxCount: 1 },
+    { name: 'afterPicture1', maxCount: 1 },
+    { name: 'afterPicture2', maxCount: 1 },
+    { name: 'afterPicture3', maxCount: 1 },
+    { name: 'afterPicture4', maxCount: 1 },
+    { name: 'afterPicture5', maxCount: 1},]),
   isAuthenticated,
   updatePersonalHistory
 );

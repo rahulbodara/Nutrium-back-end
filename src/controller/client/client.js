@@ -1187,7 +1187,6 @@ const deletePregnancyHistory = async (req, res, next) => {
 };
 
 const updatePersonalHistory = async (req, res, next) => {
-  console.log("first");
   console.log("req.file.path", req.files);
   try {
     const clientId = req.params.id;
@@ -1308,6 +1307,19 @@ const updatePersonalHistory = async (req, res, next) => {
       Habit,
       otherInfo,
     };
+
+    if (req.files) {
+      const pictureFields = [
+        'beforePicture1', 'beforePicture2', 'beforePicture3','beforePicture4', 'beforePicture5',
+        'afterPicture1', 'afterPicture2', 'afterPicture3','afterPicture4', 'afterPicture5',
+      ];
+      pictureFields.forEach(field => {
+        if (req.files[field]) {
+          newPersonalHistory[field] = req.files[field][0].path;
+        }
+      });
+    }
+    
 
     const updatedPersonalHistory = await PersonalHistory.findOneAndUpdate(
       { clientId: clientId },
