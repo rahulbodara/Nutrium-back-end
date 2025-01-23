@@ -419,7 +419,7 @@ const updateClient = async (req, res, next) => {
       vatNumber,
     };
 
-    if (req.file) {
+    if (req.file && req.file.path) {
       updatedFields.image = req.file.path;
     }
 
@@ -432,7 +432,7 @@ const updateClient = async (req, res, next) => {
       });
     }
 
-    if (client.image && req.file.path) {
+    if (client.image && req.file && req.file.path) {
       fs.unlink(client.image, (err) => {
         if (err) {
           console.error(err);
@@ -1642,7 +1642,7 @@ const updateFileDetail = async (req, res, next) => {
       file: updatedFile,
     });
   } catch (error) {
-    if (req.file) {
+    if (req.file && req.file.path) {
       fs.unlinkSync(req.file.path);
     }
     next(error);

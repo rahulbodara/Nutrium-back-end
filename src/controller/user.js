@@ -22,6 +22,9 @@ const Observations = require('../model/Observations');
 const MedicalHistory = require('../model/MedicalHistory');
 const mongoose = require('mongoose');
 const Client = require('../model/Client');
+const eatingBehaviour = require('../model/eatingBehaviour');
+const FoodDiares = require('../model/FoodDiares');
+const Goals = require('../model/Goals');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -319,7 +322,7 @@ const UpdateProfile = async (req, res, next) => {
       professionCardNumber,
       zipcode,
     };
-    if (req.file.path) {
+    if (req.file && req.file.path) {
       updatedFields.image = req.file.path;
     }
     const user = await User.findById(userId);
@@ -330,7 +333,7 @@ const UpdateProfile = async (req, res, next) => {
         message: 'User not found',
       });
     }
-    if (user.image && req.file.path) {
+    if (user.image && req.file && req.file.path) {
       fs.unlink(user.image, (err) => {
         if (err) {
           console.error(err);
@@ -353,6 +356,7 @@ const UpdateProfile = async (req, res, next) => {
       message: 'User profile updated successfully',
     });
   } catch (error) {
+    console.log("🚀 ~ UpdateProfile ~ error:", error)
     next(error);
   }
 };
@@ -628,6 +632,41 @@ const createClientByForm = async (req, res, next) => {
   }
 };
 
+const getPdfData = async (req, res, next) => {
+  try {
+      const { clientId } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(clientId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid client ID',
+        });
+      }
+      const userId = req.userId;
+
+    const appointmentInformation = await AppointmentInformation.find({ userId, clientId })
+    const pregnancyhistory = await pregnancyHistory.find({
+          clientId: clientId,
+          userId: userId,
+        });
+
+    const observation = await Observations.find({ clientId: clientId, userId: userId });
+    const Eatingbehaviours = await eatingBehaviour.find({ clientId: clientId, userId: userId });
+    const foodDiaries = await FoodDiares.find({ clientId: clientId, userId: userId });
+    const goalsData = await Goals.find({
+          clientId: clientId,
+          userId: userId
+        });
+    const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
+    const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
+    const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
+    const clientData = await Client.find({ _id: clientId, userId: userId })
+
+    return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData });
+
+    } catch (error) {
+      next(error);
+    }
+}
 
 module.exports = {
   SignUp,
@@ -640,5 +679,6 @@ module.exports = {
   sendVerificationEmailHandler,
   verifyEmail,
   VerifyExistingUser,
-  createClientByForm
+  createClientByForm,
+  getPdfData
 };

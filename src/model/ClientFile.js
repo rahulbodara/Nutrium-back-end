@@ -19,7 +19,7 @@ const fileSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'This field is required.'],
-    maxLength: [30, 'Name cannot exceed 30 charaters'],
+    maxLength: [3000, 'Name cannot exceed 30 charaters'],
     minLength: [4, 'Name should have more then 4 charaters'],
   },
   description: {
