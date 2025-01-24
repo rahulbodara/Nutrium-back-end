@@ -15,6 +15,8 @@ const Measurements = require("../../model/Measurements");
 const pregnancyHistory = require("../../model/pregnancyHistory");
 const importHistory = require("../../model/importHistory");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
 const User = require("../../model/User");
 const {
   clientEmailSend,
@@ -2752,9 +2754,47 @@ const sendClientEmail = async (req, res) => {
   }
 };
 
-const clientLogin = async (req, res) => {
+const clientLogin = async (req, res, next) => {
   try {
-  } catch (error) {}
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: 'Please provide email and password' });
+    }
+    const user = await Client.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (isPasswordMatch) {
+      const token = jwt.sign(
+        {
+          id: user._id,
+        },
+        JWT_SECRET,
+        {
+          expiresIn: '2h',
+        }
+      );
+      const { password, ...userdetails } = user._doc;
+      return res.status(200).json({
+        token: token,
+        message: 'Login successfully',
+        status: 200,
+        userdetails,
+      });
+    } else {
+      return res
+        .status(400)
+        .send({ message: 'Invalid Credentials', status: 400 });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 };
 
 module.exports = {
@@ -2803,4 +2843,5 @@ module.exports = {
   updateBmi,
   updateGoal,
   sendClientEmail,
+  clientLogin
 };

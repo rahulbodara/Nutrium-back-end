@@ -46,7 +46,8 @@ const {
   updateBmi,
   updateGoal,
   updateClientPassword,
-  sendClientEmail
+  sendClientEmail,
+  clientLogin
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
@@ -234,4 +235,8 @@ router.get('/sendEmail/:clientId',isAuthenticated,sendClientEmail);
 
 //===================getpdfData===================//
 router.get('/client-getpdfData/:clientId', isAuthenticated, getPdfData)
+
+//===================mobile Api's===================//
+router.post('/client/login', clientLogin)
+
 module.exports = router;
