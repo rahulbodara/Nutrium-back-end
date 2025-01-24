@@ -642,7 +642,7 @@ const createClientByForm = async (req, res, next) => {
   }
 };
 
-const getPdfData = async (req, res) => {
+const getPdfData = async (req, res,next) => {
   try {
     const { clientId } = req.params;
     const {name} = req.body;
@@ -735,7 +735,7 @@ const getPdfData = async (req, res) => {
     };
 
   } catch (error) {
-    // next(error);
+    next(error);
   }
 }
 
