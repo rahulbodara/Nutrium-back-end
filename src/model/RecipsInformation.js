@@ -6,6 +6,12 @@ const RecipeInformation = mongoose.Schema({
     required: true,
     ref: "user",
   },
+  authorName: {
+    type: String,
+  },
+  authorImages: {
+    type: String,
+  },
   category: {
     type: Array
   },
@@ -19,9 +25,9 @@ const RecipeInformation = mongoose.Schema({
   description: {
     type: String,
   },
-  like:{
-    type:Number,
-    default:0
+  like: {
+    type: Number,
+    default: 0
   },
   totalTime: {
     type: String,
@@ -101,10 +107,10 @@ const RecipeInformation = mongoose.Schema({
     type: Boolean,
     default: false
   },
-  likes:[
+  likes: [
     {
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"users"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users"
     }
   ]
 });
