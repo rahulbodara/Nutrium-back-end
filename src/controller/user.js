@@ -25,6 +25,11 @@ const Client = require('../model/Client');
 const eatingBehaviour = require('../model/eatingBehaviour');
 const FoodDiares = require('../model/FoodDiares');
 const Goals = require('../model/Goals');
+const path = require('path');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer');
+const pdf = require('html-pdf');
+const ClientFile = require('../model/ClientFile');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -637,9 +642,11 @@ const createClientByForm = async (req, res, next) => {
   }
 };
 
-const getPdfData = async (req, res, next) => {
+const getPdfData = async (req, res) => {
   try {
     const { clientId } = req.params;
+    const {name} = req.body;
+    // const clientId = '67737c96e905d752c6e5322b';
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
@@ -647,6 +654,7 @@ const getPdfData = async (req, res, next) => {
       });
     }
     const userId = req.userId;
+    // const userId = '675a81c3d3014c082abbd96f'
 
     const appointmentInformation = await AppointmentInformation.find({ userId, clientId })
     const pregnancyhistory = await pregnancyHistory.find({
@@ -664,12 +672,70 @@ const getPdfData = async (req, res, next) => {
     const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
-    const clientData = await Client.find({ _id: clientId, userId: userId })
+    const clientDatas = await Client.find({ _id: clientId, userId: userId })
 
-    return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData });
+    const clientData = {
+      appointmentInformation,
+      pregnancyhistory,
+      observation,
+      Eatingbehaviours,
+      foodDiaries,
+      goalsData,
+      personalSocialHistory,
+      medicalHistory,
+      dietHistory,
+      clientDatas,
+    };
+
+    const templatePath = path.join(__dirname, '../view/clientReport.ejs');
+    const html = await ejs.renderFile(templatePath, { clientData });
+    const currentDate = new Date();
+    const uploadPath = path.join(__dirname, '../uploads', `${name}_${currentDate.getSeconds()}.pdf`);
+
+    pdf.create(html, { format: 'A4' }).toFile(uploadPath, async (err, response) => {
+      if (err) {
+        return next(err);
+      }
+
+      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')
+        }/${currentDate.getFullYear()}`;
+
+      const filePayload = {
+        userId: req.userId,
+        clientId: clientId,
+        file: path.basename(uploadPath),
+        name: name,
+        date: formattedDate,
+        category: 'Patient Informations'
+      };
+
+      try {
+        const createdFileResponse = await createFileDetailHelper(filePayload);
+
+        return res.status(200).json({
+          success: true,
+          message: 'PDF generated and file details saved successfully',
+          pdfFilePath: response.filename,
+          createdFile: createdFileResponse,
+        });
+      } catch (error) {
+        console.log('Error while saving file details:', error);
+        next(error);
+      }
+    });
+
+    const createFileDetailHelper = async (filePayload) => {
+      try {
+        const createdFile = await ClientFile.create(filePayload);
+        return createdFile;
+      } catch (error) {
+        console.log("🚀 ~ createFileDetailHelper ~ error:", error)
+        throw new Error('Failed to save file details');
+      }
+    };
 
   } catch (error) {
-    next(error);
+    // next(error);
   }
 }
 

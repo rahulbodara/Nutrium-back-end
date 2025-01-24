@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Report</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f9;
+      color: #333;
+      padding: 20px 30px;
+    }
+
+    h1 {
+
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+      font-size: 2.5em;
+    }
+
+    
+
+    .logo {
+      width: 220px;
+      height: 50px;
+    }
+
+    .logo img {
+      width: 220px;
+      height: 50px;
+      object-fit: cover;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 1.5em;
+      color: #1ab394;
+      /* margin-top: 30px; */
+      padding-bottom: 5px;
+    }
+
+    .section-content {
+      margin-bottom: 20px;
+      padding: 10px 0;
+    }
+
+    .section-content:last-child {
+      border-bottom: none;
+    }
+
+    p {
+      margin: 8px 0;
+    }
+
+    ul {
+      list-style: disc;
+      padding-left: 20px;
+    }
+
+    .list-item {
+      margin-bottom: 5px;
+    }
+
+    strong {
+      color: #333;
+    }
+
+    .info-label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    i {
+      color: #1ab394
+    }
+    .fs14{
+      font-size: 14px;
+    }
+    .fs16{
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="" style=" max-width: 900px; width: 100%; margin: 0 auto;">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+
+      <div class="logo">
+        <img src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737694340/green-logo_m5mztr.png" />
+      </div>
+      <div style="display: flex; gap: 50px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <i class="fa-solid fa-user"></i>
+            <span style="font-size: 14px;">
+              <%= clientData.clientDatas[0].fullName %>
+            </span>
+          </div>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <i class="fa-solid fa-briefcase"></i>
+            <span style="font-size: 14px;">xyz</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <i class="fa-solid fa-phone"></i>
+            <span style="font-size: 14px;">
+              <%= clientData.clientDatas[0].phoneNumber %>
+            </span>
+          </div>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <i class="fa-solid fa-envelope"></i>
+            <span style="font-size: 14px;">
+              <%= clientData.clientDatas[0].email %>
+            </span>
+          </div>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <i class="fa-solid fa-location-dot"></i>
+            <span style="font-size: 14px;">xyz</span>
+          </div>
+        </div>
+      </div>
+      <div>
+
+      </div>
+    </div>
+
+    <!-- Client Information -->
+    <div class="section-title">Client Information</div>
+    <div class="section-content">
+      <div style="display: flex; gap: 20px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div>
+            <img 
+            src="<%= clientData.clientDatas[0].image 
+                    ? clientData.clientDatas[0].image 
+                    : clientData.clientDatas[0].gender === 'Female' 
+                      ? 'https://res.cloudinary.com/dmracr8nw/image/upload/v1737694415/clientprof_af1to0.png' 
+                      : 'https://res.cloudinary.com/dmracr8nw/image/upload/v1737694414/avatar_fyusmw.png' %>" 
+            style="width: 80px; height: 80px; border-radius: 100%; object-fit: cover;" 
+            alt="Profile Image"
+          />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-size: 16px;"><%= clientData.clientDatas[0].fullName %></span>
+            <span style="font-size: 16px;"><%= clientData.clientDatas[0].email %></span>
+          </div>
+        </div>
+      </div>
+      <p class="fs14"><strong class="fs16">Gender</strong>
+        <br/>
+        <%= clientData.clientDatas[0].gender %>
+      </p>
+      <p class="fs14"><strong class="fs16">Date of Birth</strong>
+        <br/>
+        <%= clientData.clientDatas[0].dateOfBirth %>
+      </p>
+      <p class="fs14"><strong class="fs16">Occupation</strong>
+        <br/>
+        <%= clientData.clientDatas[0].occupation %>
+      </p>
+      <p class="fs14"><strong class="fs16">Country</strong>
+        <br/>
+        <%= clientData.clientDatas[0].country %>
+      </p>
+      <p class="fs14"><strong class="fs16">Phone Number</strong>
+        <br/>
+        <%= clientData.clientDatas[0].phoneNumber %>
+      </p>
+      <p class="fs14"><strong class="fs16">Zip Code</strong>
+        <br/>
+        <%= clientData.clientDatas[0].zipcode %>
+      </p>
+    </div>
+
+    <!-- Appointment Information -->
+    <div class="section-title">Appointment Information</div>
+    <% clientData.appointmentInformation.forEach(function(appointment) { %>
+      <div class="section-content">
+        <p><strong>Reason for Appointment</strong>
+          <br/>
+          <%= appointment.appointmentReason %>
+        </p>
+        <p><strong>Clinic Goals:</strong></p>
+        <ul>
+          <% appointment.clinicGoals.forEach(function(goal) { %>
+            <li class="list-item">
+              <%= goal %>
+            </li>
+            <% }); %>
+        </ul>
+        <p><strong>Other Information:</strong>
+          <%= appointment.otherInfo %>
+        </p>
+      </div>
+      <% }); %>
+
+        <!-- Pregnancy History -->
+        <div class="section-title">Pregnancy History</div>
+        <% clientData.pregnancyhistory.forEach(function(record) { %>
+          <div class="section-content">
+            <p class="fs14"><strong class="fs16">Type of Record</strong>
+              <br/>
+              <%= record.typeOfRecord %>
+            </p>
+            <p class="fs14"><strong class="fs16">Gestation Type</strong><br/>
+              <%= record.gestationType %>
+            </p>
+            <p class="fs14"><strong class="fs16">Last Menstrual Period</strong><br/>
+              <%= record.lastMenstrualPeriod %>
+            </p>
+            <p class="fs14"><strong class="fs16">Beginning of Lactation</strong><br/>
+              <%= record.beginningOfLactation %>
+            </p>
+            <p class="fs14"><strong class="fs16">Duration of Lactation (Months)</strong><br/>
+              <%= record.durationOfLactationInMonths %>
+            </p>
+            <p class="fs14"><strong class="fs16">Observations</strong><br/>
+              <%= record.observations %>
+            </p>
+            <p class="fs14"><strong class="fs16">Current Pregnancy Trimester</strong><br/>
+              <%= record.currentPregnancyTrimester %>
+            </p>
+            <p class="fs14"><strong class="fs16">Current Pregnancy Week</strong><br/>
+              <%= record.currentPregnancyWeek %>
+            </p>
+          </div>
+          <% }); %>
+
+            <!-- Observations -->
+            <div class="section-title">Observations</div>
+            <% clientData.observation.forEach(function(obs) { %>
+              <div class="section-content">
+                <p class="fs14"><strong class="fs16">Observation Date</strong><br/>
+                  <%= obs.registrationDate %>
+                </p>
+                <p class="fs14"><strong class="fs16">Observation</strong><br/>
+                  <%= obs.observation %>
+                </p>
+              </div>
+              <% }); %>
+
+                <!-- Eating Behaviours -->
+                <div class="section-title">Eating Behaviours</div>
+                <% clientData.Eatingbehaviours.forEach(function(behaviour) { %>
+                  <div class="section-content">
+                    <p class="fs14"><strong class="fs16">Behaviour Date</strong><br/>
+                      <%= behaviour.date %>
+                    </p>
+                    <p class="fs14"><strong class="fs16">Behaviour</strong><br/>
+                      <%= behaviour.behaviour %>
+                    </p>
+                  </div>
+                  <% }); %>
+
+                    <!-- Food Diaries -->
+                    <div class="section-title">Food Diaries</div>
+                    <% clientData.foodDiaries.forEach(function(diary) { %>
+                      <div class="section-content">
+                        <p class="fs14"><strong class="fs16">Registration Date</strong><br/>
+                          <%= diary.registrationDate %>
+                        </p>
+                        <p class="fs14"><strong class="fs16">Meals:</strong></p>
+                        <ul>
+                          <% diary.addMeal.forEach(function(meal) { %>
+                            <li class="list-item">
+                              <%= meal.mealType %>: <%= meal.value %>
+                            </li>
+                            <% }); %>
+                        </ul>
+                        <p class="fs14"><strong class="fs16">Observation</strong><br/>
+                          <%= diary.observation %>
+                        </p>
+                      </div>
+                      <% }); %>
+
+                        <!-- Personal Social History -->
+                        <div class="section-title">Personal and Social History</div>
+                        <% clientData.personalSocialHistory.forEach(function(item) { %>
+                          <div class="section-content">
+                            <p class="fs14"><strong class="fs16">Bowel Movements</strong><br/>
+                              <%= item.bowelMovements %>
+                            </p>
+                            <p class="fs14"><strong class="fs16">Sleep Quality</strong>
+                              <br/>
+                              <%= item.sleepQuality %>
+                            </p>
+                            <p class="fs14"><strong class="fs16">Smoker</strong><br/>
+                              <%= item.smoker %>
+                            </p>
+                            <p class="fs14"><strong class="fs16">Alcohol Consumption</strong><br/>
+                              <%= item.alcoholConsumption %>
+                            </p>
+                            <p class="fs14"><strong class="fs16">Race</strong><br/>
+                              <%= item.race %>
+                            </p>
+                            <p class="fs14"><strong class="fs16">Marital Status</strong><br/>
+                              <%= item.maritalStatus %>
+                            </p>
+                          </div>
+                          <% }); %>
+
+                            <!-- Medical History -->
+                            <div class="section-title">Medical History</div>
+                            <% clientData.medicalHistory.forEach(function(item) { %>
+                              <div class="section-content">
+                                <p><strong class="fs16">Diseases:</strong></p>
+                                <ul>
+                                  <% item.diseases.forEach(function(disease) { %>
+                                    <li class="list-item">
+                                      <%= disease %>
+                                    </li>
+                                    <% }); %>
+                                </ul>
+                                <p class="fs14"><strong class="fs16">Medication</strong><br/>
+                                  <%= item.medication %>
+                                </p>
+                                <p class="fs14"><strong class="fs16">Personal History</strong><br/>
+                                  <%= item.pesonalhistory %>
+                                </p>
+                                <p class="fs14"><strong class="fs16">Family History</strong><br/>
+                                  <%= item.familyHistory %>
+                                </p>
+                              </div>
+                              <% }); %>
+
+                                <!-- Dietary History -->
+                                <div class="section-title">Dietary History</div>
+                                <% clientData.dietHistory.forEach(function(item) { %>
+                                  <div class="section-content">
+                                    <p class="fs14"><strong class="fs16">Type of Diet</strong><br/>
+                                      <%= item.typeOfDiet.join(', ') %></p>
+        <p class="fs14"><strong class="fs16">Favorite Food</strong> <br/><%= item.favoriteFood %></p>
+        <p class="fs14"><strong class="fs16">Disliked Food</strong> <br/><%= item.dislikeFood %></p>
+        <p class="fs14"><strong class="fs16">Allergies</strong><br/> <%= item.allergies.join(' , ') %></p>
+        <p class="fs14"><strong class="fs16">Food Intolerances</strong><br/> <%= item.foodIntolerances.join(' , ') %></p>
+        <p class="fs14"><strong class="fs16">Nutritional Deficiencies</strong> <br/><%= item.nutritionalDeficiencies.join(' , ') %></p>
+        <p class="fs14"><strong class="fs16">Water Intake</strong><br/> <%= item.waterTank %></p>
+        <p class="fs14"><strong class="fs16">Other Information</strong><br/> <%= item.otherInfo %></p>
+      </div>
+    <% }); %>
+  </div>
+
+</body>
+</html>

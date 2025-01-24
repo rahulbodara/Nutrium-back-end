@@ -234,7 +234,7 @@ router.put('/setPassword/:clientId',updateClientPassword)
 router.get('/sendEmail/:clientId',isAuthenticated,sendClientEmail);
 
 //===================getpdfData===================//
-router.get('/client-getpdfData/:clientId', isAuthenticated, getPdfData)
+router.post('/client-getpdfData/:clientId', isAuthenticated, getPdfData)
 
 //===================mobile Api's===================//
 router.post('/client/login', clientLogin)

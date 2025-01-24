@@ -37,6 +37,7 @@ const CommonMeasures = require('./routes/CommonMeasures')
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
+const { getPdfData } = require('./controller/user');
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -78,6 +79,15 @@ app.set('views', path.join(__dirname, '../src/view'));
 app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname + '/views/index.html'));
 });
+
+app.get('/downloads',async (req,res) => {
+  const clientData = await getPdfData();
+  console.log("🚀 ~ app.get ~ apiData:", clientData)
+
+    res.render('clientReport', {
+      clientData,
+    });
+})
 
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
