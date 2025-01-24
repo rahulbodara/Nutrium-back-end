@@ -52,7 +52,6 @@ const clientSchema = new mongoose.Schema(
         message: 'Please enter a valid date of birth (DD/MM/YYYY)',
       },
     },
-
     image: {
       type: String,
     },
@@ -115,8 +114,14 @@ const clientSchema = new mongoose.Schema(
     },
     payment: {
       type: String
+    },
+    createdByClient:{
+      type:Boolean,
+      default:false
+    },
+    googleAuthId: {
+      type: String,
     }
-
   },
   { timestamps: true }
 );
