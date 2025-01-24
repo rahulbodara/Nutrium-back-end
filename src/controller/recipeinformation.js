@@ -25,7 +25,7 @@ const updateRecipe = async (req, res, next) => {
   try {
     const userId = req.userId;
     const recipeId = req.params.recipeId;
-    const { name, category, description, totalTime, preparationTime, finalWeight, portions, ingredients, cookingMethod, commonMeasures, website, community } = req.body;
+    const { name, category, description, totalTime, preparationTime, finalWeight, portions, ingredients, cookingMethod, commonMeasures, website, community, authorImages, authorName } = req.body;
     let existingRecipe = await RecipeData.findOne({ userId: userId, _id: recipeId });
     if (!existingRecipe) {
       res.status(404).json({ message: "Recipe not found" });
@@ -94,7 +94,9 @@ const updateRecipe = async (req, res, next) => {
       cookingMethod,
       commonMeasures: existingRecipe.commonMeasures,
       website,
-      community
+      community,
+      authorImages,
+      authorName
     }
 
     if (req.file && req.file.filename) {
