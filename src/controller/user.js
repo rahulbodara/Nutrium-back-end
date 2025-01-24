@@ -642,10 +642,10 @@ const createClientByForm = async (req, res, next) => {
   }
 };
 
-const getPdfData = async (req, res,next) => {
+const getPdfData = async (req, res, next) => {
   try {
     const { clientId } = req.params;
-    const {name} = req.body;
+    const { name } = req.body;
     // const clientId = '67737c96e905d752c6e5322b';
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -692,10 +692,19 @@ const getPdfData = async (req, res,next) => {
     const currentDate = new Date();
     const uploadPath = path.join(__dirname, '../uploads', `${name}_${currentDate.getSeconds()}.pdf`);
 
-    pdf.create(html, { format: 'A4' }).toFile(uploadPath, async (err, response) => {
-      if (err) {
-        return next(err);
-      }
+    try {
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+
+      await page.setContent(html);
+
+      await page.pdf({
+        path: uploadPath,
+        format: 'A4',
+        printBackground: true,
+      });
+
+      await browser.close();
 
       const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')
         }/${currentDate.getFullYear()}`;
@@ -709,30 +718,36 @@ const getPdfData = async (req, res,next) => {
         category: 'Patient Informations'
       };
 
+      const createFileDetailHelper = async (filePayload) => {
+        try {
+          const createdFile = await ClientFile.create(filePayload);
+          return createdFile;
+        } catch (error) {
+          console.log("🚀 ~ createFileDetailHelper ~ error:", error)
+          throw new Error('Failed to save file details');
+        }
+      };
+
       try {
         const createdFileResponse = await createFileDetailHelper(filePayload);
 
         return res.status(200).json({
           success: true,
           message: 'PDF generated and file details saved successfully',
-          pdfFilePath: response.filename,
+          pdfFilePath: uploadPath,
           createdFile: createdFileResponse,
         });
       } catch (error) {
         console.log('Error while saving file details:', error);
         next(error);
       }
-    });
 
-    const createFileDetailHelper = async (filePayload) => {
-      try {
-        const createdFile = await ClientFile.create(filePayload);
-        return createdFile;
-      } catch (error) {
-        console.log("🚀 ~ createFileDetailHelper ~ error:", error)
-        throw new Error('Failed to save file details');
-      }
-    };
+    } catch (error) {
+      console.log("Error while generating PDF:", error);
+      next(error);
+    }
+
+    
 
   } catch (error) {
     next(error);
