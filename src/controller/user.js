@@ -30,6 +30,7 @@ const ejs = require('ejs');
 const puppeteer = require('puppeteer');
 const pdf = require('html-pdf');
 const ClientFile = require('../model/ClientFile');
+const html_to_pdf = require('html-pdf-node');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -688,62 +689,55 @@ const getPdfData = async (req, res, next) => {
     };
 
     const templatePath = path.join(__dirname, '../view/clientReport.ejs');
-    const html = await ejs.renderFile(templatePath, { clientData });
     const currentDate = new Date();
-    const uploadPath = path.join(__dirname, '../uploads', `${name}_${currentDate.getSeconds()}.pdf`);
-
+    const uploadPath = path.join(__dirname, '../uploads', `${req.body.name}_${currentDate.getSeconds()}.pdf`);
+  
     try {
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-
-      await page.setContent(html);
-
-      await page.pdf({
-        path: uploadPath,
+      const html = await ejs.renderFile(templatePath, { clientData: clientData });
+  
+      const options = {
         format: 'A4',
+        path: uploadPath, 
         printBackground: true,
-      });
-
-      await browser.close();
-
-      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')
-        }/${currentDate.getFullYear()}`;
-
+      };
+  
+      const pdfBuffer = await html_to_pdf.generatePdf({ content: html }, options);
+  
+      fs.writeFileSync(uploadPath, pdfBuffer);
+  
+      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}/${currentDate.getFullYear()}`;
+  
       const filePayload = {
-        userId: req.userId,
+        userId: userId,
         clientId: clientId,
         file: path.basename(uploadPath),
-        name: name,
+        name: req.body.name,
         date: formattedDate,
-        category: 'Patient Informations'
+        category: 'Patient Informations',
       };
-
-      const createFileDetailHelper = async (filePayload) => {
+  
+      const createFileDetailHelper = async (payload) => {
         try {
-          const createdFile = await ClientFile.create(filePayload);
+          const createdFile = await ClientFile.create(payload);
           return createdFile;
         } catch (error) {
-          console.log("🚀 ~ createFileDetailHelper ~ error:", error)
+          console.error("Error while saving file details:", error);
           throw new Error('Failed to save file details');
         }
       };
-
-      try {
-        const createdFileResponse = await createFileDetailHelper(filePayload);
-
-        return res.status(200).json({
-          success: true,
-          message: 'PDF generated and file details saved successfully',
-          pdfFilePath: uploadPath,
-          createdFile: createdFileResponse,
-        });
-      } catch (error) {
-        console.log('Error while saving file details:', error);
-        next(error);
-      }
-
+  
+      const createdFileResponse = await createFileDetailHelper(filePayload);
+  
+      return res.status(200).json({
+        success: true,
+        message: 'PDF generated and file details saved successfully',
+        pdfFilePath: uploadPath,
+        createdFile: createdFileResponse,
+      });
     } catch (error) {
-      console.log("Error while generating PDF:", error);
+      console.error("Error while generating PDF:", error);
       next(error);
     }
 
