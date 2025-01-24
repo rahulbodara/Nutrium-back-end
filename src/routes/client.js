@@ -50,7 +50,6 @@ const {
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
-const uploadPdf = require('../middleware/pdfHandler');
 
 //===================client CRUD===================//
 router.post('/client', isAuthenticated, registerClient);
@@ -139,7 +138,7 @@ router.put('/client/diet-history/:id', isAuthenticated, updateDietHistory);
 router.post(
   '/client/file/:id',
   isAuthenticated,
-  uploadPdf.single('file'),
+  upload.single('file'),
   createFileDetail
 );
 
