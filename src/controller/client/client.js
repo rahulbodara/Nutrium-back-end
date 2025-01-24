@@ -2780,7 +2780,7 @@ const clientLogin = async (req, res, next) => {
     if (isPasswordMatch) {
       const token = jwt.sign(
         {
-          id: user._id,
+          id: user.userId,
         },
         JWT_SECRET,
         {
@@ -2801,6 +2801,42 @@ const clientLogin = async (req, res, next) => {
     }
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+
+const clientGoogleLogin = async (req, res, next) => {
+  try {
+    const { google_token } = req.body;
+    const client = new OAuth2Client('737792334349-eefln2o4gd1ovb2vs0kdct1hgfg5raf9.apps.googleusercontent.com');
+    const result = await client.verifyIdToken({
+      idToken: google_token,
+      audience: '737792334349-eefln2o4gd1ovb2vs0kdct1hgfg5raf9.apps.googleusercontent.com',
+    });
+
+    const email = result.payload.email;
+    const googleAuthId = result.payload.sub;
+    const user = await Client.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    const existingGoogleID =user.googleAuthId
+    if (existingGoogleID){
+      user.googleAuthId = googleAuthId
+      await user.save()
+    }
+
+    const token = jwt.sign({ id: user.userId }, JWT_SECRET, { expiresIn: "2h" });
+
+    return res.status(200).json({
+      token,
+      message: "Login successfully",
+      status: 200,
+      user,
+      role: user?.role
+    });
+  } catch (error) {
+    console.error(error);
     next(error);
   }
 };
@@ -2851,5 +2887,7 @@ module.exports = {
   updateBmi,
   updateGoal,
   sendClientEmail,
-  clientLogin
+  clientLogin,
+  clientGoogleLogin
 };
+
