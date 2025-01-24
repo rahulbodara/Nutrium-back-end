@@ -68,15 +68,15 @@ const registerClient = async (req, res, next) => {
 
     if (client && client.isEmailSend === true) {
       await EmailForm(user.email, client.email, client, user, token);
+
+      // await getScheduleAppointmentInfo(client._id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Client added successfully",
+        client,
+      });
     }
-
-    // await getScheduleAppointmentInfo(client._id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Client added successfully",
-      client,
-    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -401,6 +401,10 @@ const updateClient = async (req, res, next) => {
       nationalNumber,
       healthNumber,
       vatNumber,
+      diagnosis,
+      inquiryBy,
+      payment,
+      isEmailSend
     } = req.body;
 
     const updatedFields = {
@@ -419,6 +423,10 @@ const updateClient = async (req, res, next) => {
       nationalNumber,
       healthNumber,
       vatNumber,
+      diagnosis,
+      inquiryBy,
+      payment,
+      isEmailSend
     };
 
     if (req.file && req.file.path) {
@@ -786,7 +794,7 @@ const createPregnancyHistory = async (req, res, next) => {
           if (!isNaN(lactationStartDate.getTime())) {
             const diffInMonths =
               (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
-                12 +
+              12 +
               (currentDate.getMonth() - lactationStartDate.getMonth());
 
             const lactationMonthsRemaining =
@@ -852,7 +860,7 @@ const createPregnancyHistory = async (req, res, next) => {
         if (!isNaN(lactationStartDate.getTime())) {
           const diffInMonths =
             (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
-              12 +
+            12 +
             (currentDate.getMonth() - lactationStartDate.getMonth());
 
           const lactationMonthsRemaining =
@@ -1005,7 +1013,7 @@ const updatePregnancyHistory = async (req, res, next) => {
           if (!isNaN(lactationStartDate.getTime())) {
             const diffInMonths =
               (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
-                12 +
+              12 +
               (currentDate.getMonth() - lactationStartDate.getMonth());
 
             const lactationMonthsRemaining =
@@ -1065,7 +1073,7 @@ const updatePregnancyHistory = async (req, res, next) => {
         if (!isNaN(lactationStartDate.getTime())) {
           const diffInMonths =
             (currentDate.getFullYear() - lactationStartDate.getFullYear()) *
-              12 +
+            12 +
             (currentDate.getMonth() - lactationStartDate.getMonth());
 
           const lactationMonthsRemaining =
@@ -1312,8 +1320,8 @@ const updatePersonalHistory = async (req, res, next) => {
 
     if (req.files) {
       const pictureFields = [
-        'beforePicture1', 'beforePicture2', 'beforePicture3','beforePicture4', 'beforePicture5',
-        'afterPicture1', 'afterPicture2', 'afterPicture3','afterPicture4', 'afterPicture5',
+        'beforePicture1', 'beforePicture2', 'beforePicture3', 'beforePicture4', 'beforePicture5',
+        'afterPicture1', 'afterPicture2', 'afterPicture3', 'afterPicture4', 'afterPicture5',
       ];
       pictureFields.forEach(field => {
         if (req.files[field]) {
@@ -1321,7 +1329,7 @@ const updatePersonalHistory = async (req, res, next) => {
         }
       });
     }
-    
+
 
     const updatedPersonalHistory = await PersonalHistory.findOneAndUpdate(
       { clientId: clientId },

@@ -478,7 +478,7 @@ const deleteUserProfile = async (req, res, next) => {
 
 const createClientByForm = async (req, res, next) => {
   try {
-    const {clientId} = req.params;
+    const { clientId } = req.params;
     const userId = req.userId;
 
     const {
@@ -491,7 +491,8 @@ const createClientByForm = async (req, res, next) => {
       nutritionalDeficienciesDetail, waterTank, otherInfoD, typeOfRecord, gestationType,
       lastMenstrualPeriod, beginningOfLactation, observations, durationOfLactationInMonths,
       registrationDate, observation, diseases, diseasesDetail, medication, pesonalhistory,
-      familyHistory, otherInfoM,
+      familyHistory, otherInfoM, islactation, isPregnant, height, weight
+
     } = req.body;
 
     // Validate Client ID
@@ -500,14 +501,14 @@ const createClientByForm = async (req, res, next) => {
     }
 
     // Appointment Information Update
-    const newAppointmentInfo = { userId, appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfoA };
+    const newAppointmentInfo = { userId, appointmentReason, expectations, clinicGoals, clinicGoalsInfo, otherInfo: otherInfoA };
     await AppointmentInformation.findOneAndUpdate({ clientId }, newAppointmentInfo, { new: true, upsert: true });
 
     // Personal History Update
     const newPersonalHistory = {
       userId, bowelMovements, bowelMovementsInfo, sleepQuality, sleepQualityInfo, smoker,
       smokerInfo, alcoholConsumption, alcoholConsumptionInfo, maritalStatus, maritalStatusInfo,
-      physicalActivity, race, otherInfoP,
+      physicalActivity, race, otherInfo: otherInfoP,
     };
     await PersonalHistory.findOneAndUpdate({ clientId }, newPersonalHistory, { new: true, upsert: true });
 
@@ -515,9 +516,11 @@ const createClientByForm = async (req, res, next) => {
     const newDietHistory = {
       userId, wakeupTime, bedTime, typeOfDiet, typeOfDietDetail, favoriteFood, dislikeFood,
       allergies, allergiesDetail, foodIntolerances, foodIntolerancesDetail,
-      nutritionalDeficiencies, nutritionalDeficienciesDetail, waterTank, otherInfoD,
+      nutritionalDeficiencies, nutritionalDeficienciesDetail, waterTank, otherInfo: otherInfoD,
     };
     await DietHistory.findOneAndUpdate({ clientId }, newDietHistory, { new: true, upsert: true });
+
+
 
     // Format Date Helper
     const formatDate = (dateString) => {
@@ -595,13 +598,15 @@ const createClientByForm = async (req, res, next) => {
         currentPregnancyTrimester,
         currentPregnancyWeek,
         lactating,
+        islactation,
+        isPregnant
       });
 
       await newPregnancyHistory.save();
     }
 
     // Observation
-    if(observation){
+    if (observation) {
       const formatDate = (date) => {
         const d = new Date(date);
         const day = d.getDate().toString().padStart(2, '0');
@@ -612,17 +617,17 @@ const createClientByForm = async (req, res, next) => {
 
       const registrationDates = registrationDate ? registrationDate : formatDate(new Date())
 
-      const newObservation = new Observations({ userId, registrationDate:registrationDates, observation, clientId });
+      const newObservation = new Observations({ userId, registrationDate: registrationDates, observation, clientId, });
       await newObservation.save();
     }
 
     // Medical History Update
-    const newMedicalHistory = { userId, diseases, diseasesDetail, medication, pesonalhistory, familyHistory, otherInfoM };
+    const newMedicalHistory = { userId, diseases, diseasesDetail, medication, pesonalhistory, familyHistory, otherInfo: otherInfoM };
     await MedicalHistory.findOneAndUpdate({ clientId }, newMedicalHistory, { new: true, upsert: true });
 
     await Client.findOneAndUpdate(
-      { _id: clientId }, 
-      { $set: { createdByClient: true } }, 
+      { _id: clientId },
+      { $set: { createdByClient: true } },
       { new: true, upsert: true }
     );
 
@@ -634,28 +639,28 @@ const createClientByForm = async (req, res, next) => {
 
 const getPdfData = async (req, res, next) => {
   try {
-      const { clientId } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(clientId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid client ID',
-        });
-      }
-      const userId = req.userId;
+    const { clientId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+    const userId = req.userId;
 
     const appointmentInformation = await AppointmentInformation.find({ userId, clientId })
     const pregnancyhistory = await pregnancyHistory.find({
-          clientId: clientId,
-          userId: userId,
-        });
+      clientId: clientId,
+      userId: userId,
+    });
 
     const observation = await Observations.find({ clientId: clientId, userId: userId });
     const Eatingbehaviours = await eatingBehaviour.find({ clientId: clientId, userId: userId });
     const foodDiaries = await FoodDiares.find({ clientId: clientId, userId: userId });
     const goalsData = await Goals.find({
-          clientId: clientId,
-          userId: userId
-        });
+      clientId: clientId,
+      userId: userId
+    });
     const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
@@ -663,9 +668,9 @@ const getPdfData = async (req, res, next) => {
 
     return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData });
 
-    } catch (error) {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = {

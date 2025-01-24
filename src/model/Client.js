@@ -92,21 +92,31 @@ const clientSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    isImported:{
+    isImported: {
       type: Boolean,
       default: false
     },
-    password:{
+    password: {
       type: String
     },
-    isEmailSend:{
-      type:Boolean,
-      default:false
+    isEmailSend: {
+      type: Boolean,
+      default: false
     },
-    createdByClient:{
-      type:Boolean,
-      default:false
+    createdByClient: {
+      type: Boolean,
+      default: false
+    },
+    diagnosis: {
+      type: String,
+    },
+    inquiryBy: {
+      type: String
+    },
+    payment: {
+      type: String
     }
+
   },
   { timestamps: true }
 );

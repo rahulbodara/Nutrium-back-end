@@ -6,7 +6,7 @@ const RecipeInformation = mongoose.Schema({
     required: true,
     ref: "user",
   },
-  category:{
+  category: {
     type: Array
   },
   image: {
@@ -66,7 +66,8 @@ const RecipeInformation = mongoose.Schema({
     ],
   },
   cookingMethod: {
-    type: Array
+    type: Array,
+    default: [""]
   },
   commonMeasures: [
     {
@@ -92,11 +93,11 @@ const RecipeInformation = mongoose.Schema({
       },
     },
   ],
-  website:{
+  website: {
     type: Boolean,
     default: false
   },
-  community:{
+  community: {
     type: Boolean,
     default: false
   },

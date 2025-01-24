@@ -15,13 +15,13 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  start: { type: Date, default: Date.now },
+  start: { type: Date, },
   status: {
     type: String,
     enum: ["confirmed", "not_confirmed", "completed", "canceled"],
     default: "not_confirmed",
   },
-  isStarted:{
+  isStarted: {
     type: Boolean,
     default: false
   },
@@ -32,18 +32,16 @@ const appointmentSchema = new mongoose.Schema({
   },
   end: {
     type: Date,
-    default: function () {
-      return new Date(Date.now() + 30 * 60 * 1000);
-    },
+
   },
   workplace: { type: String, required: true },
   schedulingNotes: { type: String, default: "" },
   videoLink: { type: String, default: "" },
-  description:{
+  description: {
     type: String,
     default: "Not Yet"
   }
-},{timestamps:true});
+}, { timestamps: true });
 
 const ScheduleApointment = mongoose.model("Appointment", appointmentSchema);
 
