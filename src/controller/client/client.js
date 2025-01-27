@@ -17,6 +17,7 @@ const importHistory = require("../../model/importHistory");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
+const path = require('path');
 const User = require("../../model/User");
 const {
   clientEmailSend,
@@ -1621,9 +1622,9 @@ const updateFileDetail = async (req, res, next) => {
       category: category,
     };
 
-    if (req.file && req.file.filename) {
-      newFile.file = req.file.filename;
-    }
+    // if (req.file && req.file.filename) {
+    //   newFile.file = req.file.filename;
+    // }
 
     if (
       !mongoose.Types.ObjectId.isValid(userId) ||
@@ -1635,6 +1636,27 @@ const updateFileDetail = async (req, res, next) => {
         message: "Invalid user, client, or behaviourId",
       });
     }
+
+    const existingFile = await ClientFile.findOne({_id: fileId});
+
+    if (!existingFile) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found",
+      });
+    }
+
+    if (req.file && req.file.filename) {
+      if (existingFile.file) {
+        const oldFilePath = path.join(__dirname, `../../uploads/${existingFile.file}`);
+        console.log("🚀 ~ updateFileDetail ~ oldFilePath:", oldFilePath)
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath); 
+        }
+      }
+      newFile.file = req.file.filename;
+    }
+
 
     const updatedFile = await ClientFile.findOneAndUpdate(
       { _id: fileId, userId: userId, clientId: clientId },
@@ -1674,6 +1696,19 @@ const deleteFileDetail = async (req, res, next) => {
         success: false,
         message: "Invalid userId or clientId or fileId",
       });
+    }
+
+    const existingFile = await ClientFile.findOne({
+      _id:fileId
+    });
+
+
+    if (existingFile.file) {
+      const oldFilePath = path.join(__dirname, `../../uploads/${existingFile.file}`);
+      console.log("🚀 ~ updateFileDetail ~ oldFilePath:", oldFilePath)
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath); 
+      }
     }
 
     const deletedFile = await ClientFile.findOneAndDelete({

@@ -113,13 +113,15 @@
           <div style="display: flex; gap: 5px; align-items: center;">
             <img style="width: 20px; height: 20px;" src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737713144/user_1_wnmvru.png" />
             <span style="font-size: 14px;">
-              <%= clientData.clientDatas[0].fullName %>
+              <%= clientData.userDatas.fullName %>
             </span>
           </div>
           <div style="display: flex; gap: 5px; align-items: center;">
             <img style="width: 20px; height: 20px;" src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737713145/briefcase_lea5aq.png" />
 
-            <span style="font-size: 14px;">xyz</span>
+            <span style="font-size: 14px;">
+              <%= clientData.userDatas.profession %>
+            </span>
           </div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -127,20 +129,22 @@
             <img style="width: 20px; height: 20px;" src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737713144/call_usx9vi.png" />
 
             <span style="font-size: 14px;">
-              <%= clientData.clientDatas[0].phoneNumber %>
+              <%= clientData.userDatas.phoneNumber %>
             </span>
           </div>
           <div style="display: flex; gap: 5px; align-items: center;">
             <img style="width: 20px; height: 20px;" src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737713144/mail_qgdedl.png" />
            
             <span style="font-size: 14px;">
-              <%= clientData.clientDatas[0].email %>
+              <%= clientData.userDatas.email %>
             </span>
           </div>
           <div style="display: flex; gap: 5px; align-items: center;">
             <img style="width: 20px; height: 20px;" src="https://res.cloudinary.com/dmracr8nw/image/upload/v1737713145/location-pin_r9tett.png" />
 
-            <span style="font-size: 14px;">xyz</span>
+            <span style="font-size: 14px;">
+              <%= clientData.userDatas.workplace %>
+            </span>
           </div>
         </div>
       </div>

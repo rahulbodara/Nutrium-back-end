@@ -31,6 +31,7 @@ const puppeteer = require('puppeteer');
 const pdf = require('html-pdf');
 const ClientFile = require('../model/ClientFile');
 const html_to_pdf = require('html-pdf-node');
+const Measurements = require('../model/Measurements');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -637,6 +638,44 @@ const createClientByForm = async (req, res, next) => {
       { new: true, upsert: true }
     );
 
+    // Measurement Update
+    const currentDate = new Date();
+    const measurementDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+
+    if(height || weight){
+      const newMeasurement = new Measurements({
+        userId: userId,
+        clientId: clientId,
+        measurementsdate: measurementDate,
+        measurements: [
+          {
+            measurementtype: 'Weight',
+            entries: [
+              {
+                date: measurementDate,
+                value: weight,
+                unit: 'kg',
+              },
+            ],
+          },
+          {
+            measurementtype: 'Height',
+            entries: [
+              {
+                date: measurementDate,
+                value: height,
+                unit: 'cm',
+              },
+            ],
+          },
+        ],
+      });
+
+      const data = await newMeasurement.save();
+    }
+
     res.status(200).json({ success: true, message: 'Client data processed successfully' });
   } catch (error) {
     next(error);
@@ -646,7 +685,6 @@ const createClientByForm = async (req, res, next) => {
 const getPdfData = async (req, res, next) => {
   try {
     const { clientId } = req.params;
-    const { name } = req.body;
     // const clientId = '67737c96e905d752c6e5322b';
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -674,6 +712,7 @@ const getPdfData = async (req, res, next) => {
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
     const clientDatas = await Client.find({ _id: clientId, userId: userId })
+    const userDatas = await User.findOne({_id:userId});
 
     const clientData = {
       appointmentInformation,
@@ -686,6 +725,7 @@ const getPdfData = async (req, res, next) => {
       medicalHistory,
       dietHistory,
       clientDatas,
+      userDatas
     };
 
     const templatePath = path.join(__dirname, '../view/clientReport.ejs');
