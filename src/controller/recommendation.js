@@ -17,15 +17,12 @@ const createRecommendation = async (req, res, next) => {
 
         if (existingRecommendation) {
             if (physicalActivity && !physicalActivity._id) {
-                console.log('<<---start-->>');
                 existingRecommendation.physicalActivity.push([physicalActivity]);
             } else if(physicalActivity) {
-                console.log('<<--statrt1-->>');
                 let matchingSubarrayIndex = -1;
 
                 existingRecommendation.physicalActivity.some((subarray, index) => {
                     if (subarray.some(obj => obj._id.toString() === physicalActivity._id)) {
-                        console.log('subarray-->>',subarray);
                         matchingSubarrayIndex = index;
                         return true;
                     }
@@ -83,7 +80,6 @@ const addPhysicalActivityObject = async (req, res, next) => {
         const { physicalActivity, indexToPush } = req.body;
 
         const existingRecord = await client_Recommendation.findOne({clientId: clientId});
-        console.log('existingRecord-->>',existingRecord);
 
         if (!existingRecord) {
             return res.status(404).json({ success: false, message: 'Record not found' });

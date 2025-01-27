@@ -110,7 +110,6 @@ const updateWorkplace = async (req, res, next) => {
 
       if (workplace.image) {
         const oldImagePath = path.join(__dirname, "..", workplace.image);
-        console.log("🚀 ~ updateWorkplace ~ oldImagePath:", oldImagePath)
         fs.unlink(oldImagePath, (err) => {
           if (err) console.error("Error removing old image:", err);
         });

@@ -363,7 +363,6 @@ const UpdateProfile = async (req, res, next) => {
       message: 'User profile updated successfully',
     });
   } catch (error) {
-    console.log("🚀 ~ UpdateProfile ~ error:", error)
     next(error);
   }
 };
@@ -430,8 +429,6 @@ const resetPassword = async (req, res, next) => {
 
     return res.status(200).json({ message: 'Password reset successful.', status: true });
   } catch (error) {
-    console.log("🚀 ~ resetPassword ~ error:", error)
-
     next(error.message);
   }
 };

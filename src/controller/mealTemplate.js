@@ -166,7 +166,6 @@ const addNewMeal = async (req, res) => {
 const createVersion = async (req, res) => {
   try {
     const { templateId, creationMethod, copyMealsOfMealPlan, selectedDesiredDays } = req.body;
-    console.log("req.body",req.body)
     const template = await Template.findById(templateId);
     if (!template) {
       return res.status(404).json({ error: "Template not found" });
@@ -205,8 +204,6 @@ const createVersion = async (req, res) => {
 
   if (copyMealsOfMealPlan === "copy" && creationMethod === 'null') {
 
-    console.log("entered");
-    
     const newMeal = {
       days: selectedDesiredDays, 
       mealSchedule: [],
@@ -227,9 +224,6 @@ const createVersion = async (req, res) => {
         }
       });
     };
-
-    console.log("copyMealScheduleForDays",copyMealScheduleForDays);
-    
 
     copyMealScheduleForDays(template, newMeal.days);
 

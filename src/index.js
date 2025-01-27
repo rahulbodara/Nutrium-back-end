@@ -82,8 +82,6 @@ app.get('/', async (req, res) => {
 
 app.get('/downloads',async (req,res) => {
   const clientData = await getPdfData();
-  console.log("🚀 ~ app.get ~ apiData:", clientData)
-
     res.render('clientReport', {
       clientData,
     });

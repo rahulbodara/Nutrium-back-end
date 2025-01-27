@@ -174,7 +174,6 @@ const clientEmailSend = async (sender,receiver,clientId) => {
   const updateUrl = `http://localhost:3000/accounts/clientPassword/resetPassword?clientId=${clientId}`;
 
   const templatePath = path.join(__dirname, '../view', 'password.ejs');
-  console.log("🚀 ~ clientEmailSend ~ templatePath:", templatePath)
   const html = await ejs.renderFile(templatePath, { updateUrl });
 
   const mailOptions = {
@@ -183,7 +182,6 @@ const clientEmailSend = async (sender,receiver,clientId) => {
     subject: 'Password Update Request',
     html,
   };
-  console.log("🚀 ~ clientEmailSend ~ mailOptions:", mailOptions)
 
   await transporter.sendMail(mailOptions);
 }
@@ -210,7 +208,6 @@ const EmailForm = async (sender,receiver,client,user,token) => {
     subject: 'Client Form',
     html,
   };
-  console.log("🚀 ~ clientEmailSend ~ mailOptions:", mailOptions)
 
   await transporter.sendMail(mailOptions);
 }

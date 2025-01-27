@@ -2815,7 +2815,8 @@ const clientLogin = async (req, res, next) => {
     if (isPasswordMatch) {
       const token = jwt.sign(
         {
-          id: user.userId,
+          userId: user.userId,
+          clientId: user._id
         },
         JWT_SECRET,
         {

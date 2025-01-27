@@ -65,7 +65,6 @@ const getPendingInvitation = async (req, res, next) => {
       invitations: pendingInvitations,
     });
   } catch (error) {
-    console.log('error---------->', error);
     next(error);
   }
 };

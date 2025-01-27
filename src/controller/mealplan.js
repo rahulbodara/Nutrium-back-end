@@ -780,7 +780,6 @@ const deleteParticularFood = async (req, res, next) => {
     }
 
     if (meal) {
-      console.log("start-->>");
       const indexToDelete = meal[0].findIndex(
         (food) => food.foodId.toString() === Id
       );
@@ -818,7 +817,6 @@ const deleteParticularFood = async (req, res, next) => {
             }
           });
         } else if (meal[0][0].name === null && m5 === null) {
-          console.log("<<start>>");
           meal.splice(0, 1);
         }
       }
