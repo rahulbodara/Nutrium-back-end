@@ -842,12 +842,11 @@ const printPdfData = async (req, res, next) => {
       },
 
     ])
-    console.log("🚀 ~ printPdfData ~ datas:", datas)
     const userDatas = await User.findOne({ _id: userId }, { email: 1, fullName: 1, profession: 1, phoneNumber: 1 });
     // const workplace = await Workplace.findOne({});
 
 
-    return res.status(200).json({ datas, appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
+    return res.status(200).json({appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
   } catch (error) {
     next(error);
   }
