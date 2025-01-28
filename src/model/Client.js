@@ -8,6 +8,10 @@ const clientSchema = new mongoose.Schema(
       required: true,
       ref: 'user',
     },
+    workplaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Workplace',
+    },
     fullName: {
       type: String,
       required: [true, 'Please enter your name'],

@@ -30,4 +30,6 @@ userRoute.put('/professionals/website', isAuthenticated, createPersonalDetail);
 
 userRoute.post('/createClientByForm/:clientId',isAuthenticated,userController.createClientByForm)
 
+userRoute.get('/getFormData/:clientId',isAuthenticated,userController.printPdfData)
+
 module.exports = userRoute;

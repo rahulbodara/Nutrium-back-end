@@ -641,7 +641,7 @@ const createClientByForm = async (req, res, next) => {
       .toString()
       .padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
 
-    if(height || weight){
+    if (height || weight) {
       const newMeasurement = new Measurements({
         userId: userId,
         clientId: clientId,
@@ -709,7 +709,7 @@ const getPdfData = async (req, res, next) => {
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
     const clientDatas = await Client.find({ _id: clientId, userId: userId })
-    const userDatas = await User.findOne({_id:userId});
+    const userDatas = await User.findOne({ _id: userId });
 
     const clientData = {
       appointmentInformation,
@@ -728,24 +728,24 @@ const getPdfData = async (req, res, next) => {
     const templatePath = path.join(__dirname, '../view/clientReport.ejs');
     const currentDate = new Date();
     const uploadPath = path.join(__dirname, '../uploads', `${req.body.name}_${currentDate.getSeconds()}.pdf`);
-  
+
     try {
       const html = await ejs.renderFile(templatePath, { clientData: clientData });
-  
+
       const options = {
         format: 'A4',
-        path: uploadPath, 
+        path: uploadPath,
         printBackground: true,
       };
-  
+
       const pdfBuffer = await html_to_pdf.generatePdf({ content: html }, options);
-  
+
       fs.writeFileSync(uploadPath, pdfBuffer);
-  
+
       const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1)
         .toString()
         .padStart(2, '0')}/${currentDate.getFullYear()}`;
-  
+
       const filePayload = {
         userId: userId,
         clientId: clientId,
@@ -754,7 +754,7 @@ const getPdfData = async (req, res, next) => {
         date: formattedDate,
         category: 'Patient Informations',
       };
-  
+
       const createFileDetailHelper = async (payload) => {
         try {
           const createdFile = await ClientFile.create(payload);
@@ -764,9 +764,9 @@ const getPdfData = async (req, res, next) => {
           throw new Error('Failed to save file details');
         }
       };
-  
+
       const createdFileResponse = await createFileDetailHelper(filePayload);
-  
+
       return res.status(200).json({
         success: true,
         message: 'PDF generated and file details saved successfully',
@@ -778,8 +778,76 @@ const getPdfData = async (req, res, next) => {
       next(error);
     }
 
-    
 
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+const printPdfData = async (req, res, next) => {
+  try {
+    const { clientId } = req.params;
+    // const clientId = '67737c96e905d752c6e5322b';
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid client ID',
+      });
+    }
+    const userId = req.userId;
+    // const userId = '675a81c3d3014c082abbd96f'
+
+    const appointmentInformation = await AppointmentInformation.find({ userId, clientId })
+    const pregnancyhistory = await pregnancyHistory.find({
+      clientId: clientId,
+      userId: userId,
+    });
+
+    const observation = await Observations.find({ clientId: clientId, userId: userId });
+    const Eatingbehaviours = await eatingBehaviour.find({ clientId: clientId, userId: userId });
+    const foodDiaries = await FoodDiares.find({ clientId: clientId, userId: userId });
+    const goalsData = await Goals.find({
+      clientId: clientId,
+      userId: userId
+    });
+    const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
+    const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
+    const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
+    const clientData = await Client.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(clientId),
+          userId: new mongoose.Types.ObjectId(userId)
+        }
+      },
+      {
+        $lookup: {
+          from: "workplaces",
+          localField: 'workplaceId',
+          foreignField: '_id',
+          as: 'Workplaces',
+          pipeline: [
+            {
+              $project: { 'name': 1 ,'_id':0}
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: "$Workplaces",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+    ])
+    console.log("🚀 ~ printPdfData ~ datas:", datas)
+    const userDatas = await User.findOne({ _id: userId }, { email: 1, fullName: 1, profession: 1, phoneNumber: 1 });
+    // const workplace = await Workplace.findOne({});
+
+
+    return res.status(200).json({ datas, appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
   } catch (error) {
     next(error);
   }
@@ -797,5 +865,6 @@ module.exports = {
   verifyEmail,
   VerifyExistingUser,
   createClientByForm,
-  getPdfData
+  getPdfData,
+  printPdfData
 };
