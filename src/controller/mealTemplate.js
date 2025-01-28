@@ -166,12 +166,13 @@ const addNewMeal = async (req, res) => {
 const createVersion = async (req, res) => {
   try {
     const { templateId, creationMethod, copyMealsOfMealPlan, selectedDesiredDays } = req.body;
+
     const template = await Template.findById(templateId);
     if (!template) {
       return res.status(404).json({ error: "Template not found" });
     }
 
-  if(copyMealsOfMealPlan === "Do not copy" && creationMethod === 'null'){
+  if(copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day"){
     const newMeal = {
       days: selectedDesiredDays,
       mealSchedule: [
@@ -195,6 +196,7 @@ const createVersion = async (req, res) => {
         return entry;
       });
       template.mealTemplate.push(newMeal);
+      template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
     };
 
     updateMealTemplate(template, newMeal);
@@ -247,7 +249,7 @@ const createVersion = async (req, res) => {
   }
 
   if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version"){
-
+    
   }
 
   if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "Merge selected days into a single version"){
