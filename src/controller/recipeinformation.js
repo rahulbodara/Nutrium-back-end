@@ -31,29 +31,43 @@ const updateRecipe = async (req, res, next) => {
       res.status(404).json({ message: "Recipe not found" });
     }
 
-    if (existingRecipe) {
-      if (ingredients && !ingredients._id) {
-        existingRecipe.ingredients.foods.push(ingredients);
-      }
-      else if (ingredients) {
-        let matchingSubarrayIndex = -1;
-        existingRecipe.ingredients.foods.some((subarray, index) => {
-          if (subarray._id.toString() == ingredients._id) {
-            matchingSubarrayIndex = index;
-            return true;
-          }
-          return false;
-        });
-
-
-        if (matchingSubarrayIndex !== -1) {
-          existingRecipe.ingredients.foods[matchingSubarrayIndex].subfoods.push({ ...ingredients, _id: new mongoose.Types.ObjectId() });
-        } else {
-          existingRecipe.ingredients.foods.push(ingredients);
+    if (Array.isArray(ingredients?.foods)) {
+      ingredients.foods.forEach(ingredient => {
+        if (!ingredient.foodId) {
+          return;
         }
-      }
 
+        const ingredientIndex = existingRecipe.ingredients.foods.findIndex(food => food.foodId.toString() === ingredient.foodId.toString());
+
+        if (ingredientIndex !== -1) {
+          if (ingredient.subfoods && Array.isArray(ingredient.subfoods)) {
+            ingredient.subfoods.forEach(subfood => {
+              if (!subfood.foodId) {
+                return;
+              }
+
+              const subfoodIndex = existingRecipe.ingredients.foods[ingredientIndex].subfoods.findIndex(s => s.foodId.toString() === subfood.foodId.toString());
+              if (subfoodIndex === -1) {
+                existingRecipe.ingredients.foods[ingredientIndex].subfoods.push({
+                  ...subfood,
+                  foodId: subfood.foodId || new mongoose.Types.ObjectId(),
+                });
+              }
+            });
+          } else {
+            console.log("Ingredient has no subfoods", ingredient);
+          }
+        } else {
+          existingRecipe.ingredients.foods.push({
+            ...ingredient,
+            subfoods: ingredient.subfoods || [],
+          });
+        }
+      });
+    } else {
+      return res.status(400).json({ message: "Ingredients must be an array of foods." });
     }
+
     if (commonMeasures && commonMeasures._id) {
       let indexToUpdate = existingRecipe.commonMeasures.findIndex(oldMeasure =>
         oldMeasure._id.toString() === commonMeasures._id
