@@ -165,12 +165,12 @@ const addNewMeal = async (req, res) => {
 
 const createVersion = async (req, res) => {
   try {
-    const {templateId, creationMethod, copyMealsOfMealPlan, selectedDesiredDays} = req.body;
-    const template = await Template.findById(templateId); if (!template) return res.status(404).json({ error: "Template not found" });
-    const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const { templateId, creationMethod, copyMealsOfMealPlan, selectedDesiredDays} = req.body;
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    const allDays = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    if (copyMealsOfMealPlan == "Do not copy" && creationMethod === "null") {
-      const removEvryday = template.mealTemplate.filter((entry)=> entry.days === "Everyday" )
+    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "null") {
       const newMeal = {
         days: selectedDesiredDays,
         mealSchedule: [
@@ -185,54 +185,84 @@ const createVersion = async (req, res) => {
 
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
-          if (!Array.isArray(entry.days)) {
+
+          if (entry.days === "Everyday") {
             entry.days = [];
           }
           if (entry.days.some((day) => newMeal.days.includes(day))) {
-            entry.days = entry.days.filter(
-              (day) => !newMeal.days.includes(day)
-            );
+            entry.days = entry.days.filter((day) => !newMeal.days.includes(day));
           }
           return entry;
         });
         template.mealTemplate.push(newMeal);
-        template.mealTemplate = template.mealTemplate.filter(
-          (entry) => entry.days.length > 0
-        );
+
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+          if (entry.days.length === 0) {
+            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+            const remainingDays = allDays.filter((day) => !existingDays.has(day));
+            entry.days = remainingDays;
+          }
+          return entry;
+        });
+        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
       };
 
       updateMealTemplate(template, newMeal);
       template.markModified("mealTemplate");
       await template.save();
-
-      
     }
 
     if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "null") {
+      const newMeal = {
+        days: selectedDesiredDays,
+      };
+      const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
+
+      const updateMealTemplate = (template, newMeal) => {
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+
+          if (entry.days === "Everyday") {
+            entry.days = [];
+          }
+          if (entry.days.some((day) => newMeal.days.includes(day))) {
+            entry.days = entry.days.filter((day) => !newMeal.days.includes(day));
+          }
+          return entry;
+        });
+        template.mealTemplate.push(newMeal);
+
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+          if (entry.days.length === 0) {
+            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+            const remainingDays = allDays.filter((day) => !existingDays.has(day));
+            entry.days = remainingDays;
+          }
+          return entry;
+        });
+        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
+      };
+
+      updateMealTemplate(template, newMeal);
+      template.markModified("mealTemplate");
+      await template.save();
+            
     }
 
-    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "Merge selected days into a single version") {
+    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Merge selected days into a single version") {
+
     }
 
-    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
+    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
     }
 
-    if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
+    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
     }
 
-    if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Create a version for each day") {
+    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Create a version for each day") {
     }
 
-
-
-
-
-
-
-
-
-
-    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
+    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
       const newMeal = {
         days: selectedDesiredDays,
         mealSchedule: [
@@ -268,17 +298,12 @@ const createVersion = async (req, res) => {
       await template.save();
     }
 
-    if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
-
+    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
       const newMeal = {
-        days: selectedDesiredDays
-      };// console.log("template", JSON.stringify(template, null, 2));
-      const matchedEntry = template.mealTemplate.find((entry) => {
-        const entrySet = new Set(entry.days);
-        const copyMealSet = new Set(copyMealsOfMealPlan); 
-        const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every(day => copyMealSet.has(day)); 
-        return isMatch;});
-  
+        days: selectedDesiredDays,
+      }; // console.log("template", JSON.stringify(template, null, 2));
+      const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
+
       if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
       const updateMealTemplate = (template, newMeal) => {
@@ -327,26 +352,26 @@ module.exports = {
 //   }
 // });
 
-
-
-const data = [{
-  days: ["Tuesday"],
-  mealSchedule: [
-    { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-    { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-  ],
-},
-{
-  days: ["Tuesday", "Wednesday"],
-  mealSchedule: [
-    { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-    { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-  ],
-},
-{
-  days: ["Thursday"],
-  mealSchedule: [
-    { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-    { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-  ],
-}]
+const data = [
+  {
+    days: ["Everyday"],
+    mealSchedule: [
+      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
+      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+    ],
+  },
+  {
+    days: ["Tuesday"],
+    mealSchedule: [
+      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
+      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+    ],
+  },
+  {
+    days: ["Wednesday"],
+    mealSchedule: [
+      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
+      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+    ],
+  },
+];
