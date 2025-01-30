@@ -54,8 +54,6 @@ const updateRecipe = async (req, res, next) => {
                 });
               }
             });
-          } else {
-            console.log("Ingredient has no subfoods", ingredient);
           }
         } else {
           existingRecipe.ingredients.foods.push({
@@ -64,8 +62,6 @@ const updateRecipe = async (req, res, next) => {
           });
         }
       });
-    } else {
-      return res.status(400).json({ message: "Ingredients must be an array of foods." });
     }
 
     if (commonMeasures && commonMeasures._id) {
