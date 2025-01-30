@@ -285,23 +285,9 @@ const createVersion = async (req, res) => {
       updateMealTemplate(template, newMeal);
       template.markModified("mealTemplate");
       await template.save();
-            
     }
 
     if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Merge selected days into a single version") {
-
-    }
-
-    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
-    }
-
-    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
-    }
-
-    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Create a version for each day") {
-    }
-
-    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
       const newMeal = {
         days: selectedDesiredDays,
         mealSchedule: [
@@ -313,23 +299,28 @@ const createVersion = async (req, res) => {
           { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
         ],
       };
-
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
-          if (!Array.isArray(entry.days)) {
+
+          if (entry.days === "Everyday") {
             entry.days = [];
           }
           if (entry.days.some((day) => newMeal.days.includes(day))) {
-            entry.days = entry.days.filter(
-              (day) => !newMeal.days.includes(day)
-            );
+            entry.days = entry.days.filter((day) => !newMeal.days.includes(day));
           }
           return entry;
         });
         template.mealTemplate.push(newMeal);
-        template.mealTemplate = template.mealTemplate.filter(
-          (entry) => entry.days.length > 0
-        );
+
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+          if (entry.days.length === 0) {
+            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+            const remainingDays = allDays.filter((day) => !existingDays.has(day));
+            entry.days = remainingDays;
+          }
+          return entry;
+        });
+        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
       };
 
       updateMealTemplate(template, newMeal);
@@ -337,34 +328,113 @@ const createVersion = async (req, res) => {
       await template.save();
     }
 
+    if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
+      const mealSchedule = [
+        { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
+        { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+        { mealType: "Lunch", time: "12:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
+        { mealType: "Afternoon Snack", time: "4:00 PM", meal: [], notes: "" },
+        { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
+        { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
+    ]
+
+    const newMeal = selectedDesiredDays.map((entry)=>({
+      days : [entry],
+      mealSchedule : mealSchedule
+    }))
+
+    const updateMealTemplate = (template, newMeal) => {
+      template.mealTemplate = template.mealTemplate.map((entry) => {
+       
+        if (entry.days === "Everyday") {
+          entry.days = [];
+        }
+        return entry;
+      });
+      function getNewMealDays(newMeal) {
+        return newMeal.flatMap(item => item.days);
+      }
+
+      function mergeMealData(template, newMeal) {
+        const newMealDays = new Set(getNewMealDays(newMeal));
+        const updatedTemplate = template.mealTemplate.map(entry => { const filteredDays = entry.days.filter(day => !newMealDays.has(day)); return { ...entry, days: filteredDays };}).filter(entry => entry.days.length > 0);
+        return [...updatedTemplate, ...newMeal];
+      }
+      const result = mergeMealData(template, newMeal);
+    };
+
+    updateMealTemplate(template, newMeal);
+    template.markModified("mealTemplate");
+    await template.save();     
+    }
+
     if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Merge selected days into a single version") {
       const newMeal = {
         days: selectedDesiredDays,
-      }; // console.log("template", JSON.stringify(template, null, 2));
+      };
       const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
 
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
-          if (!Array.isArray(entry.days)) {
+
+          if (entry.days === "Everyday") {
             entry.days = [];
           }
           if (entry.days.some((day) => newMeal.days.includes(day))) {
-            entry.days = entry.days.filter(
-              (day) => !newMeal.days.includes(day)
-            );
+            entry.days = entry.days.filter((day) => !newMeal.days.includes(day));
           }
           return entry;
         });
         template.mealTemplate.push(newMeal);
-        template.mealTemplate = template.mealTemplate.filter(
-          (entry) => entry.days.length > 0
-        );
+
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+          if (entry.days.length === 0) {
+            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+            const remainingDays = allDays.filter((day) => !existingDays.has(day));
+            entry.days = remainingDays;
+          }
+          return entry;
+        });
+        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
       };
+
       updateMealTemplate(template, newMeal);
       template.markModified("mealTemplate");
       await template.save();
+    }
+
+    if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Create a version for each day") {
+
+      const newMeal = selectedDesiredDays.map((entry)=>({
+        days : [entry],
+      }))
+      const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
+
+      const updateMealTemplate = (template, newMeal) => {
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+         
+          if (entry.days === "Everyday") {
+            entry.days = [];
+          }
+          return entry;
+        });
+        function getNewMealDays(newMeal) {
+          return newMeal.flatMap(item => item.days);
+        }
+  
+        function mergeMealData(template, newMeal) {
+          const newMealDays = new Set(getNewMealDays(newMeal));
+          const updatedTemplate = template.mealTemplate.map(entry => { const filteredDays = entry.days.filter(day => !newMealDays.has(day)); return { ...entry, days: filteredDays };}).filter(entry => entry.days.length > 0);
+          return [...updatedTemplate, ...newMeal];
+        }
+        const result = mergeMealData(template, newMeal);
+      };
+  
+      updateMealTemplate(template, newMeal);
+      template.markModified("mealTemplate");
+      await template.save();     
     }
 
     return res.status(201).json({
@@ -384,35 +454,3 @@ module.exports = {
   getMealTemplateById
 };
 
-// open.forEach((openEntry) => {
-//   const matchedEntry = data.find(
-//     (dataEntry) => JSON.stringify(dataEntry.days) === JSON.stringify(openEntry.days)
-//   );
-//   if (matchedEntry) {
-//     openEntry.poit = matchedEntry.poit;
-//   }
-// });
-
-const data = [
-  {
-    days: ["Everyday"],
-    mealSchedule: [
-      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-    ],
-  },
-  {
-    days: ["Tuesday"],
-    mealSchedule: [
-      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-    ],
-  },
-  {
-    days: ["Wednesday"],
-    mealSchedule: [
-      { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-      { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
-    ],
-  },
-];
