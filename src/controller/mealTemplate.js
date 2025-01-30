@@ -74,6 +74,45 @@ const createMealTemplate = async (req, res) => {
   }
 };
 
+const getMealTemplate = async (req, res) => {
+  try {
+    const query = {
+      userId: req.userId,
+    };
+    if (!req.userId) {
+      return res.status(401).json({ error: "Unauthorized, user ID missing" });
+    }
+    const templet = await Template.find(query);
+    if (!templet) {
+      return res.status(404).json({ message: "templet Not Found!!" });
+    }
+    res.status(200).json(templet);
+  } catch (error) {
+    console.error("Error creating template:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getMealTemplateById = async (req, res) => {
+  try {
+    const query = {
+      _id: req.params.id,
+      userId: req.userId,
+    };
+    if (!req.userId) {
+      return res.status(401).json({ error: "Unauthorized, user ID missing" });
+    }
+    const template = await Template.findOne(query);
+    if (!template) {
+      return res.status(404).json({ message: "template Not Found!!" });
+    }
+    res.status(200).json({template:template});
+  } catch (error) {
+    console.error("Error creating template:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 const addNewMeal = async (req, res) => {
   try {
     const { templateId, mealdays, mealType } = req.body;
@@ -341,6 +380,8 @@ module.exports = {
   createMealTemplate,
   addNewMeal,
   createVersion,
+  getMealTemplate,
+  getMealTemplateById
 };
 
 // open.forEach((openEntry) => {
