@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const Template = require("../model/mealTemplate");
+const { findById } = require("../model/Food");
 
 const createMealTemplate = async (req, res) => {
   try {
@@ -472,12 +473,32 @@ const createVersion = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+const addFood = async(req, res)=> {
+ 
+try {
+    const { templateId , } =req.body
+    console.log("mealScheduleId",templateId);
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    
+    return res.status(201).json({
+      message: "Meal added successfully",
+      template: template,
+    });
+} catch (error) {
+  console.error("Error adding meal:", error);
+  return res.status(500).json({ error: "Internal Server Error" });
+}
+}
+
 module.exports = {
   createMealTemplate,
   addNewMeal,
   createVersion,
   getMealTemplate,
   getMealTemplateById,
-  deleteMealTemplate
+  deleteMealTemplate,
+  addFood
 };
 

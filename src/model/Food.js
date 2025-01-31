@@ -46,7 +46,7 @@ const FoodSchema = new mongoose.Schema({
   },
   quantity: {
     type: String,
-    required: true,
+    default: '100 grams',
   },
   macronutrients: {
     energy: {
@@ -240,6 +240,9 @@ const FoodSchema = new mongoose.Schema({
       },
     },
   ],
+  displayName: {
+    type: String,
+  },
 });
 
 const Food = mongoose.model('Food', FoodSchema);

@@ -104,7 +104,13 @@ const addFood = async (req, res, next) => {
     if (!group) {
       return res.status(400).json({ message: 'group is required' });
     }
-
+    let displayName;
+    if (commonMeasures.pluralName == ""){
+       displayName = `100 grams of ${name}`
+    }else{
+      displayName = `${commonMeasures.quantity} ${commonMeasures.pluralName} of ${name} (${commonMeasures.totalGrams})`
+    }
+   
     const newFood = await Food.create({
       userId,
       name,
@@ -114,6 +120,7 @@ const addFood = async (req, res, next) => {
       macronutrients,
       micronutrients,
       commonMeasures,
+      displayName,
     });
 
     return res.status(200).json({
