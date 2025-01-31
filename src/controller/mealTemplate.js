@@ -8,7 +8,7 @@ const createMealTemplate = async (req, res) => {
     const templateName = Name || "Meal plan template";
     const mealTemplate = {
       days: "Everyday",
-      mealSechdule: [
+      mealSchedule: [
         {
           mealType: "BreakFast",
           time: "7:00 AM",
@@ -52,6 +52,7 @@ const createMealTemplate = async (req, res) => {
           Notes: "",
         },
       ],
+      _id: new mongoose.Types.ObjectId()
     };
     const userId = req.userId;
     if (!req.userId) {
@@ -74,7 +75,7 @@ const createMealTemplate = async (req, res) => {
   }
 };
 
-const getMealTemplate = async (req, res) => {
+const getMealTemplate = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
@@ -88,12 +89,12 @@ const getMealTemplate = async (req, res) => {
     }
     res.status(200).json(templet);
   } catch (error) {
-    console.error("Error creating template:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error(error);
+    next(error);
   }
 };
 
-const getMealTemplateById = async (req, res) => {
+const getMealTemplateById = async (req, res, next) => {
   try {
     const query = {
       _id: req.params.id,
@@ -108,8 +109,30 @@ const getMealTemplateById = async (req, res) => {
     }
     res.status(200).json({template:template});
   } catch (error) {
-    console.error("Error creating template:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error(error);
+    next(error);
+  }
+};
+
+const deleteMealTemplate = async (req, res, next) => {
+  try {
+    const query = {
+      _id: req.params.id,
+      userId: req.userId,
+    };
+    const deletedtemplate = await Template.findOneAndDelete(
+      query,
+      { new: true }
+    );
+
+    if (!deletedtemplate) {
+      res.status(404).json({ message: 'template not found!!!' });
+    } else {
+      res.status(200).json({ message: 'template deleted successfully' });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -122,7 +145,7 @@ const addNewMeal = async (req, res) => {
       return res.status(404).json({ error: "Template not found" });
     }
 
-    const existingMeals = template.mealTemplate[0].mealSechdule.filter((meal) =>
+    const existingMeals = template.mealTemplate[0].mealSchedule.filter((meal) =>
       meal.mealType.includes(mealType)
     );
 
@@ -182,7 +205,7 @@ const addNewMeal = async (req, res) => {
 
     template.mealTemplate.forEach((meal) => {
       if (meal.hasOwnProperty("days") && meal.days === mealdays) {
-        meal.mealSechdule.push(newMeal);
+        meal.mealSchedule.push(newMeal);
       }
     });
 
@@ -220,6 +243,7 @@ const createVersion = async (req, res) => {
           { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
           { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
         ],
+        _id: new mongoose.Types.ObjectId(),
       };
 
       const updateMealTemplate = (template, newMeal) => {
@@ -256,7 +280,7 @@ const createVersion = async (req, res) => {
         days: selectedDesiredDays,
       };
       const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
@@ -298,6 +322,7 @@ const createVersion = async (req, res) => {
           { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
           { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
         ],
+        _id: new mongoose.Types.ObjectId(),
       };
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
@@ -340,7 +365,8 @@ const createVersion = async (req, res) => {
 
     const newMeal = selectedDesiredDays.map((entry)=>({
       days : [entry],
-      mealSchedule : mealSchedule
+      mealSchedule : mealSchedule,
+      _id: new mongoose.Types.ObjectId(),
     }))
 
     const updateMealTemplate = (template, newMeal) => {
@@ -373,7 +399,7 @@ const createVersion = async (req, res) => {
         days: selectedDesiredDays,
       };
       const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
@@ -410,7 +436,7 @@ const createVersion = async (req, res) => {
         days : [entry],
       }))
       const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSechdule;
+      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
@@ -451,6 +477,7 @@ module.exports = {
   addNewMeal,
   createVersion,
   getMealTemplate,
-  getMealTemplateById
+  getMealTemplateById,
+  deleteMealTemplate
 };
 

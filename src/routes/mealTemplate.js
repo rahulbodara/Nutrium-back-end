@@ -6,13 +6,15 @@ const {
   addNewMeal,
   createVersion,
   getMealTemplate,
-  getMealTemplateById
+  getMealTemplateById,
+  deleteMealTemplate
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
 router.post('/createMealTemplate',isAuthenticated, createMealTemplate);
 router.get('/get-meal-templet', isAuthenticated, getMealTemplate);
 router.get('/get-meal-templet/:id', isAuthenticated, getMealTemplateById);
+router.delete('/delete-meal-templet/:id', isAuthenticated, deleteMealTemplate);
 router.post('/addNewMeal', addNewMeal);
 router.post('/createVersion', createVersion);
 

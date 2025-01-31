@@ -60,6 +60,8 @@ const fileSchema = new mongoose.Schema({
       'Others',
     ],
   },
-});
+},
+{ timestamps: true }
+);
 
 module.exports = mongoose.model('clientFile', fileSchema);
