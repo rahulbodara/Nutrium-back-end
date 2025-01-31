@@ -127,6 +127,9 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "Admin"
+    },
+    subscriptionId: {
+      type: String
     }
   },
   { timestamps: true }

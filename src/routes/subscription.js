@@ -19,4 +19,8 @@ router.put(
   subscriptionController.updateSubscription
 );
 
+router.post("/subscriptiondoc", isAuthenticated, subscriptionController.createSubscriptionDoc)
+
+// router.post("/savepayment", isAuthenticated, subscriptionController.savePayment)
+
 module.exports = router;
