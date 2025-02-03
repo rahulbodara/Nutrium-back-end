@@ -708,7 +708,34 @@ const getPdfData = async (req, res, next) => {
     const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
-    const clientDatas = await Client.find({ _id: clientId, userId: userId })
+    const clientDatas = await Client.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(clientId),
+          userId: new mongoose.Types.ObjectId(userId)
+        }
+      },
+      {
+        $lookup: {
+          from: "workplaces",
+          localField: 'workplaceId',
+          foreignField: '_id',
+          as: 'Workplaces',
+          pipeline: [
+            {
+              $project: { 'name': 1, '_id': 0 }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: "$Workplaces",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+    ])
     const userDatas = await User.findOne({ _id: userId });
 
     const clientData = {
@@ -829,7 +856,7 @@ const printPdfData = async (req, res, next) => {
           as: 'Workplaces',
           pipeline: [
             {
-              $project: { 'name': 1 ,'_id':0}
+              $project: { 'name': 1, '_id': 0 }
             }
           ]
         }
@@ -843,10 +870,9 @@ const printPdfData = async (req, res, next) => {
 
     ])
     const userDatas = await User.findOne({ _id: userId }, { email: 1, fullName: 1, profession: 1, phoneNumber: 1 });
-    // const workplace = await Workplace.findOne({});
 
 
-    return res.status(200).json({appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
+    return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
   } catch (error) {
     next(error);
   }

@@ -4,6 +4,7 @@ const cors = require('cors');
 var path = require('path');
 const ConnectDB = require('./db/connection');
 const port = 8080 || process.env.PORT;
+const http = require('http');
 const bodyParser = require('body-parser');
 const workplaceRoutes = require('./routes/workplace');
 const subscriptionRoutes = require('./routes/subscription');
@@ -34,10 +35,13 @@ const dailyplan = require('./routes/dailyplan');
 const professionalPreference = require('./routes/professionalpreference');
 const privacyandnotification = require('./routes/privacyAndnotification');
 const CommonMeasures = require('./routes/CommonMeasures')
+const Message = require('./model/Message');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
 const { getPdfData } = require('./controller/user');
+const socketIo = require('socket.io');
+const { v4: uuidv4 } = require('uuid');
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -63,15 +67,15 @@ const credentials = { key: privateKey, cert: certificate };
 const app = express();
 const corsOptions = {
   origin: ['http://localhost:3000', 'https://nutrium-front-end-six.vercel.app'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type', 'Authorization'],  
-  credentials: true,  
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
-app.use('/uploads', express.static(__dirname+'/uploads'));
+app.use('/uploads', express.static(__dirname + '/uploads'));
 
 // Catch-all route
 app.set('view engine', 'ejs');
@@ -80,12 +84,81 @@ app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname + '/views/index.html'));
 });
 
-app.get('/downloads',async (req,res) => {
+app.get('/downloads', async (req, res) => {
   const clientData = await getPdfData();
-    res.render('clientReport', {
-      clientData,
-    });
+  res.render('clientReport', {
+    clientData,
+  });
 })
+
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  }
+})
+
+const activeRooms = new Map();
+
+function getRoomId(senderId, receiverId) {
+  const sortedIds = [senderId, receiverId].sort();
+  const roomId = sortedIds.join('-');
+  if (!activeRooms.has(roomId)) {
+    activeRooms.set(roomId, uuidv4());
+  }
+  return activeRooms.get(roomId);
+}
+
+io.on("connection", (socket) => {
+  console.log('New client connected', socket.id);
+
+  socket.on("join", ({ userId, otherUserId }) => {
+    const roomId = getRoomId(userId, otherUserId);
+    socket.join(roomId);
+  });
+
+  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+    try {
+      const roomId = getRoomId(senderId, receiverId);
+      const newMessage = new Message({ senderId, receiverId, message,roomId });
+      await newMessage.save();
+
+      console.log(`Sending message to room ${roomId}`);
+
+      io.to(roomId).emit('receiveMessage', newMessage);
+      io.to(socket.id).emit('messageSent', newMessage);
+
+    } catch (error) {
+      console.log("Error in sendMessage:", error);
+    }
+  });
+
+  socket.on('getHistory', async ({ userId, otherUserId }) => {
+    console.log("Getting history between:", userId, otherUserId);
+    try {
+      const messages = await Message.find({
+        $or: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ]
+      }).sort({ timestamp: 1 });
+      console.log("🚀 ~ socket.on ~ messages:", messages)
+
+      io.to(socket.id).emit("chatHistory", messages);
+    } catch (error) {
+      console.log("Error in getHistory:", error);
+    }
+  });
+
+  socket.on('disconnect', () =>{
+    console.log('user disconnected');
+})
+});
+
+
 
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
@@ -121,7 +194,8 @@ app.use(notFoundMiddleware);
 
 const httpsServer = https.createServer(credentials, app);
 
-app.listen(port, () => {
+server.listen(port, () => {
   ConnectDB();
   console.log(`Server is running at ${port}`);
 });
+
