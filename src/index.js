@@ -1,3 +1,4 @@
+require("./cron")
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
@@ -36,6 +37,7 @@ const professionalPreference = require('./routes/professionalpreference');
 const privacyandnotification = require('./routes/privacyAndnotification');
 const CommonMeasures = require('./routes/CommonMeasures')
 const Message = require('./model/Message');
+const lookup = require('./routes/lookup');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -123,7 +125,7 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
-      const newMessage = new Message({ senderId, receiverId, message,roomId });
+      const newMessage = new Message({ senderId, receiverId, message, roomId });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);
@@ -153,9 +155,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on('disconnect', () =>{
+  socket.on('disconnect', () => {
     console.log('user disconnected');
-})
+  })
 });
 
 
@@ -187,6 +189,8 @@ app.use('/api/v1', dailyplan);
 app.use('/api/v1', professionalPreference);
 app.use('/api/v1', privacyandnotification);
 app.use('/api/v1', CommonMeasures);
+app.use("/api/v1", lookup)
+
 
 
 app.use(HandleError);

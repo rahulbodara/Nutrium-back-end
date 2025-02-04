@@ -1,16 +1,21 @@
 const BillingInformation = require("../model/BillingInformation");
 const User = require("../model/User");
 
-const getBillingInformation = async (req,res, next) => {
+const getBillingInformation = async (req, res, next) => {
   try {
-    const billingInformation = await BillingInformation.findOne();
-    res.status(200).json(billingInformation);
+    const userId = req.userId;
+    const billingInformation = await BillingInformation.findOne({ userId });
+    if (!billingInformation) {
+      return res.status(404).json({ message: "Billing information not found" });
+    }
+    return res.status(200).json({ data: billingInformation });
   } catch (error) {
     console.error("Error retrieving billingInformation:", error);
     next(error);
+    return res.json(500).json({ message: error })
   }
 };
-const createBillingInformation = async (res,userId, billingData) => {
+const createBillingInformation = async (res, userId, billingData) => {
   try {
     const user = await User.findOne({ _id: userId });
     if (!user) {

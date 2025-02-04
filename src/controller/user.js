@@ -32,6 +32,7 @@ const pdf = require('html-pdf');
 const ClientFile = require('../model/ClientFile');
 const html_to_pdf = require('html-pdf-node');
 const Measurements = require('../model/Measurements');
+const Lookup = require('../model/lookupUser');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -120,6 +121,12 @@ const SignUp = async (req, res, next) => {
     await createProfessionalPreference(savedUser._id);
     await createPrivacyAndNotification(savedUser._id);
     await createBillingInformation(savedUser._id, req.body);
+    const lookupEntry = new Lookup({
+      userId: savedUser._id,  // Assuming Lookup requires userId
+      timestamp: new Date(),  // Add a timestamp if needed
+    });
+    await lookupEntry.save();
+
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
