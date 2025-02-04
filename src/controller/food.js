@@ -137,7 +137,15 @@ const addFood = async (req, res, next) => {
 
 const getAllFood = async (req, res, next) => {
   try {
-    const foods = await Food.find();
+
+    const { source } = req.query;
+    const filter = source ? { source } : {};
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const foods = await Food.find(filter).skip(skip).limit(limit);
 
     return res.status(200).json({
       success: true,

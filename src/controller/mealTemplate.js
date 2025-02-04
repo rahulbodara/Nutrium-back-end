@@ -486,7 +486,7 @@ try {
     
     variabel[0].mealSchedule.map((entry) => {
       if (entry.mealType === `${mealType}`) {
-        entry.meal.push({ displayName:`${food[0].displayName}`,notes : ""});
+        entry.meal.push({ displayName:`${food[0].displayName}`,or : []});
       }
       return entry;
     });
