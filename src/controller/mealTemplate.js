@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const Template = require("../model/mealTemplate");
+const Food = require('../model/Food');
 const { findById } = require("../model/Food");
 
 const createMealTemplate = async (req, res) => {
@@ -474,14 +475,25 @@ const createVersion = async (req, res) => {
   }
 };
 
-const addFood = async(req, res)=> {
- 
+const addFoodInTemplate = async(req, res)=> {
 try {
-    const { templateId , } =req.body
-    console.log("mealScheduleId",templateId);
+    const { templateId ,_id, mealType ,foodId} =req.body
+    const userId = req.userId;
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
+    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
+    const food = await Food.find({ _id: foodId, userId: userId });
     
+    variabel[0].mealSchedule.map((entry) => {
+      if (entry.mealType === `${mealType}`) {
+        entry.meal.push({ displayName:`${food[0].displayName}`,notes : ""});
+      }
+      return entry;
+    });
+    
+    template.markModified("mealTemplate");
+      await template.save();
+   
     return res.status(201).json({
       message: "Meal added successfully",
       template: template,
@@ -499,6 +511,6 @@ module.exports = {
   getMealTemplate,
   getMealTemplateById,
   deleteMealTemplate,
-  addFood
+  addFoodInTemplate
 };
 

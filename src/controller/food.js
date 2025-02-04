@@ -104,11 +104,12 @@ const addFood = async (req, res, next) => {
     if (!group) {
       return res.status(400).json({ message: 'group is required' });
     }
+   
     let displayName;
-    if (commonMeasures.pluralName == ""){
+    if (!commonMeasures?.[0]?.[0]){
        displayName = `100 grams of ${name}`
     }else{
-      displayName = `${commonMeasures.quantity} ${commonMeasures.pluralName} of ${name} (${commonMeasures.totalGrams})`
+      displayName = `${commonMeasures?.[0][0].quantity.value} ${commonMeasures?.[0][0].pluralName.value} of ${name} (${commonMeasures?.[0][0].totalGrams.value})`
     }
    
     const newFood = await Food.create({
@@ -356,3 +357,4 @@ module.exports = {
   updateFood,
   deleteCommonMeasure
 };
+
