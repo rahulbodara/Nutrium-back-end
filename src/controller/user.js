@@ -239,7 +239,7 @@ const SignIn = async (req, res, next) => {
       console.log("🚀 ~ SignIn ~ email:", email)
       userDetails = await Client.findOne({ email });
       if (userDetails) {
-        isClient = true; 
+        isClient = true;
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -256,7 +256,7 @@ const SignIn = async (req, res, next) => {
 
     const token = jwt.sign(
       {
-        id: isClient ? userDetails.userId : userDetails._id, 
+        id: isClient ? userDetails.userId : userDetails._id,
         role: isClient ? 'Client' : userDetails.role,
       },
       JWT_SECRET,
@@ -280,30 +280,48 @@ const SignIn = async (req, res, next) => {
 
 const VerifyExistingUser = async (req, res, next) => {
   try {
-    const { googleId, email } = req.body;
+    const { googleId, email, isWebLogin } = req.body;
 
-    const user = await User.findOne({ email: email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
+    let userDetails = await User.findOne({ email: email });
+    let isClient = false;
+
+    if (!userDetails) {
+      userDetails = await Client.findOne({ email: email });
+      if (userDetails) {
+        isClient = true
+      } else {
+        return res.status(404).json({ message: "User not found." });
+      }
     }
 
-    if (googleId && (!user.googleId || user.googleId !== googleId)) {
-      user.googleId = googleId;
-      await user.save();
+    if (isClient && isWebLogin) {
+      return res.status(403).json({ message: 'Clients cannot log in from the web' });
     }
 
-    if (googleId && googleId !== user.googleId) {
+    if (googleId && (!userDetails.googleId || userDetails.googleId !== googleId)) {
+      userDetails.googleId = googleId;
+      await userDetails.save();
+    }
+
+    if (googleId && googleId !== userDetails.googleId) {
       return res.status(400).json({ message: "Invalid Google ID.", status: 400 });
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign(
+      {
+        id: isClient ? userDetails.userId : userDetails._id,
+        role: isClient ? "client" : userDetails.role,
+      },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
 
     return res.status(200).json({
       token,
       message: "Login successfully",
       status: 200,
-      user,
-      role: user?.role
+      user:userDetails,
+      role: isClient ? "client" : userDetails.role
     });
   } catch (error) {
     console.error(error);

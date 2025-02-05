@@ -119,9 +119,9 @@ const clientSchema = new mongoose.Schema(
     payment: {
       type: String
     },
-    createdByClient:{
-      type:Boolean,
-      default:false
+    createdByClient: {
+      type: Boolean,
+      default: false
     },
     googleAuthId: {
       type: String,
@@ -129,7 +129,10 @@ const clientSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "Client"
-    }
+    },
+    googleId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
