@@ -30,15 +30,19 @@ const measurementSchema = new mongoose.Schema({
           unit: {
             type: String,
           },
+          createdByClient: {
+            type: Boolean,
+            default: false,
+          }
         },
       ],
     },
   ],
-  bmiGoalWeight:{
+  bmiGoalWeight: {
     type: String,
-    default : null,
+    default: null,
   },
-  bmiFlag :{
+  bmiFlag: {
     type: Boolean,
     default: false,
   }
