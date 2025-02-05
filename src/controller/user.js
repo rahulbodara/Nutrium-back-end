@@ -321,7 +321,7 @@ const VerifyExistingUser = async (req, res, next) => {
       message: "Login successfully",
       status: 200,
       user:userDetails,
-      role: isClient ? "client" : userDetails.role
+      role: isClient ? "Client" : userDetails.role
     });
   } catch (error) {
     console.error(error);
