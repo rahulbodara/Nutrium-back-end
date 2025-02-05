@@ -310,7 +310,7 @@ const VerifyExistingUser = async (req, res, next) => {
     const token = jwt.sign(
       {
         id: isClient ? userDetails.userId : userDetails._id,
-        role: isClient ? "client" : userDetails.role,
+        role: isClient ? "Client" : userDetails.role,
       },
       JWT_SECRET,
       { expiresIn: "2h" }
