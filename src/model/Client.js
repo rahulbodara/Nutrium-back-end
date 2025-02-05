@@ -125,6 +125,10 @@ const clientSchema = new mongoose.Schema(
     },
     googleAuthId: {
       type: String,
+    },
+    role: {
+      type: String,
+      default: "Client"
     }
   },
   { timestamps: true }

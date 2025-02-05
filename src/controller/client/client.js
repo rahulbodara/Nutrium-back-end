@@ -41,9 +41,17 @@ const registerClient = async (req, res, next) => {
       isEmailSend,
     } = req.body;
 
-    const exist = await Client.findOne({ email, userId: { $ne: userId } });
+    const exist = await Client.findOne({ email });
 
     if (exist) {
+      return res.status(400).json({
+        success: false,
+        message: "This email already exists",
+      });
+    }
+
+    const userExist = await User.findOne({email});
+    if(userExist){
       return res.status(400).json({
         success: false,
         message: "This email already exists",

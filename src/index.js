@@ -120,6 +120,8 @@ io.on("connection", (socket) => {
   socket.on("join", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
     socket.join(roomId);
+    console.log(`User ${userId} joined room ${roomId}`);
+
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {

@@ -76,6 +76,15 @@ const SignUp = async (req, res, next) => {
       });
     }
 
+    const clientExist = await Client.findOne({ email });
+
+    if (clientExist) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email already exists',
+      });
+    }
+
     const userData = await new User({
       fullName,
       email,
@@ -217,46 +226,57 @@ const verifyEmail = async (req, res, next) => {
 
 const SignIn = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, isWebLogin } = req.body;
+
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: 'Please provide email and password' });
-    }
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    let userDetails = await User.findOne({ email });
+    let isClient = false;
 
-    if (isPasswordMatch) {
-      const token = jwt.sign(
-        {
-          id: user._id,
-        },
-        JWT_SECRET,
-        {
-          expiresIn: '2h',
-        }
-      );
-      const { password, ...userdetails } = user._doc;
-      return res.status(200).json({
-        token: token,
-        message: 'Login successfully',
-        status: 200,
-        userdetails,
-      });
-    } else {
-      return res
-        .status(400)
-        .send({ message: 'Invalid Credentials', status: 400 });
+    if (!userDetails) {
+      console.log("🚀 ~ SignIn ~ email:", email)
+      userDetails = await Client.findOne({ email });
+      if (userDetails) {
+        isClient = true; 
+      } else {
+        return res.status(404).json({ message: 'User not found.' });
+      }
     }
+
+    const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
+    if (!isPasswordMatch) {
+      return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
+    }
+
+    if (isClient && isWebLogin) {
+      return res.status(403).json({ message: 'Clients cannot log in from the web.', status: 403 });
+    }
+
+    const token = jwt.sign(
+      {
+        id: isClient ? userDetails.userId : userDetails._id, 
+        role: isClient ? 'Client' : userDetails.role,
+      },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+
+    const { password: _, ...userData } = userDetails._doc;
+
+    return res.status(200).json({
+      token,
+      message: 'Login successful',
+      status: 200,
+      userData,
+    });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
+
 
 const VerifyExistingUser = async (req, res, next) => {
   try {
@@ -884,6 +904,7 @@ const printPdfData = async (req, res, next) => {
     next(error);
   }
 }
+
 
 module.exports = {
   SignUp,
