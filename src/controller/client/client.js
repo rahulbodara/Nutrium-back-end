@@ -42,7 +42,6 @@ const registerClient = async (req, res, next) => {
     } = req.body;
 
     const exist = await Client.findOne({ email });
-
     if (exist) {
       return res.status(400).json({
         success: false,
@@ -50,13 +49,14 @@ const registerClient = async (req, res, next) => {
       });
     }
 
-    const userExist = await User.findOne({email});
-    if(userExist){
+    const userExist = await User.findOne({ email });
+    if (userExist) {
       return res.status(400).json({
         success: false,
         message: "This email already exists",
       });
     }
+
     const client = await Client.create({
       userId,
       fullName,
@@ -71,24 +71,28 @@ const registerClient = async (req, res, next) => {
       isEmailSend,
     });
 
-    const user = await User.findOne({ _id: userId });
 
+    const user = await User.findOne({ _id: userId });
     const { token } = await generateResetToken(user);
 
     if (client && client.isEmailSend === true) {
       await EmailForm(user.email, client.email, client, user, token);
-
       // await getScheduleAppointmentInfo(client._id);
-
-      return res.status(200).json({
-        success: true,
-        message: "Client added successfully",
-        client,
-      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Client added successfully",
+      client,
+    });
+
   } catch (error) {
-    console.log(error);
-    next(error);
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
 
@@ -1645,7 +1649,7 @@ const updateFileDetail = async (req, res, next) => {
       });
     }
 
-    const existingFile = await ClientFile.findOne({_id: fileId});
+    const existingFile = await ClientFile.findOne({ _id: fileId });
 
     if (!existingFile) {
       return res.status(404).json({
@@ -1659,7 +1663,7 @@ const updateFileDetail = async (req, res, next) => {
         const oldFilePath = path.join(__dirname, `../../uploads/${existingFile.file}`);
         console.log("🚀 ~ updateFileDetail ~ oldFilePath:", oldFilePath)
         if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath); 
+          fs.unlinkSync(oldFilePath);
         }
       }
       newFile.file = req.file.filename;
@@ -1707,7 +1711,7 @@ const deleteFileDetail = async (req, res, next) => {
     }
 
     const existingFile = await ClientFile.findOne({
-      _id:fileId
+      _id: fileId
     });
 
 
@@ -1715,7 +1719,7 @@ const deleteFileDetail = async (req, res, next) => {
       const oldFilePath = path.join(__dirname, `../../uploads/${existingFile.file}`);
       console.log("🚀 ~ updateFileDetail ~ oldFilePath:", oldFilePath)
       if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath); 
+        fs.unlinkSync(oldFilePath);
       }
     }
 
@@ -2432,6 +2436,8 @@ const getMeasurementById = async (req, res, next) => {
   }
 };
 
+
+
 const deleteMeasurementObject = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
@@ -2864,8 +2870,8 @@ const clientGoogleLogin = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    const existingGoogleID =user.googleAuthId
-    if (existingGoogleID){
+    const existingGoogleID = user.googleAuthId
+    if (existingGoogleID) {
       user.googleAuthId = googleAuthId
       await user.save()
     }
@@ -2932,6 +2938,7 @@ module.exports = {
   updateGoal,
   sendClientEmail,
   clientLogin,
-  clientGoogleLogin
+  clientGoogleLogin,
+
 };
 
