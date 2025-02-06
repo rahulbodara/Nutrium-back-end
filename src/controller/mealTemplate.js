@@ -373,33 +373,25 @@ const createVersion = async (req, res) => {
         if (entry.days === "Everyday") {
           entry.days = [];
         }
+        if (entry.days.some((day) => newMeal[0].days.includes(day))) {
+          entry.days = entry.days.filter((day) => !newMeal[0].days.includes(day));
+        }
+        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
         return entry;
       });
-      function getNewMealDays(newMeal) {
-        return newMeal.flatMap(item => item.days);
-      }
+      template.mealTemplate.push(...newMeal);
 
-      function mergeMealData(template, newMeal) {
-        const newMealDays = new Set(getNewMealDays(newMeal));
-        const updatedTemplate = template.mealTemplate.map(entry => { const filteredDays = entry.days.filter(day => !newMealDays.has(day)); return { ...entry, days: filteredDays };}).filter(entry => entry.days.length > 0);
-        return [...updatedTemplate, ...newMeal];
-      }
-      const result = mergeMealData(template, newMeal);
+        template.mealTemplate = template.mealTemplate.map((entry) => {
+          if (entry.days.length === 0) {
+            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+            const remainingDays = allDays.filter((day) => !existingDays.has(day));
+            entry.days = remainingDays;
+          }
+          return entry;
+        });
     };
 
     updateMealTemplate(template, newMeal);
-    template.mealTemplate.push(...newMeal);
-
-    template.mealTemplate = template.mealTemplate.map((entry) => {
-      if (entry.days.length === 0) {
-          const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
-          const remainingDays = allDays.filter((day) => !existingDays.has(day));
-          entry.days = remainingDays;            
-      }
-        return entry;
-    });
-    template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
-
     template.markModified("mealTemplate");
     await template.save();     
     }
