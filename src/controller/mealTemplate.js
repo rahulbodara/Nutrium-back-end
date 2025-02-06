@@ -388,6 +388,18 @@ const createVersion = async (req, res) => {
     };
 
     updateMealTemplate(template, newMeal);
+    template.mealTemplate.push(...newMeal);
+
+    template.mealTemplate = template.mealTemplate.map((entry) => {
+      if (entry.days.length === 0) {
+          const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
+          const remainingDays = allDays.filter((day) => !existingDays.has(day));
+          entry.days = remainingDays;            
+      }
+        return entry;
+    });
+    template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
+
     template.markModified("mealTemplate");
     await template.save();     
     }
