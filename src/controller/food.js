@@ -139,7 +139,11 @@ const getAllFood = async (req, res, next) => {
   try {
 
     const { source } = req.query;
+    const userId = req.userId;
     const filter = source ? { source } : {};
+    if (source === "My foods" && userId) {
+      filter.userId = userId;
+    }
 
     const page = parseInt(req.query.page) || 1;
     const limit = 5;

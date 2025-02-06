@@ -140,17 +140,18 @@ const deleteMealTemplate = async (req, res, next) => {
 
 const addNewMeal = async (req, res) => {
   try {
-    const { templateId, mealdays, mealType } = req.body;
-
+    const { templateId, _id, mealType } = req.body;
+    
     const template = await Template.findById(templateId);
-    if (!template) {
-      return res.status(404).json({ error: "Template not found" });
-    }
-
-    const existingMeals = template.mealTemplate[0].mealSchedule.filter((meal) =>
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    
+    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
+    console.log("variabel",variabel);
+    
+    const existingMeals = variabel[0].mealSchedule.filter((meal) =>
       meal.mealType.includes(mealType)
     );
-
+    console.log("existingMeals",existingMeals);
     let newMealType = mealType;
     if (existingMeals.length > 0) {
       const suffix = ["Second", "Third", "Fourth", "Fifth"];
@@ -161,9 +162,10 @@ const addNewMeal = async (req, res) => {
     let newMeal = {
       mealType: newMealType,
       time: "",
+      meal: [],
       Notes: "",
     };
-
+    
     if (mealType === "Dinner" || mealType === "Lunch") {
       newMeal = {
         ...newMeal,
@@ -179,7 +181,7 @@ const addNewMeal = async (req, res) => {
         time: "10:00 AM",
         meal: [],
       };
-
+      
       switch (newMeal.mealType) {
         case "BreakFast":
           newMeal.time = "7:00 AM";
@@ -204,22 +206,15 @@ const addNewMeal = async (req, res) => {
           break;
       }
     }
-
-    template.mealTemplate.forEach((meal) => {
-      if (meal.hasOwnProperty("days") && meal.days === mealdays) {
-        meal.mealSchedule.push(newMeal);
-      }
-    });
-
+     
+    variabel[0].mealSchedule.push(newMeal);
     template.markModified("mealTemplate");
-
     await template.save();
-
     const updatedTemplate = await Template.findById(templateId);
 
     return res.status(201).json({
       message: "Meal added successfully",
-      template: updatedTemplate,
+      template: template,
     });
   } catch (error) {
     console.error("Error adding meal:", error);
@@ -479,8 +474,10 @@ const addFoodInTemplate = async(req, res)=> {
 try {
     const { templateId ,_id, mealType ,foodId} =req.body
     const userId = req.userId;
+
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
+
     const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
     const food = await Food.find({ _id: foodId, userId: userId });
     
@@ -504,6 +501,24 @@ try {
 }
 }
 
+const updateMealPlanInTemplate = async(req, res)=> {
+  try {
+    const { templateId ,_id, mealType ,time} =req.body
+    const userId = req.userId;
+
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+
+    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
+    console.log("variabel",variabel);
+    
+
+  } catch (error) {
+  console.error("Error adding meal:", error);
+  return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 module.exports = {
   createMealTemplate,
   addNewMeal,
@@ -511,6 +526,7 @@ module.exports = {
   getMealTemplate,
   getMealTemplateById,
   deleteMealTemplate,
-  addFoodInTemplate
+  addFoodInTemplate,
+  updateMealPlanInTemplate
 };
 
