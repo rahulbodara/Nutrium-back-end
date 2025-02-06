@@ -140,14 +140,15 @@ const deleteMealTemplate = async (req, res, next) => {
 
 const addNewMeal = async (req, res) => {
   try {
-    const { templateId, _id, mealType } = req.body;
+    const { templateId, mealId, mealType } = req.body;
     
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
     
-    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
-    console.log("variabel",variabel);
-    
+    const variabel = template.mealTemplate.filter((entry) => {
+      return entry._id.toString() === mealId;
+    });
+        
     const existingMeals = variabel[0].mealSchedule.filter((meal) =>
       meal.mealType.includes(mealType)
     );
@@ -472,13 +473,13 @@ const createVersion = async (req, res) => {
 
 const addFoodInTemplate = async(req, res)=> {
 try {
-    const { templateId ,_id, mealType ,foodId} =req.body
+    const { templateId ,mealId, mealType ,foodId} =req.body
     const userId = req.userId;
 
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
 
-    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
+    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${mealId}` })
     const food = await Food.find({ _id: foodId, userId: userId });
     
     variabel[0].mealSchedule.map((entry) => {
