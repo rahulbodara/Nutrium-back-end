@@ -6,7 +6,7 @@ const { findById } = require("../model/Food");
 
 const createMealTemplate = async (req, res) => {
   try {
-    const { Name } = req.body;
+    const { Name , clientId } = req.body;
     const templateName = Name || "Meal plan template";
     const mealTemplate = {
       days: "Everyday",
@@ -61,11 +61,15 @@ const createMealTemplate = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized, user ID missing" });
     }
 
-    const newTemplate = await Template.create({
+    const templateData = {
       templateName,
       userId,
       mealTemplate,
-    });
+    };
+
+    if (clientId) templateData.clientId = clientId;
+  
+    const newTemplate = await Template.create(templateData);
 
     return res.status(201).json({
       message: "Template created successfully",

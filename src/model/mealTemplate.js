@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const TemplateSchema = new mongoose.Schema({
   templateName: { type: String, },
   userId: { type: String, required: true },
+  clientId: { type: String },
   mealTemplate: {type: [Object] , default: []}, 
 });
 
