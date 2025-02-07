@@ -366,32 +366,35 @@ const createVersion = async (req, res) => {
       mealSchedule : mealSchedule,
       _id: new mongoose.Types.ObjectId(),
     }))
+    const newDays = newMeal.flatMap(item => item.days);
 
-    const updateMealTemplate = (template, newMeal) => {
+    const updateMealTemplate = (template) => {
       template.mealTemplate = template.mealTemplate.map((entry) => {
-       
+
         if (entry.days === "Everyday") {
           entry.days = [];
         }
-        if (entry.days.some((day) => newMeal[0].days.includes(day))) {
-          entry.days = entry.days.filter((day) => !newMeal[0].days.includes(day));
-        }
-        template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
         return entry;
       });
-      template.mealTemplate.push(...newMeal);
-
-        template.mealTemplate = template.mealTemplate.map((entry) => {
-          if (entry.days.length === 0) {
-            const existingDays = new Set(template.mealTemplate.flatMap((item) => item.days));
-            const remainingDays = allDays.filter((day) => !existingDays.has(day));
-            entry.days = remainingDays;
-          }
-          return entry;
-        });
     };
 
-    updateMealTemplate(template, newMeal);
+    updateMealTemplate(template);
+
+    template.mealTemplate.forEach(entry => {
+      entry.days = entry.days.filter(day => !newDays.includes(day));
+    });
+    template.mealTemplate.push(...newMeal)
+
+    const missingDays = allDays.filter(day => 
+      !newDays.includes(day) && !template.mealTemplate.some(entry => entry.days.includes(day))
+    );
+    
+    for (const day of missingDays) {
+      const target = template.mealTemplate.find(entry => !newDays.some(d => entry.days.includes(d)));
+      if (target) target.days.push(day);
+    }
+    template.mealTemplate = template.mealTemplate.filter((entry) => entry.days.length > 0);
+
     template.markModified("mealTemplate");
     await template.save();     
     }
@@ -467,7 +470,7 @@ const createVersion = async (req, res) => {
 
     return res.status(201).json({
       message: "Meal added successfully",
-      template: template,
+      template,
     });
   } catch (error) {
     console.error("Error adding meal:", error);
@@ -534,4 +537,63 @@ module.exports = {
   addFoodInTemplate,
   updateMealPlanInTemplate
 };
+
+const data = [
+  {
+    days: ["Wednesday"],
+    mealSchedule: [
+      {
+        mealType: "BreakFast",
+        time: "7:00 AM",
+        meal: [],
+        Notes: ""
+      },
+      {
+        mealType: "Super",
+        time: "10:00 PM",
+        meal: [],
+        Notes: ""
+      }
+    ],
+    _id: "67a49c76e143c6f2c379f6da"
+  },
+  {
+    days: ["Tuesday"],
+    mealSchedule: [
+      {
+        mealType: "Breakfast",
+        time: "7:00 AM",
+        meal: [],
+        notes: ""
+      },
+      {
+        mealType: "Supper",
+        time: "10:00 PM",
+        meal: [],
+        notes: ""
+      }
+    ],
+    _id: "67a49cd6e143c6f2c379f6e9"
+  },
+  {
+    days: ["Friday", "Thursday", "Sunday"],
+    mealSchedule: [
+      {
+        mealType: "Breakfast",
+        time: "7:00 AM",
+        meal: [],
+        notes: ""
+      },
+      {
+        mealType: "Supper",
+        time: "10:00 PM",
+        meal: [],
+        notes: ""
+      }
+    ],
+    _id: "67a4a3a7f41c8b29e1125f7a"
+  }
+]
+
+const days = ['Tuesday', 'Wednesday' ]
 
