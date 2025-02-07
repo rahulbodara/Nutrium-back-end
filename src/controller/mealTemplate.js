@@ -12,7 +12,7 @@ const createMealTemplate = async (req, res) => {
       days: "Everyday",
       mealSchedule: [
         {
-          mealType: "BreakFast",
+          mealType: "Breakfast",
           time: "7:00 AM",
           meal: [],
           Notes: "",
@@ -184,7 +184,7 @@ const addNewMeal = async (req, res) => {
       };
       
       switch (newMeal.mealType) {
-        case "BreakFast":
+        case "Breakfast":
           newMeal.time = "7:00 AM";
           break;
         case "Morning snack":
@@ -235,9 +235,9 @@ const createVersion = async (req, res) => {
         days: selectedDesiredDays,
         mealSchedule: [
           { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-          { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+          { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
           { mealType: "Lunch", time: "12:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
-          { mealType: "Afternoon Snack", time: "4:00 PM", meal: [], notes: "" },
+          { mealType: "Afternoon snack", time: "4:00 PM", meal: [], notes: "" },
           { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
           { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
         ],
@@ -314,9 +314,9 @@ const createVersion = async (req, res) => {
         days: selectedDesiredDays,
         mealSchedule: [
           { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-          { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+          { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
           { mealType: "Lunch", time: "12:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
-          { mealType: "Afternoon Snack", time: "4:00 PM", meal: [], notes: "" },
+          { mealType: "Afternoon snack", time: "4:00 PM", meal: [], notes: "" },
           { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
           { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
         ],
@@ -354,9 +354,9 @@ const createVersion = async (req, res) => {
     if ( copyMealsOfMealPlan === "Do not copy" && creationMethod === "Create a version for each day") {
       const mealSchedule = [
         { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-        { mealType: "Morning Snack", time: "10:00 AM", meal: [], notes: "" },
+        { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
         { mealType: "Lunch", time: "12:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
-        { mealType: "Afternoon Snack", time: "4:00 PM", meal: [], notes: "" },
+        { mealType: "Afternoon snack", time: "4:00 PM", meal: [], notes: "" },
         { mealType: "Dinner", time: "7:00 PM", appetizer: [], dish: [], dessert: [], beverage: [], notes: "",},
         { mealType: "Supper", time: "10:00 PM", meal: [], notes: "" },
     ]
@@ -538,62 +538,4 @@ module.exports = {
   updateMealPlanInTemplate
 };
 
-const data = [
-  {
-    days: ["Wednesday"],
-    mealSchedule: [
-      {
-        mealType: "BreakFast",
-        time: "7:00 AM",
-        meal: [],
-        Notes: ""
-      },
-      {
-        mealType: "Super",
-        time: "10:00 PM",
-        meal: [],
-        Notes: ""
-      }
-    ],
-    _id: "67a49c76e143c6f2c379f6da"
-  },
-  {
-    days: ["Tuesday"],
-    mealSchedule: [
-      {
-        mealType: "Breakfast",
-        time: "7:00 AM",
-        meal: [],
-        notes: ""
-      },
-      {
-        mealType: "Supper",
-        time: "10:00 PM",
-        meal: [],
-        notes: ""
-      }
-    ],
-    _id: "67a49cd6e143c6f2c379f6e9"
-  },
-  {
-    days: ["Friday", "Thursday", "Sunday"],
-    mealSchedule: [
-      {
-        mealType: "Breakfast",
-        time: "7:00 AM",
-        meal: [],
-        notes: ""
-      },
-      {
-        mealType: "Supper",
-        time: "10:00 PM",
-        meal: [],
-        notes: ""
-      }
-    ],
-    _id: "67a4a3a7f41c8b29e1125f7a"
-  }
-]
-
-const days = ['Tuesday', 'Wednesday' ]
 
