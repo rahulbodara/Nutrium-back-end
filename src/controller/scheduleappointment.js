@@ -78,7 +78,7 @@ const getAllAppointments = async (req, res, next) => {
 const getAppointementDescription = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const appointments = await Appointment.find({ userId: userId,status:'completed' });
+    const appointments = await Appointment.find({ userId: userId, status: 'completed' });
 
     if (!appointments) {
       return res.status(404).json({ message: "Appointment not found!" });
@@ -187,6 +187,22 @@ const updateAppointementStatus = async (req, res, next) => {
   }
 }
 
+const getAppointmentByClientId = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+    const appointment = await Appointment.find({ clientId: clientId });
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found!" });
+    }
+
+    res.status(200).json(appointment);
+  } catch (error) {
+    console.error("Error getting appointment:", error);
+    next(error);
+  }
+}
+
 const updateStartAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
@@ -246,5 +262,6 @@ module.exports = {
   updateAppointementStatus,
   getAppointementDescription,
   updateStartAppointment,
-  getStartedAppointments
+  getStartedAppointments,
+  getAppointmentByClientId
 };
