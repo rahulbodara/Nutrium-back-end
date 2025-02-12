@@ -513,23 +513,34 @@ try {
 }
 }
 
-const updateMealPlanInTemplate = async(req, res)=> {
+const updateTimeAndSubMealTypeName = async (req, res) => {
   try {
-    const { templateId ,_id, mealType ,time} =req.body
+    const { templateId, mealId, mealType, time ,subMealTypeName} = req.body;
     const userId = req.userId;
 
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
 
-    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${_id}` })
-    console.log("variabel",variabel);
+    const mealTemplateEntry = template.mealTemplate.find((entry) => entry._id.toString() === mealId);
+    if (!mealTemplateEntry) return res.status(404).json({ error: "Meal entry not found" });
     
+    const scheduleEntry = mealTemplateEntry.mealSchedule.find((entry) => entry.mealType === mealType);
+    if (!scheduleEntry) return res.status(404).json({ error: "Meal type not found" });
+    
+    if (subMealTypeName) scheduleEntry.subMealTypeName = subMealTypeName;
+    if (time) scheduleEntry.time = time;
+    template.markModified("mealTemplate");
+    await template.save();
 
+    return res.status(200).json({
+      message: "Meal updated successfully",
+      template,
+    });
   } catch (error) {
-  console.error("Error adding meal:", error);
-  return res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error updating meal:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
 
 module.exports = {
   createMealTemplate,
@@ -539,7 +550,5 @@ module.exports = {
   getMealTemplateById,
   deleteMealTemplate,
   addFoodInTemplate,
-  updateMealPlanInTemplate
+  updateTimeAndSubMealTypeName
 };
-
-
