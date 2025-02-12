@@ -238,10 +238,10 @@ const SignIn = async (req, res, next) => {
     let isClient = false;
 
     if (!userDetails) {
-      console.log("🚀 ~ SignIn ~ email:", email)
-      userDetails = await Client.findOne({ email });
+      userDetails = await Client.findOne({ email })
       if (userDetails) {
         isClient = true;
+        isActive = 1;
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -278,6 +278,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 const VerifyExistingUser = async (req, res, next) => {
@@ -322,8 +323,8 @@ const VerifyExistingUser = async (req, res, next) => {
       token,
       message: "Login successfully",
       status: 200,
-      user:userDetails,
-      role: isClient ? "Client" : userDetails.role
+      user: userDetails,
+      role: isClient ? "client" : userDetails.role
     });
   } catch (error) {
     console.error(error);
@@ -336,7 +337,7 @@ const getUserProfile = async (req, res, next) => {
   try {
     const query = {
       _id: req.userId,
-      isActive: 1,
+
     };
 
     const user = await User.findOne(query).select('-password');

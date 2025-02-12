@@ -8,19 +8,31 @@ const {
   getRecommendations,
   createPhysicalActivity,
   getPhysicalActivity,
-  addPhysicalActivityObject
+  addPhysicalActivityObject,
+  setWaterIntakeLimit,
+  waterIntakeLimit,
+  setWaterIntake,
+  getWaterIntake
 } = require("../controller/recommendation");
 
-router.put('/recommendations/:clientId',isAuthenticated,createRecommendation);
+router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
 
-router.delete('/deleteActivity/:clientId/:objectId',isAuthenticated,deletePhysicalActivity);
+router.delete('/deleteActivity/:clientId/:objectId', isAuthenticated, deletePhysicalActivity);
 
-router.get('/recommendations/:clientId',isAuthenticated,getRecommendations);
+router.get('/recommendations/:clientId', isAuthenticated, getRecommendations);
 
-router.post('/createActivity',createPhysicalActivity);
+router.post('/createActivity', createPhysicalActivity);
 
-router.get('/activities',getPhysicalActivity);
+router.get('/activities', getPhysicalActivity);
 
-router.put('/addActivity/:clientId',isAuthenticated,addPhysicalActivityObject);
+router.put('/addActivity/:clientId', isAuthenticated, addPhysicalActivityObject);
+
+router.post("/setwaterintakelimit/:clientId", isAuthenticated, setWaterIntakeLimit)
+
+router.get("/getWaterIntakeLimit/:clientId", isAuthenticated, waterIntakeLimit)
+
+router.post("/setwaterintake/:clientId", isAuthenticated, setWaterIntake)
+
+router.get("/getWaterIntake/:clientId", isAuthenticated, getWaterIntake)
 
 module.exports = router;                                                             

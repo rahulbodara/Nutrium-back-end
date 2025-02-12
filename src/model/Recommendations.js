@@ -32,9 +32,6 @@ const recommendation_schema = new mongoose.Schema({
     foodAvoids: {
         type: [String]
     },
-    waterIntake: {
-        type: String
-    },
     recommendation: {
         type: String
     },
