@@ -327,9 +327,6 @@ const setWaterIntake = async (req, res) => {
 };
 
 
-
-
-
 const getWaterIntake = async (req, res, next) => {
     try {
         const clientId = req.params.clientId;
@@ -347,53 +344,77 @@ const getWaterIntake = async (req, res, next) => {
 }
 
 
-// const updateWaterIntake = async (req, res, next) => {
-//     try {
-//         const waterIntakeId = req.params.waterIntakeId;
-//         const userId = req.userId;
-//         const { waterIntake, date, time } = req.body;
+const updateWaterIntake = async (req, res) => {
+    try {
+        const { waterIntakeId, waterRecordId, waterIntakeAmountId } = req.params;
+        const userId = req.userId;
+        let { waterIntake, date, time } = req.body;
 
-//         // Ensure recordDate is in UTC format (start of the day)
-//         const recordDate = date ? new Date(date) : new Date();
-//         recordDate.setUTCHours(0, 0, 0, 0);
+        let waterIntakeData = await WaterIntake.findOne({ _id: waterIntakeId, userId });
 
-//         // Use provided time or default to current time
-//         const recordTime = time.toISOString() || new Date().toISOString().split('T')[1].split('.')[0];
+        if (!waterIntakeData) {
+            return res.status(404).json({ message: "Water intake data not found." });
+        }
 
-//         // Find the water intake record
-//         const waterIntakeData = await WaterIntake.findOne({ _id: waterIntakeId, userId });
+        let existingDateRecord = waterIntakeData.waterIntakeRecords.find(record =>
+            record._id.toString() === waterRecordId
+        );
 
-//         if (!waterIntakeData) {
-//             return res.status(404).json({ message: 'Water intake data not found.' });
-//         }
+        if (!existingDateRecord) {
+            return res.status(404).json({ message: "Water record for the specified date not found." });
+        }
 
-//         // Check if a record for the given date exists
-//         const existingRecord = waterIntakeData.waterIntakeRecords.find(record =>
-//             new Date(record.date).getTime() === recordDate.getTime()
-//         );
+        if (date) {
+            existingDateRecord.date = new Date(date);
+        }
 
-//         if (existingRecord) {
-//             // If the date exists, update the existing record by pushing new time and intake
-//             existingRecord.waterIntakeAmount.push({ amount: `${waterIntake}ml`, time: recordTime });
-//         } else {
-//             // If no record for the date, create a new entry
-//             waterIntakeData.waterIntakeRecords.push({
-//                 date: recordDate,
-//                 waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime }]
-//             });
-//         }
+        let recordTime;
+        if (time) {
+            const [hours, minutes] = time.split(":").map(Number);
+            recordTime = new Date(Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate(),
+                hours, minutes, 0
+            )).toISOString().split("T")[1].split(".")[0];
+        } else {
+            recordTime = new Date().toISOString().split("T")[1].split(".")[0];
+        }
 
-//         // Save the updated document
-//         await waterIntakeData.save();
+        let existingWaterRecord = existingDateRecord.waterIntakeAmount.find(entry =>
+            entry._id.toString() === waterIntakeAmountId
+        );
 
-//         return res.status(200).json({ success: true, waterIntakeData });
+        if (existingWaterRecord) {
+            existingWaterRecord.amount = waterIntake !== undefined ? `${waterIntake}ml` : existingWaterRecord.amount;
+            existingWaterRecord.time = recordTime;
+        } else {
+            let existingTimeRecord = existingDateRecord.waterIntakeAmount.find(entry =>
+                entry.time === recordTime
+            );
 
-//     } catch (error) {
-//         console.error('Error updating water intake:', error);
-//         return res.status(500).json({ message: 'Internal server error.' });
-//     }
-// };
+            if (existingTimeRecord) {
+                existingTimeRecord.amount = waterIntake !== undefined ? `${waterIntake}ml` : existingTimeRecord.amount;
+            } else {
+                existingDateRecord.waterIntakeAmount.push({
+                    _id: new mongoose.Types.ObjectId(),
+                    amount: waterIntake !== undefined ? `${waterIntake}ml` : "0ml",
+                    time: recordTime,
+                });
+            }
+        }
+        await waterIntakeData.save();
 
+        return res.status(200).json({
+            success: true,
+            message: "Water intake record updated successfully.",
+            data: waterIntakeData,
+        });
+    } catch (error) {
+        console.error("Error updating water intake:", error);
+        return res.status(500).json({ message: "Internal server error." });
+    }
+};
 
 
 module.exports = {
@@ -407,5 +428,5 @@ module.exports = {
     waterIntakeLimit,
     setWaterIntake,
     getWaterIntake,
-    // updateWaterIntake
+    updateWaterIntake
 }
