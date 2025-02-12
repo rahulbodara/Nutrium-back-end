@@ -5,6 +5,7 @@ const multer = require('multer');
 const { isAuthenticated } = require('../middleware/auth');
 const { createPersonalDetail } = require('../controller/personalPage');
 const upload = require('../middleware/imageHandler');
+const uploadMessage = require('../middleware/messageMiddleware');
 
 
 userRoute.post('/sign_up', upload.single('image'), userController.SignUp);
@@ -31,5 +32,9 @@ userRoute.put('/professionals/website', isAuthenticated, createPersonalDetail);
 userRoute.post('/createClientByForm/:clientId',isAuthenticated,userController.createClientByForm)
 
 userRoute.get('/getFormData/:clientId',isAuthenticated,userController.printPdfData)
+
+userRoute.get('/getUser',isAuthenticated,userController.getUser);
+
+userRoute.post('/upload',uploadMessage.single("file"),userController.uploadMessage);
 
 module.exports = userRoute;

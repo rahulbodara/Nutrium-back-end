@@ -44,6 +44,8 @@ const fs = require('fs');
 const { getPdfData } = require('./controller/user');
 const socketIo = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
+const multer = require("./middleware/messageMiddleware");
+const cloudinary = require("./db/cloudinary");
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -68,7 +70,7 @@ const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://nutrium-front-end-six.vercel.app'],
+  origin: ['http://localhost:3000', 'https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -124,10 +126,15 @@ io.on("connection", (socket) => {
 
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
+    console.log("🚀 ~ socket.on ~ file:", file)
     try {
       const roomId = getRoomId(senderId, receiverId);
-      const newMessage = new Message({ senderId, receiverId, message, roomId });
+      let fileUrl = null;
+      if (file) {
+          fileUrl = file;
+      }
+      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);

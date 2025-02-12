@@ -56,12 +56,12 @@ const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     const allowedExtensions =
-      /\.(gif|jpe?g|tiff?|png|webp|bmp|pdf|docx?|xlsx?)$/i;
+      /\.(gif|jpe?g|tiff?|png|webp|bmp)$/i;
 
     if (!file.originalname.match(allowedExtensions)) {
       req.fileValidationError = 'Only JPG, PNG, PDF, DOC, or Excel allowed!';
       return cb('Only .jpg, .png, .pdf, .doc, or .xlsx are allowed!', false);
-    } else if (file.size >= 10485760) {  // 10MB limit
+    } else if (file.size >= 10485760) { 
       req.fileValidationError = 'File size should be 10MB or less.';
       return cb('File size should be 10MB or less.', false);
     }

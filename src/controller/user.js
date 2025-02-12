@@ -33,6 +33,8 @@ const ClientFile = require('../model/ClientFile');
 const html_to_pdf = require('html-pdf-node');
 const Measurements = require('../model/Measurements');
 const Lookup = require('../model/lookupUser');
+const multer = require("../middleware/messageMiddleware");
+const cloudinary = require("../db/cloudinary");
 
 const SignUp = async (req, res, next) => {
   try {
@@ -923,6 +925,47 @@ const printPdfData = async (req, res, next) => {
   }
 }
 
+const getUser = async (req,res,next) => {
+  try {
+
+    const userId = req.userId;
+
+    const user = await User.findOne({_id:userId});
+    if(!user){
+      return res.status(404).json({message:"User not found"});
+    }
+
+    return res.status(200).json({message:"User retrieved successfully",data:user})
+    
+  } catch (error) {
+    console.log("🚀 ~ getUser ~ error:", error)
+  }
+}
+
+const uploadMessage = async (req,res, next) => {
+  try {
+
+    console.log("🚀 ~ app.post ~ req.file:", req.file)
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    if (req.file.mimetype.startsWith("image/")) {
+      cloudinary.uploader.upload(req.file.path, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ url: result.secure_url });
+      });
+    } else if (req.file.mimetype.startsWith("application/")) {
+      res.json({ url: `${req.file.filename}` });
+    } else {
+      res.status(400).json({ error: "Invalid file type" });
+    }
+  } catch (error) {
+    console.log("🚀 ~ app.post ~ error:", error)
+
+  }
+}
+
 
 module.exports = {
   SignUp,
@@ -937,5 +980,7 @@ module.exports = {
   VerifyExistingUser,
   createClientByForm,
   getPdfData,
-  printPdfData
+  printPdfData,
+  getUser,
+  uploadMessage
 };
