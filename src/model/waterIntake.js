@@ -24,9 +24,6 @@ const waterIntakeSchema = new mongoose.Schema({
             date: {
                 type: Date,
             },
-            time: {
-                type: String,
-            },
             DailyGoal: {
                 type: Number,
                 default: 0
@@ -37,6 +34,9 @@ const waterIntakeSchema = new mongoose.Schema({
                         type: String,
                         required: true,
                         default: "0ml"
+                    },
+                    time: {
+                        type: String,
                     },
 
                 }

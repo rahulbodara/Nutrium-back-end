@@ -188,6 +188,7 @@ const setWaterIntakeLimit = async (req, res) => {
         const clientId = req.params.clientId;
         const userId = req.userId;
         const { waterIntakeLimit } = req.body;
+        console.log("🚀 ~ setWaterIntakeLimit ~ req.body:", req.body)
 
         if (!waterIntakeLimit || isNaN(waterIntakeLimit) || waterIntakeLimit <= 0) {
             return res.status(400).json({ message: 'Valid water intake limit is required.' });
@@ -275,8 +276,15 @@ const setWaterIntake = async (req, res) => {
         const recordDate = date ? new Date(date) : new Date();
         recordDate.setUTCHours(0, 0, 0, 0);
 
-        const recordTime = time || new Date().toISOString().split('T')[1].split('.')[0];
-
+        let recordTime;
+        if (time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            const utcTime = new Date(Date.UTC(recordDate.getUTCFullYear(), recordDate.getUTCMonth(), recordDate.getUTCDate(), hours, minutes, 0));
+            recordTime = utcTime.toISOString().split('T')[1].split('.')[0]; // Store as HH:mm:ss
+        } else {
+            const nowUtc = new Date();
+            recordTime = nowUtc.toISOString().split('T')[1].split('.')[0];
+        }
         let waterIntakeData = await WaterIntake.findOne({ clientId, userId });
 
         if (!waterIntakeData) {
@@ -286,8 +294,7 @@ const setWaterIntake = async (req, res) => {
                 waterIntakeRecords: [
                     {
                         date: recordDate,
-                        time: recordTime,
-                        waterIntakeAmount: [{ amount: `${waterIntake}ml` }]
+                        waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime, }]
                     }
                 ]
             });
@@ -301,8 +308,7 @@ const setWaterIntake = async (req, res) => {
             } else {
                 waterIntakeData.waterIntakeRecords.push({
                     date: recordDate,
-                    time: recordTime,
-                    waterIntakeAmount: [{ amount: `${waterIntake}ml` }]
+                    waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime, }]
                 });
             }
         }
@@ -341,6 +347,54 @@ const getWaterIntake = async (req, res, next) => {
 }
 
 
+// const updateWaterIntake = async (req, res, next) => {
+//     try {
+//         const waterIntakeId = req.params.waterIntakeId;
+//         const userId = req.userId;
+//         const { waterIntake, date, time } = req.body;
+
+//         // Ensure recordDate is in UTC format (start of the day)
+//         const recordDate = date ? new Date(date) : new Date();
+//         recordDate.setUTCHours(0, 0, 0, 0);
+
+//         // Use provided time or default to current time
+//         const recordTime = time.toISOString() || new Date().toISOString().split('T')[1].split('.')[0];
+
+//         // Find the water intake record
+//         const waterIntakeData = await WaterIntake.findOne({ _id: waterIntakeId, userId });
+
+//         if (!waterIntakeData) {
+//             return res.status(404).json({ message: 'Water intake data not found.' });
+//         }
+
+//         // Check if a record for the given date exists
+//         const existingRecord = waterIntakeData.waterIntakeRecords.find(record =>
+//             new Date(record.date).getTime() === recordDate.getTime()
+//         );
+
+//         if (existingRecord) {
+//             // If the date exists, update the existing record by pushing new time and intake
+//             existingRecord.waterIntakeAmount.push({ amount: `${waterIntake}ml`, time: recordTime });
+//         } else {
+//             // If no record for the date, create a new entry
+//             waterIntakeData.waterIntakeRecords.push({
+//                 date: recordDate,
+//                 waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime }]
+//             });
+//         }
+
+//         // Save the updated document
+//         await waterIntakeData.save();
+
+//         return res.status(200).json({ success: true, waterIntakeData });
+
+//     } catch (error) {
+//         console.error('Error updating water intake:', error);
+//         return res.status(500).json({ message: 'Internal server error.' });
+//     }
+// };
+
+
 
 module.exports = {
     createRecommendation,
@@ -352,5 +406,6 @@ module.exports = {
     setWaterIntakeLimit,
     waterIntakeLimit,
     setWaterIntake,
-    getWaterIntake
+    getWaterIntake,
+    // updateWaterIntake
 }
