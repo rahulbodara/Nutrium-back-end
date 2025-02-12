@@ -417,6 +417,64 @@ const updateWaterIntake = async (req, res) => {
 };
 
 
+
+const deleteWaterIntake = async (req, res) => {
+    try {
+        const { waterIntakeId, waterRecordId, waterIntakeAmountId } = req.params;
+        const userId = req.userId;
+
+        // Find the user's water intake document
+        let waterIntakeData = await WaterIntake.findOne({ _id: waterIntakeId, userId });
+
+        if (!waterIntakeData) {
+            return res.status(404).json({ message: "Water intake data not found." });
+        }
+
+        if (waterRecordId && waterIntakeAmountId) {
+            // ✅ Case 1: Delete a single water intake entry by ID
+            let dateRecord = waterIntakeData.waterIntakeRecords.find(record => record._id.toString() === waterRecordId);
+            if (!dateRecord) {
+                return res.status(404).json({ message: "Water record not found." });
+            }
+
+            let initialLength = dateRecord.waterIntakeAmount.length;
+            dateRecord.waterIntakeAmount = dateRecord.waterIntakeAmount.filter(entry => entry._id.toString() !== waterIntakeAmountId);
+
+            if (dateRecord.waterIntakeAmount.length === initialLength) {
+                return res.status(404).json({ message: "Water intake entry not found." });
+            }
+
+            // Remove empty date records
+            waterIntakeData.waterIntakeRecords = waterIntakeData.waterIntakeRecords.filter(record => record.waterIntakeAmount.length > 0);
+
+        } else if (waterRecordId) {
+            // ✅ Case 2: Delete an entire water record for a date
+            let initialLength = waterIntakeData.waterIntakeRecords.length;
+            waterIntakeData.waterIntakeRecords = waterIntakeData.waterIntakeRecords.filter(record => record._id.toString() !== waterRecordId);
+
+            if (waterIntakeData.waterIntakeRecords.length === initialLength) {
+                return res.status(404).json({ message: "Water record not found." });
+            }
+        } else {
+            // ✅ Case 3: Delete all water intake records for the user
+            waterIntakeData.waterIntakeRecords = [];
+        }
+
+        await waterIntakeData.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Water intake data deleted successfully.",
+            data: waterIntakeData,
+        });
+
+    } catch (error) {
+        console.error("Error deleting water intake:", error);
+        return res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+
 module.exports = {
     createRecommendation,
     deletePhysicalActivity,
@@ -428,5 +486,6 @@ module.exports = {
     waterIntakeLimit,
     setWaterIntake,
     getWaterIntake,
-    updateWaterIntake
+    updateWaterIntake,
+    deleteWaterIntake,
 }

@@ -13,7 +13,8 @@ const {
   waterIntakeLimit,
   setWaterIntake,
   getWaterIntake,
-  updateWaterIntake
+  updateWaterIntake,
+  deleteWaterIntake
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
@@ -37,5 +38,7 @@ router.post("/setwaterintake/:clientId", isAuthenticated, setWaterIntake)
 router.get("/getWaterIntake/:clientId", isAuthenticated, getWaterIntake)
 
 router.put("/updatewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountId", isAuthenticated, updateWaterIntake)
+
+router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId?/:waterIntakeAmountId?", isAuthenticated, deleteWaterIntake);
 
 module.exports = router;                                                             
