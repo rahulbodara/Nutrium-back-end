@@ -576,19 +576,20 @@ const deleteDayInTemplate = async (req, res, next) => {
 
 const deleteFoodInTemplate = async (req, res, next) => {
   try {
-    const { templateId, mealId, mealType } = req.body;
+    const { templateId, mealId, mealType ,foodIndex} = req.body;
     
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
-    console.log("template",template.mealTemplate);
-    
+
     const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
+
     if (index !== -1) {
-      const copiedDays = template.mealTemplate[index].days;
-      console.log("copiedDays",copiedDays);
-      
-      template.mealTemplate.splice(index, 1);
-      template.mealTemplate[0].days.push(...copiedDays);
+      template.mealTemplate[index].mealSchedule.forEach((entry)=>{ 
+        if(entry.mealType === `${mealType}`) {
+          const index = entry.meal.findIndex(item => item?.foodIndex?.toString() === foodIndex);
+          if (index !== -1) entry.meal.splice(index, 1);
+        }
+      })
   }
     
     template.markModified("mealTemplate");
@@ -653,5 +654,7 @@ const mealUpdateResponse = {
       __v: 8
   }
 };
+
+
 
 
