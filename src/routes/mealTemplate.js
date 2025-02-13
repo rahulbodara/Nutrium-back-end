@@ -9,7 +9,8 @@ const {
   getMealTemplateById,
   deleteMealTemplate,
   addFoodInTemplate,
-  updateTimeAndSubMealTypeName
+  updateTimeAndSubMealTypeName,
+  deleteDayInTemplate
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
@@ -21,6 +22,7 @@ router.post('/addNewMeal', addNewMeal);
 router.post('/createVersion', createVersion);
 router.post('/addFoodInTemplate', isAuthenticated, addFoodInTemplate);
 router.post('/updateMealPlanInTemplate', isAuthenticated, updateTimeAndSubMealTypeName);
+router.post('/deleteDayinTemplate', isAuthenticated, deleteDayInTemplate);
 
 module.exports = router;
 
