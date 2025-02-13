@@ -8,72 +8,54 @@ const createRecommendation = async (req, res, next) => {
     try {
         const userId = req.userId;
         const clientId = req.params.clientId;
-        const { physicalActivity, foodAvoids, waterIntake, recommendation } = req.body;
+        const { physicalActivity = [], foodAvoids, waterIntake, recommendation } = req.body;
 
-        const filter = {
-            userId: userId,
-            clientId: clientId
-        };
+        const filter = { userId, clientId };
 
-        const existingRecommendation = await client_Recommendation.findOne(filter);
+        let existingRecommendation = await client_Recommendation.findOne(filter);
 
-        if (existingRecommendation) {
-            if (physicalActivity && !physicalActivity._id) {
-                existingRecommendation.physicalActivity.push([physicalActivity]);
-            } else if (physicalActivity) {
-                let matchingSubarrayIndex = -1;
-
-                existingRecommendation.physicalActivity.some((subarray, index) => {
-                    if (subarray.some(obj => obj._id.toString() === physicalActivity._id)) {
-                        matchingSubarrayIndex = index;
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (matchingSubarrayIndex !== -1) {
-                    existingRecommendation.physicalActivity[matchingSubarrayIndex].push({ ...physicalActivity, _id: mongoose.Schema.Types.objectId });
-                } else {
-                    existingRecommendation.physicalActivity.push([physicalActivity]);
-                }
-            }
-
-            if (foodAvoids !== undefined) {
-                existingRecommendation.foodAvoids = foodAvoids;
-            }
-            if (waterIntake !== undefined) {
-                existingRecommendation.waterIntake = waterIntake;
-            }
-            if (recommendation !== undefined) {
-                existingRecommendation.recommendation = recommendation;
-            }
-
-            await existingRecommendation.save();
-
-            res.status(200).json({ success: true, data: existingRecommendation });
-        } else {
+        if (!existingRecommendation) {
+            // If no existing record, create a new one with a FLAT ARRAY of objects
             const newRecommendation = new client_Recommendation({
                 userId,
                 clientId,
-                physicalActivity: physicalActivity ? [[physicalActivity]] : [],
+                physicalActivity: physicalActivity.map(act => ({ ...act, _id: new mongoose.Types.ObjectId() })),
                 foodAvoids,
                 waterIntake,
-                recommendation
+                recommendation,
             });
 
             await newRecommendation.save();
-
-            res.status(200).json({ success: true, data: newRecommendation });
+            return res.status(200).json({ success: true, data: newRecommendation });
         }
+
+        // Ensure physicalActivity is properly structured as a FLAT array
+        if (!Array.isArray(existingRecommendation.physicalActivity)) {
+            existingRecommendation.physicalActivity = [];
+        }
+
+        // Add new activities if they don't already exist
+        physicalActivity.forEach((newActivity) => {
+            const exists = existingRecommendation.physicalActivity.some(act => act.activity === newActivity.activity);
+
+            if (!exists) {
+                existingRecommendation.physicalActivity.push({ ...newActivity, _id: new mongoose.Types.ObjectId() });
+            }
+        });
+
+        // Update other fields if provided
+        if (foodAvoids !== undefined) existingRecommendation.foodAvoids = foodAvoids;
+        if (waterIntake !== undefined) existingRecommendation.waterIntake = waterIntake;
+        if (recommendation !== undefined) existingRecommendation.recommendation = recommendation;
+
+        await existingRecommendation.save();
+
+        res.status(200).json({ success: true, data: existingRecommendation });
     } catch (err) {
-        console.log(err);
+        console.error("Error in createRecommendation:", err);
         next(err);
     }
 };
-
-
-
-
 
 const addPhysicalActivityObject = async (req, res, next) => {
     try {
@@ -98,44 +80,52 @@ const addPhysicalActivityObject = async (req, res, next) => {
 }
 
 const deletePhysicalActivity = async (req, res, next) => {
-
-    const { clientId, objectId } = req.params;
-
     try {
-        const client = await client_Recommendation.findOne({ clientId: clientId });
+        const { clientId, objectId } = req.params;
+
+        // Find client recommendation
+        const client = await client_Recommendation.findOne({ clientId });
+
         if (!client) {
             return res.status(404).json({ message: 'Client not found' });
         }
-        let activity = client.physicalActivity.map(object => {
-            const data = object.map(item => {
-                if (item._id.toString() !== objectId) {
-                    return item
-                }
-            }
-            )
-            return data;
-        });
 
-        let data = activity.map(subArray => subArray.filter(item => item));
+        // Flatten the nested array
+        let flattenedActivities = client.physicalActivity.flat();
 
-        client.physicalActivity = data;
+        // Check if physicalActivity exists
+        if (!flattenedActivities.length) {
+            return res.status(404).json({ message: 'No activities found' });
+        }
 
-        if (!activity) {
+        // Filter out the activity with the given `objectId`
+        const initialLength = flattenedActivities.length;
+        flattenedActivities = flattenedActivities.filter(item => item?._id?.toString() !== objectId);
+
+        // Check if anything was removed
+        if (flattenedActivities.length === initialLength) {
             return res.status(404).json({ message: 'Activity not found' });
         }
 
-        const result = await client.save()
+        // Assign the modified activities back to the original structure (re-nesting)
+        client.physicalActivity = flattenedActivities;
+
+        // Save updated document
+        const result = await client.save();
 
         return res.status(200).json({ message: 'Activity removed successfully', data: result });
-    }
-    catch (err) {
+    } catch (err) {
+        console.error("Error in deletePhysicalActivity:", err);
         next(err);
     }
-}
+};
+
+
+
 const getRecommendations = async (req, res, next) => {
     try {
         const clientId = req.params.clientId;
-        const recommendations = await client_Recommendation.find({ clientId: clientId });
+        const recommendations = await client_Recommendation.findOne({ clientId: clientId });
         if (!recommendations) {
             return res.status(404).json({ message: 'Recommendations not found' });
         }
@@ -181,7 +171,6 @@ const getPhysicalActivity = async (req, res, next) => {
         next(err);
     }
 }
-
 
 const setWaterIntakeLimit = async (req, res) => {
     try {
@@ -237,6 +226,7 @@ const setWaterIntakeLimit = async (req, res) => {
         await waterIntakeRecord.save();
 
         return res.status(200).json({
+            success: true,
             waterIntakeLimit: waterIntakeRecord.waterIntakeLimit
         });
 
@@ -245,8 +235,6 @@ const setWaterIntakeLimit = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 };
-
-
 
 const waterIntakeLimit = async (req, res) => {
     try {
@@ -260,8 +248,6 @@ const waterIntakeLimit = async (req, res) => {
     }
 
 }
-
-
 
 const setWaterIntake = async (req, res) => {
     try {
@@ -325,7 +311,6 @@ const setWaterIntake = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 };
-
 
 const getWaterIntake = async (req, res, next) => {
     try {

@@ -39,6 +39,6 @@ router.get("/getWaterIntake/:clientId", isAuthenticated, getWaterIntake)
 
 router.put("/updatewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountId", isAuthenticated, updateWaterIntake)
 
-router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId?/:waterIntakeAmountId?", isAuthenticated, deleteWaterIntake);
+router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountId", isAuthenticated, deleteWaterIntake);
 
 module.exports = router;                                                             
