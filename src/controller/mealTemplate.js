@@ -490,18 +490,20 @@ try {
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({ error: "Template not found" });
 
-    const variabel = template.mealTemplate.filter((entry)=>{ return entry._id.toString() === `${mealId}` })
-    const food = await Food.find({ _id: foodId, userId: userId });
+    const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
+    const food = await Food.findOne({ _id: foodId });
     
-    variabel[0].mealSchedule.map((entry) => {
-      if (entry.mealType === `${mealType}`) {
-        entry.meal.push({ displayName:`${food[0].displayName}`,or : []});
-      }
-      return entry;
-    });
+    template.mealTemplate[index].mealSchedule.forEach((entry)=>{ 
+      if(entry.mealType === `${mealType}`) entry.meal.push({
+         displayName:`${food.displayName}`,
+        foodId : `${food._id}`,
+        or : [],
+        foodIndex: new mongoose.Types.ObjectId(),
+      });
+    })
     
     template.markModified("mealTemplate");
-      await template.save();
+    await template.save();
    
     return res.status(201).json({
       message: "Meal added successfully",
@@ -572,6 +574,36 @@ const deleteDayInTemplate = async (req, res, next) => {
   }
 };
 
+const deleteFoodInTemplate = async (req, res, next) => {
+  try {
+    const { templateId, mealId, mealType } = req.body;
+    
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    console.log("template",template.mealTemplate);
+    
+    const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
+    if (index !== -1) {
+      const copiedDays = template.mealTemplate[index].days;
+      console.log("copiedDays",copiedDays);
+      
+      template.mealTemplate.splice(index, 1);
+      template.mealTemplate[0].days.push(...copiedDays);
+  }
+    
+    template.markModified("mealTemplate");
+    await template.save();
+
+    return res.status(200).json({
+      message: "Meal updated successfully",
+      template,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 module.exports = {
   createMealTemplate,
   addNewMeal,
@@ -581,7 +613,8 @@ module.exports = {
   deleteMealTemplate,
   addFoodInTemplate,
   updateTimeAndSubMealTypeName,
-  deleteDayInTemplate
+  deleteDayInTemplate,
+  deleteFoodInTemplate
 };
 
 
