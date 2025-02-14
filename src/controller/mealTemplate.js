@@ -605,6 +605,61 @@ const deleteFoodInTemplate = async (req, res, next) => {
   }
 };
 
+const deleteMealScheduleInTemplate = async (req, res, next) => {
+  try {
+    const { templateId, mealId, mealType } = req.body;
+
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    
+    const mealIndex = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
+
+    if (mealIndex !== -1) {
+
+    const scheduleIndex = template.mealTemplate[mealIndex].mealSchedule.findIndex((entry) => entry.mealType === mealType);
+    if (scheduleIndex !== -1) template.mealTemplate[mealIndex].mealSchedule.splice(scheduleIndex, 1);
+      
+    }
+
+    template.markModified("mealTemplate");
+    await template.save();
+
+    return res.status(200).json({
+      message: "Meal schedule deleted successfully",
+      template,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+//***********************************/ Mobile Apis /***********************************
+
+const featchMealPlanForClient = async (req, res, next) => {
+  try {
+    const { clientId } = req.params;
+    
+    if (!clientId) {
+      return res.status(400).json({ error: "clientId ID is required" });
+    }
+
+    const template = await Template.find({clientId});
+
+    if (!template) {
+      return res.status(404).json({ error: "Meal plan not found" });
+    }
+
+    return res.status(200).json({
+      message: "Meal plan fetched successfully",
+      template,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 module.exports = {
   createMealTemplate,
   addNewMeal,
@@ -615,7 +670,9 @@ module.exports = {
   addFoodInTemplate,
   updateTimeAndSubMealTypeName,
   deleteDayInTemplate,
-  deleteFoodInTemplate
+  deleteFoodInTemplate,
+  deleteMealScheduleInTemplate,
+  featchMealPlanForClient
 };
 
 
@@ -654,6 +711,7 @@ const mealUpdateResponse = {
       __v: 8
   }
 };
+
 
 
 
