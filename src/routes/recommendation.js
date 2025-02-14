@@ -18,7 +18,8 @@ const {
   addPhysicalActivityByClient,
   getPhysicalActivityByClient,
   updatePhysicalActivityByClient,
-  deletePhysicalActivityByClient
+  deletePhysicalActivityByClient,
+  deleteAllPhysicalActivitiesByClient
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
@@ -52,5 +53,7 @@ router.get("/client-physical-activity/:clientId", isAuthenticated, getPhysicalAc
 router.put("/update-physical-activity/:clientId/:activityId", isAuthenticated, updatePhysicalActivityByClient)
 
 router.delete("/delete-physical-activity/:clientId/:activityId", isAuthenticated, deletePhysicalActivityByClient)
+
+router.delete("/delete-physical-activity/:clientId", isAuthenticated, deleteAllPhysicalActivitiesByClient)
 
 module.exports = router;                                                             

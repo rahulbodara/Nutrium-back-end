@@ -581,6 +581,35 @@ const deletePhysicalActivityByClient = async (req, res) => {
 
 
 
+const deleteAllPhysicalActivitiesByClient = async (req, res) => {
+    try {
+        const { clientId } = req.params;
+
+        let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
+
+        if (!clientData) {
+            return res.status(404).json({ message: "Client record not found." });
+        }
+
+        clientData.physicalActivity = [];
+
+        await clientData.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "All activities deleted successfully",
+            data: clientData
+        });
+
+    } catch (error) {
+        console.error("Error in deleteAllPhysicalActivitiesByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+
+
 
 
 module.exports = {
@@ -599,5 +628,6 @@ module.exports = {
     addPhysicalActivityByClient,
     getPhysicalActivityByClient,
     updatePhysicalActivityByClient,
-    deletePhysicalActivityByClient
+    deletePhysicalActivityByClient,
+    deleteAllPhysicalActivitiesByClient
 }
