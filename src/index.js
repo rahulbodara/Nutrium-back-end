@@ -105,75 +105,11 @@ const io = socketIo(server, {
   }
 })
 
-// const activeRooms = new Map();
-
-// function getRoomId(senderId, receiverId) {
-//   const sortedIds = [senderId, receiverId].sort();
-//   const roomId = sortedIds.join('-');
-//   if (!activeRooms.has(roomId)) {
-//     activeRooms.set(roomId, uuidv4());
-//   }
-//   return activeRooms.get(roomId);
-// }
-
-// io.on("connection", (socket) => {
-//   console.log('New client connected', socket.id);
-
-//   socket.on("join", ({ userId, otherUserId }) => {
-//     const roomId = getRoomId(userId, otherUserId);
-//     socket.join(roomId);
-//     console.log(`User ${userId} joined room ${roomId}`);
-
-//   });
-
-//   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
-//     console.log("🚀 ~ socket.on ~ file:", file)
-//     try {
-//       const roomId = getRoomId(senderId, receiverId);
-//       let fileUrl = null;
-//       if (file) {
-//           fileUrl = file;
-//       }
-//       const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
-//       await newMessage.save();
-
-//       console.log(`Sending message to room ${roomId}`);
-
-//       io.to(roomId).emit('receiveMessage', newMessage);
-//       io.to(socket.id).emit('messageSent', newMessage);
-
-//     } catch (error) {
-//       console.log("Error in sendMessage:", error);
-//     }
-//   });
-
-//   socket.on('getHistory', async ({ userId, otherUserId }) => {
-//     console.log("Getting history between:", userId, otherUserId);
-//     try {
-//       const messages = await Message.find({
-//         $or: [
-//           { senderId: userId, receiverId: otherUserId },
-//           { senderId: otherUserId, receiverId: userId },
-//         ]
-//       }).sort({ timestamp: 1 });
-//       console.log("🚀 ~ socket.on ~ messages:", messages)
-
-//       io.to(socket.id).emit("chatHistory", messages);
-//     } catch (error) {
-//       console.log("Error in getHistory:", error);
-//     }
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log('user disconnected');
-//   })
-// });
-
 const activeRooms = new Map();
 
-function getRoomId(senderId, receiverId, messageType) {
+function getRoomId(senderId, receiverId) {
   const sortedIds = [senderId, receiverId].sort();
-  const roomId = `${sortedIds.join('-')}-${messageType}`;
+  const roomId = sortedIds.join('-');
   if (!activeRooms.has(roomId)) {
     activeRooms.set(roomId, uuidv4());
   }
@@ -183,38 +119,44 @@ function getRoomId(senderId, receiverId, messageType) {
 io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
-  socket.on("join", ({ userId, otherUserId, messageType }) => {
-    const roomId = getRoomId(userId, otherUserId, messageType);
+  socket.on("join", ({ userId, otherUserId }) => {
+    const roomId = getRoomId(userId, otherUserId);
     socket.join(roomId);
     console.log(`User ${userId} joined room ${roomId}`);
+
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message, file, messageType }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
+    console.log("🚀 ~ socket.on ~ file:", file)
     try {
-      const roomId = getRoomId(senderId, receiverId, messageType);
-      let fileUrl = file || null;
-
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, messageType });
+      const roomId = getRoomId(senderId, receiverId);
+      let fileUrl = null;
+      if (file) {
+          fileUrl = file;
+      }
+      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);
 
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', newMessage);
+
     } catch (error) {
       console.log("Error in sendMessage:", error);
     }
   });
 
-  socket.on('getHistory', async ({ userId, otherUserId, messageType }) => {
-    console.log("Getting history between:", userId, otherUserId, "for type:", messageType);
+  socket.on('getHistory', async ({ userId, otherUserId }) => {
+    console.log("Getting history between:", userId, otherUserId);
     try {
       const messages = await Message.find({
         $or: [
-          { senderId: userId, receiverId: otherUserId, messageType },
-          { senderId: otherUserId, receiverId: userId, messageType }
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
         ]
-      }).sort({ createdAt: 1 });
+      }).sort({ timestamp: 1 });
+      console.log("🚀 ~ socket.on ~ messages:", messages)
 
       io.to(socket.id).emit("chatHistory", messages);
     } catch (error) {
@@ -223,9 +165,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
+    console.log('user disconnected');
+  })
 });
+
 
 
 
