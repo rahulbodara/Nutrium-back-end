@@ -501,6 +501,86 @@ const getPhysicalActivityByClient = async (req, res) => {
     }
 };
 
+const updatePhysicalActivityByClient = async (req, res) => {
+    try {
+        const { clientId, activityId } = req.params;
+        const updateData = req.body;
+
+
+        let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
+
+        if (!clientData) {
+            return res.status(404).json({ message: "Client record not found." });
+        }
+
+
+        let activityIndex = clientData.physicalActivity.findIndex(activity => activity._id.toString() === activityId);
+
+        if (activityIndex === -1) {
+            return res.status(404).json({ message: "Activity not found." });
+        }
+
+
+        clientData.physicalActivity[activityIndex] = {
+            ...clientData.physicalActivity[activityIndex].toObject(), // Convert to plain object to avoid issues
+            ...updateData,
+            _id: clientData.physicalActivity[activityIndex]._id // Retain original _id
+        };
+
+
+        await clientData.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "Activity updated successfully",
+            data: clientData.physicalActivity[activityIndex]
+        });
+
+    } catch (error) {
+        console.error("Error in updatePhysicalActivityByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+const deletePhysicalActivityByClient = async (req, res) => {
+    try {
+        const { clientId, activityId } = req.params;
+
+        // Find client document
+        let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
+
+        if (!clientData) {
+            return res.status(404).json({ message: "Client record not found." });
+        }
+
+        // Find the activity index
+        let activityIndex = clientData.physicalActivity.findIndex(activity => activity._id.toString() === activityId);
+
+        if (activityIndex === -1) {
+            return res.status(404).json({ message: "Activity not found." });
+        }
+
+        // Remove the activity from the array
+        clientData.physicalActivity.splice(activityIndex, 1);
+
+        // Save the updated document
+        await clientData.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "Activity deleted successfully",
+            data: clientData
+        });
+
+    } catch (error) {
+        console.error("Error in deletePhysicalActivityByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+
 
 
 module.exports = {
@@ -517,5 +597,7 @@ module.exports = {
     updateWaterIntake,
     deleteWaterIntake,
     addPhysicalActivityByClient,
-    getPhysicalActivityByClient
+    getPhysicalActivityByClient,
+    updatePhysicalActivityByClient,
+    deletePhysicalActivityByClient
 }

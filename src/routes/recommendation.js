@@ -16,7 +16,9 @@ const {
   updateWaterIntake,
   deleteWaterIntake,
   addPhysicalActivityByClient,
-  getPhysicalActivityByClient
+  getPhysicalActivityByClient,
+  updatePhysicalActivityByClient,
+  deletePhysicalActivityByClient
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
@@ -46,5 +48,9 @@ router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmou
 router.post("/clientSidePhysicalActivity/:clientId", isAuthenticated, addPhysicalActivityByClient)
 
 router.get("/client-physical-activity/:clientId", isAuthenticated, getPhysicalActivityByClient)
+
+router.put("/update-physical-activity/:clientId/:activityId", isAuthenticated, updatePhysicalActivityByClient)
+
+router.delete("/delete-physical-activity/:clientId/:activityId", isAuthenticated, deletePhysicalActivityByClient)
 
 module.exports = router;                                                             
