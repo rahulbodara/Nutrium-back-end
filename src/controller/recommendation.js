@@ -249,18 +249,35 @@ const setWaterIntake = async (req, res) => {
             return res.status(400).json({ message: 'Water intake amount is required.' });
         }
 
-        const recordDate = date ? new Date(date) : new Date();
+        // Get current UTC date at midnight
+        let recordDate = date ? new Date(date) : new Date();
         recordDate.setUTCHours(0, 0, 0, 0);
 
+        // Validate time input
         let recordTime;
-        if (time) {
-            const [hours, minutes] = time.split(':').map(Number);
-            const utcTime = new Date(Date.UTC(recordDate.getUTCFullYear(), recordDate.getUTCMonth(), recordDate.getUTCDate(), hours, minutes, 0));
-            recordTime = utcTime.toISOString().split('T')[1].split('.')[0]; // Store as HH:mm:ss
+        if (time && /^\d{2}:\d{2}$/.test(time)) {
+            let [hours, minutes] = time.split(':').map(Number);
+
+            // If minutes are invalid, default to current time
+            if (minutes >= 60) {
+                console.warn("Invalid time format. Using current UTC time.");
+                const nowUtc = new Date();
+                recordTime = nowUtc.toISOString().split('T')[1].split('.')[0];
+            } else {
+                const utcTime = new Date(Date.UTC(
+                    recordDate.getUTCFullYear(),
+                    recordDate.getUTCMonth(),
+                    recordDate.getUTCDate(),
+                    hours, minutes, 0
+                ));
+                recordTime = utcTime.toISOString().split('T')[1].split('.')[0]; // Store as HH:mm:ss
+            }
         } else {
+            // Default to current UTC time if time is missing or invalid
             const nowUtc = new Date();
             recordTime = nowUtc.toISOString().split('T')[1].split('.')[0];
         }
+
         let waterIntakeData = await WaterIntake.findOne({ clientId, userId });
 
         if (!waterIntakeData) {
@@ -270,7 +287,8 @@ const setWaterIntake = async (req, res) => {
                 waterIntakeRecords: [
                     {
                         date: recordDate,
-                        waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime, }]
+                        DailyGoal: 0, // Default to 0 if not provided
+                        waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime }]
                     }
                 ]
             });
@@ -280,11 +298,15 @@ const setWaterIntake = async (req, res) => {
             );
 
             if (existingDateRecord) {
-                existingDateRecord.waterIntakeAmount.push({ amount: `${waterIntake}ml` });
+                existingDateRecord.waterIntakeAmount.push({
+                    amount: `${waterIntake}ml`,
+                    time: recordTime
+                });
             } else {
                 waterIntakeData.waterIntakeRecords.push({
                     date: recordDate,
-                    waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime, }]
+                    DailyGoal: 0,
+                    waterIntakeAmount: [{ amount: `${waterIntake}ml`, time: recordTime }]
                 });
             }
         }
@@ -547,24 +569,20 @@ const deletePhysicalActivityByClient = async (req, res) => {
     try {
         const { clientId, activityId } = req.params;
 
-        // Find client document
         let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
 
         if (!clientData) {
             return res.status(404).json({ message: "Client record not found." });
         }
 
-        // Find the activity index
         let activityIndex = clientData.physicalActivity.findIndex(activity => activity._id.toString() === activityId);
 
         if (activityIndex === -1) {
             return res.status(404).json({ message: "Activity not found." });
         }
 
-        // Remove the activity from the array
         clientData.physicalActivity.splice(activityIndex, 1);
 
-        // Save the updated document
         await clientData.save();
 
         return res.status(200).json({
