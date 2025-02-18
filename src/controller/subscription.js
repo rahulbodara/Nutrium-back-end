@@ -91,26 +91,27 @@ const plans = [
 
 const createSubscriptionDoc = async (req, res, next) => {
   const userId = req.userId;
-  const { duration, plan_name } = req.body
-  try {
-    const user = await User.findById({ _id: userId })
-    const plan = plans.find((p) => p.plan_name === plan_name && p.duration === duration)
-    console.log("🚀 ~ createSubscriptionDoc ~ plan:", plan)
-    if (!plan) {
-      throw new Error("Invalid plan");
-    }
+  const { duration, plan_name } = req.body;
 
+  try {
+    const user = await User.findById({ _id: userId });
     if (!user) {
       throw new Error("User not found");
     }
 
-    const { email, fullName } = user
+    const plan = plans.find((p) => p.plan_name === plan_name && p.duration === duration);
+    if (!plan) {
+      throw new Error("Invalid plan");
+    }
 
+    const { email, fullName } = user;
 
+    // Create a customer in Stripe
     const customer = await stripe.customers.create({
       name: fullName,
       email,
     });
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -118,23 +119,50 @@ const createSubscriptionDoc = async (req, res, next) => {
         price: plan.plan_id,
         quantity: 1,
       }],
-      success_url: `http://localhost:3000/admin/professionals/Subscription/success?session_id={CHECKOUT_SESSION_ID} `,
+      success_url: `http://localhost:3000/admin/professionals/Subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:3000/admin/professionals/Subscription/fails`,
       customer: customer.id,
+    });
 
 
-    })
-    console.log("🚀 ~ createSubscriptionDoc ~ session:", session)
+    await User.findByIdAndUpdate(
+      { _id: userId },
+      { subscriptionId: session.id }
+    );
 
-    const saveSessionId = await User.findByIdAndUpdate({ _id: userId }, { subscriptionId: session.id })
+    const subscriptionData = {
+      userId: userId,
+      subscriptionStatus: "Active",
+      currentPlan: plan_name === "Nutrium_Yearly" ? "Meal Plans" : "Follow-up",
+      limitOfActiveClientsPerMonth: plan_name === "Nutrium_Yearly" ? "Unlimited" : "10",
+      subscriptionPeriod: {
+        period: duration === "year" ? "Annual" : "Monthly",
+        currency: "US$",
+        discount: duration === "year" ? -10 : 0,
+        value: duration === "year" ? 68.4 : 76.0,
+      },
+      price: {
+        priceCurrency: "US$",
+        priceValue: duration === "year" ? 68.4 : 76.0,
+      },
+    };
 
+    const updatedSubscription = await Subscription.findOneAndUpdate(
+      { userId: userId },
+      subscriptionData,
+      { upsert: true, new: true }
+    );
 
-    return res.status(200).json({ data: session, message: "Purchased successfully" });
+    return res.status(200).json({
+      data: session,
+      subscription: updatedSubscription,
+      message: "Purchased successfully"
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: error })
+    return res.status(500).json({ message: error.message });
   }
-}
-
+};
 
 
 

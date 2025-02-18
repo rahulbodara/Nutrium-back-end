@@ -6,7 +6,7 @@ const path = require('path');
 
 const generateResetToken = async (user) => {
   const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: '5m',
+    // expiresIn: '5m',
   });
   const resetTokenExpires = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -19,12 +19,12 @@ const generateResetToken = async (user) => {
 };
 
 const generateVerificationToken = async (user) => {
-  
+
   const token = await jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: '1h', 
+    // expiresIn: '1h', 
   });
 
-  const verificationTokenExpires = new Date(Date.now() + 60 * 60 * 1000); 
+  const verificationTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
 
   user.verificationEmailToken = token;
   user.verificationEmailTokenExpires = verificationTokenExpires;
@@ -143,26 +143,26 @@ const sendInvitationEmail = async (
 
   // Render the invitation template with dynamic content
   const filePath = path.join(__dirname, '../view', 'invitation.ejs');
-    const htmlContent = await ejs.renderFile(
-      filePath,
-      {
-        title: `${username} invited you to Nutrium`,
-        acceptLink: acceptLink,
-        useremail: useremail,
-        username: username,
-      }
-    );
+  const htmlContent = await ejs.renderFile(
+    filePath,
+    {
+      title: `${username} invited you to Nutrium`,
+      acceptLink: acceptLink,
+      useremail: useremail,
+      username: username,
+    }
+  );
 
-    const mailOptions = {
-      from: process.env.GMAIL,
-      to: inviteEmail,
-      subject: `${username} invited you to Nutrium`,
-      html: htmlContent,
-    };
-    await transporter.sendMail(mailOptions);
+  const mailOptions = {
+    from: process.env.GMAIL,
+    to: inviteEmail,
+    subject: `${username} invited you to Nutrium`,
+    html: htmlContent,
+  };
+  await transporter.sendMail(mailOptions);
 };
 
-const clientEmailSend = async (sender,receiver,clientId) => {
+const clientEmailSend = async (sender, receiver, clientId) => {
   const transporter = nodemailer.createTransport({
     service: process.env.SERVICE,
     auth: {
@@ -186,7 +186,7 @@ const clientEmailSend = async (sender,receiver,clientId) => {
   await transporter.sendMail(mailOptions);
 }
 
-const EmailForm = async (sender,receiver,client,user,token) => {
+const EmailForm = async (sender, receiver, client, user, token) => {
   const transporter = nodemailer.createTransport({
     service: process.env.SERVICE,
     auth: {
@@ -200,7 +200,7 @@ const EmailForm = async (sender,receiver,client,user,token) => {
   const userName = user.fullName;
 
   const templatePath = path.join(__dirname, '../view', 'assessment.ejs');
-  const html = await ejs.renderFile(templatePath, { updateUrl,clientName,userName });
+  const html = await ejs.renderFile(templatePath, { updateUrl, clientName, userName });
 
   const mailOptions = {
     from: `"Nutrium" <${sender}>`,

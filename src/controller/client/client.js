@@ -69,6 +69,7 @@ const registerClient = async (req, res, next) => {
       country,
       zipcode,
       isEmailSend,
+      isActive: 0
     });
 
 
@@ -287,7 +288,6 @@ const getAllClient = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
-      isActive: 1,
     };
     const client = await Client.find(query);
     if (!client) {
@@ -306,7 +306,7 @@ const getClientByID = async (req, res, next) => {
 
     const query = {
       _id: clientId,
-      isActive: 1,
+
     };
     const client = await Client.findOne(query);
     if (!client) {
@@ -317,7 +317,6 @@ const getClientByID = async (req, res, next) => {
       {
         $match: {
           _id: new mongoose.Types.ObjectId(clientId),
-          isActive: 1,
         },
       },
     ];
@@ -2833,9 +2832,9 @@ const clientLogin = async (req, res, next) => {
           clientId: user._id
         },
         JWT_SECRET,
-        {
-          expiresIn: '2h',
-        }
+        // {
+        //   expiresIn: '2d',
+        // }
       );
       const { password, ...userdetails } = user._doc;
       return res.status(200).json({
@@ -2876,7 +2875,7 @@ const clientGoogleLogin = async (req, res, next) => {
       await user.save()
     }
 
-    const token = jwt.sign({ id: user.userId }, JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign({ id: user.userId }, JWT_SECRET,);//{ expiresIn: "2d" }
 
     return res.status(200).json({
       token,

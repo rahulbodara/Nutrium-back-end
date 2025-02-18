@@ -15,8 +15,8 @@ const subscriptionSchema = new mongoose.Schema({
   },
   currentPlan: {
     type: String,
-    enum: ["Follow-up", "Meal Plans"],
-    default: "Follow-up",
+    enum: ["Nutrium_Yearly", "Nutrium_monthly"],
+    default: "Nutrium_monthly",
   },
   limitOfActiveClientsPerMonth: {
     type: String,
