@@ -116,7 +116,7 @@ const SignUp = async (req, res, next) => {
         id: savedUser._id,
       },
       JWT_SECRET,
-      { expiresIn: '2h' }
+      // { expiresIn: '2h' }
     );
 
     if (workplace && countryCode) {
@@ -262,7 +262,7 @@ const SignIn = async (req, res, next) => {
         role: isClient ? 'Client' : userDetails.role,
       },
       JWT_SECRET,
-      { expiresIn: '2h' }
+      // { expiresIn: '2h' }
     );
 
     const { password: _, ...userData } = userDetails._doc;
@@ -316,7 +316,7 @@ const VerifyExistingUser = async (req, res, next) => {
         role: isClient ? "Client" : userDetails.role,
       },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      // { expiresIn: "2h" }
     );
 
     return res.status(200).json({
@@ -926,24 +926,24 @@ const printPdfData = async (req, res, next) => {
   }
 }
 
-const getUser = async (req,res,next) => {
+const getUser = async (req, res, next) => {
   try {
 
     const userId = req.userId;
 
-    const user = await User.findOne({_id:userId});
-    if(!user){
-      return res.status(404).json({message:"User not found"});
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({message:"User retrieved successfully",data:user})
-    
+    return res.status(200).json({ message: "User retrieved successfully", data: user })
+
   } catch (error) {
     console.log("🚀 ~ getUser ~ error:", error)
   }
 }
 
-const uploadMessage = async (req,res, next) => {
+const uploadMessage = async (req, res, next) => {
   try {
 
     console.log("🚀 ~ app.post ~ req.file:", req.file)
