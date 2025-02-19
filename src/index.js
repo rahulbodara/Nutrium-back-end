@@ -38,6 +38,7 @@ const privacyandnotification = require('./routes/privacyAndnotification');
 const CommonMeasures = require('./routes/CommonMeasures')
 const Message = require('./model/Message');
 const lookup = require('./routes/lookup');
+const foodDiary = require('./routes/foodDiary');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -200,7 +201,8 @@ app.use('/api/v1', dailyplan);
 app.use('/api/v1', professionalPreference);
 app.use('/api/v1', privacyandnotification);
 app.use('/api/v1', CommonMeasures);
-app.use("/api/v1", lookup)
+app.use("/api/v1", lookup);
+app.use("/api/v1", foodDiary);
 
 
 
