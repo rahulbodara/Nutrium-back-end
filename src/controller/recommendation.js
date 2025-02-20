@@ -470,33 +470,37 @@ const addPhysicalActivityByClient = async (req, res) => {
     try {
         const userId = req.userId;
         const clientId = req.params.clientId;
-        const { physicalActivity, date } = req.body;
+        const { physicalActivity } = req.body;
 
-        // Ensure physicalActivity is an array
         if (!Array.isArray(physicalActivity)) {
-            return res.status(400).json({ message: "Invalid data format. physicalActivity must be an array." });
+            return res.status(400).json({ message: "Invalid format. 'physicalActivity' must be an array." });
         }
 
         let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
 
         if (clientData) {
-            // Push new activities correctly without nesting arrays
+            physicalActivity.forEach(activity => {
+                activity.date = activity.date ? new Date(activity.date) : new Date();
+            });
             clientData.physicalActivity.push(...physicalActivity);
         } else {
-            // Create a new document with properly formatted array
             clientData = new ClientSidePhysicalActivity({
                 userId,
                 clientId,
-                date: date || new Date(),
-                physicalActivity: physicalActivity, // No extra nesting
+                physicalActivity: physicalActivity.map(activity => ({
+                    ...activity,
+                    date: activity.date ? new Date(activity.date) : new Date(),
+                })),
             });
         }
 
-        // Save the document
         await clientData.save();
 
-        return res.status(200).json({ success: true, message: "Activity added successfully", data: clientData });
-
+        return res.status(200).json({
+            success: true,
+            message: "Activity added successfully",
+            data: clientData,
+        });
     } catch (error) {
         console.error("Error in addPhysicalActivityByClient:", error);
         return res.status(500).json({ message: "Server error", error });
@@ -508,26 +512,28 @@ const getPhysicalActivityByClient = async (req, res) => {
     try {
         const { clientId } = req.params;
 
-
         const clientData = await ClientSidePhysicalActivity.findOne({ clientId });
 
         if (!clientData) {
             return res.status(404).json({ message: "No records found for this client." });
         }
 
-        return res.status(200).json({ success: true, message: "Data retrieved successfully", data: clientData });
-
+        return res.status(200).json({
+            success: true,
+            message: "Data retrieved successfully",
+            data: clientData,
+        });
     } catch (error) {
         console.error("Error in getPhysicalActivityByClient:", error);
         return res.status(500).json({ message: "Server error", error });
     }
 };
 
+
 const updatePhysicalActivityByClient = async (req, res) => {
     try {
         const { clientId, activityId } = req.params;
         const updateData = req.body;
-
 
         let clientData = await ClientSidePhysicalActivity.findOne({ clientId });
 
@@ -535,34 +541,31 @@ const updatePhysicalActivityByClient = async (req, res) => {
             return res.status(404).json({ message: "Client record not found." });
         }
 
-
         let activityIndex = clientData.physicalActivity.findIndex(activity => activity._id.toString() === activityId);
 
         if (activityIndex === -1) {
             return res.status(404).json({ message: "Activity not found." });
         }
 
-
         clientData.physicalActivity[activityIndex] = {
-            ...clientData.physicalActivity[activityIndex].toObject(), // Convert to plain object to avoid issues
+            ...clientData.physicalActivity[activityIndex].toObject(),
             ...updateData,
-            _id: clientData.physicalActivity[activityIndex]._id // Retain original _id
+            date: updateData.date ? new Date(updateData.date) : clientData.physicalActivity[activityIndex].date,
         };
-
 
         await clientData.save();
 
         return res.status(200).json({
-            status: true,
+            success: true,
             message: "Activity updated successfully",
-            data: clientData.physicalActivity[activityIndex]
+            data: clientData.physicalActivity[activityIndex],
         });
-
     } catch (error) {
         console.error("Error in updatePhysicalActivityByClient:", error);
         return res.status(500).json({ message: "Server error", error });
     }
 };
+
 
 
 const deletePhysicalActivityByClient = async (req, res) => {
@@ -586,17 +589,15 @@ const deletePhysicalActivityByClient = async (req, res) => {
         await clientData.save();
 
         return res.status(200).json({
-            status: true,
+            success: true,
             message: "Activity deleted successfully",
-            data: clientData
+            data: clientData,
         });
-
     } catch (error) {
         console.error("Error in deletePhysicalActivityByClient:", error);
         return res.status(500).json({ message: "Server error", error });
     }
 };
-
 
 
 const deleteAllPhysicalActivitiesByClient = async (req, res) => {
@@ -614,16 +615,16 @@ const deleteAllPhysicalActivitiesByClient = async (req, res) => {
         await clientData.save();
 
         return res.status(200).json({
-            status: true,
+            success: true,
             message: "All activities deleted successfully",
-            data: clientData
+            data: clientData,
         });
-
     } catch (error) {
         console.error("Error in deleteAllPhysicalActivitiesByClient:", error);
         return res.status(500).json({ message: "Server error", error });
     }
 };
+
 
 
 
