@@ -12,10 +12,7 @@ const ClientSidePhysicalActivitySchema = new mongoose.Schema(
             required: true,
             ref: 'Clients',
         },
-        date: {
-            type: Date,
-            default: Date.now()
-        },
+
         physicalActivity: [{
             time: {
                 type: Number
@@ -37,6 +34,10 @@ const ClientSidePhysicalActivitySchema = new mongoose.Schema(
             },
             dailyaverage: {
                 type: String,
+            },
+            date: {
+                type: Date,
+                default: Date.now()
             },
         }]
     })
