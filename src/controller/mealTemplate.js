@@ -59,7 +59,7 @@ const createMealTemplate = async (req, res) => {
     };
     const userId = req.userId;
     if (!req.userId) {
-      return res.status(401).json({ error: "Unauthorized, user ID missing" });
+      return res.status(401).json({success: false, error: "Unauthorized, user ID missing" });
     }
 
     const templateData = {
@@ -87,6 +87,7 @@ const createMealTemplate = async (req, res) => {
     }
 
     return res.status(201).json({
+      success: true,
       message: "Template created successfully",
       template: newTemplate,
     });
@@ -102,13 +103,13 @@ const getMealTemplate = async (req, res, next) => {
       userId: req.userId,
     };
     if (!req.userId) {
-      return res.status(401).json({ error: "Unauthorized, user ID missing" });
+      return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
     }
     const templet = await Template.find(query);
     if (!templet) {
-      return res.status(404).json({ message: "templet Not Found!!" });
+      return res.status(404).json({success: false, message: "templet Not Found!!" });
     }
-    res.status(200).json(templet);
+    res.status(200).json({success: true, templet});
   } catch (error) {
     console.error(error);
     next(error);
@@ -122,13 +123,13 @@ const getMealTemplateById = async (req, res, next) => {
       userId: req.userId,
     };
     if (!req.userId) {
-      return res.status(401).json({ error: "Unauthorized, user ID missing" });
+      return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
     }
     const template = await Template.findOne(query);
     if (!template) {
-      return res.status(404).json({ message: "template Not Found!!" });
+      return res.status(404).json({success: false, message: "template Not Found!!" });
     }
-    res.status(200).json({template:template});
+    res.status(200).json({ success: true, template:template});
   } catch (error) {
     console.error(error);
     next(error);
@@ -147,9 +148,9 @@ const deleteMealTemplate = async (req, res, next) => {
     );
 
     if (!deletedtemplate) {
-      res.status(404).json({ message: 'template not found!!!' });
+      res.status(404).json({ success: false,message: 'template not found!!!' });
     } else {
-      res.status(200).json({ message: 'template deleted successfully' });
+      res.status(200).json({success: true, message: 'template deleted successfully' });
     }
   } catch (error) {
     console.error(error);
@@ -162,7 +163,7 @@ const addNewMeal = async (req, res) => {
     const { templateId, mealId, mealType } = req.body;
     
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
     
     const variabel = template.mealTemplate.filter((entry) => {
       return entry._id.toString() === mealId;
@@ -233,6 +234,7 @@ const addNewMeal = async (req, res) => {
     const updatedTemplate = await Template.findById(templateId);
 
     return res.status(201).json({
+      success: true,
       message: "Meal added successfully",
       template: template,
     });
@@ -246,7 +248,7 @@ const createVersion = async (req, res) => {
   try {
     const { templateId, creationMethod, copyMealsOfMealPlan, selectedDesiredDays} = req.body;
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
     const allDays = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
     if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "null") {
@@ -488,6 +490,7 @@ const createVersion = async (req, res) => {
     }
 
     return res.status(201).json({
+      success: true,
       message: "Meal added successfully",
       template,
     });
@@ -503,7 +506,7 @@ try {
     const userId = req.userId;
 
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
 
     const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
     const food = await Food.findOne({ _id: foodId });
@@ -521,6 +524,7 @@ try {
     await template.save();
    
     return res.status(201).json({
+      success: true,
       message: "Meal added successfully",
       template: template,
     });
@@ -536,13 +540,13 @@ const updateTimeAndSubMealTypeName = async (req, res) => {
     const userId = req.userId;
 
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
 
     const mealTemplateEntry = template.mealTemplate.find((entry) => entry._id.toString() === mealId);
-    if (!mealTemplateEntry) return res.status(404).json({ error: "Meal entry not found" });
+    if (!mealTemplateEntry) return res.status(404).json({success: false, error: "Meal entry not found" });
     
     const scheduleEntry = mealTemplateEntry.mealSchedule.find((entry) => entry.mealType === mealType);
-    if (!scheduleEntry) return res.status(404).json({ error: "Meal type not found" });
+    if (!scheduleEntry) return res.status(404).json({success: false, error: "Meal type not found" });
     
     if (subMealTypeName) scheduleEntry.subMealTypeName = subMealTypeName;
     if (time) scheduleEntry.time = time;
@@ -550,6 +554,7 @@ const updateTimeAndSubMealTypeName = async (req, res) => {
     await template.save();
 
     return res.status(200).json({
+      success: true,
       message: "Meal updated successfully",
       template,
     });
@@ -564,7 +569,7 @@ const deleteDayInTemplate = async (req, res, next) => {
     const { templateId, mealId, mealType } = req.body;
     
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
     console.log("template",template.mealTemplate);
     
     const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
@@ -580,6 +585,7 @@ const deleteDayInTemplate = async (req, res, next) => {
     await template.save();
 
     return res.status(200).json({
+      success: true,
       message: "Meal updated successfully",
       template,
     });
@@ -594,7 +600,7 @@ const deleteFoodInTemplate = async (req, res, next) => {
     const { templateId, mealId, mealType ,foodIndex} = req.body;
     
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
 
     const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
 
@@ -611,6 +617,7 @@ const deleteFoodInTemplate = async (req, res, next) => {
     await template.save();
 
     return res.status(200).json({
+      success: true,
       message: "Meal updated successfully",
       template,
     });
@@ -625,7 +632,7 @@ const deleteMealScheduleInTemplate = async (req, res, next) => {
     const { templateId, mealId, mealType } = req.body;
 
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({ error: "Template not found" });
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
     
     const mealIndex = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
 
@@ -640,6 +647,7 @@ const deleteMealScheduleInTemplate = async (req, res, next) => {
     await template.save();
 
     return res.status(200).json({
+      success: true,
       message: "Meal schedule deleted successfully",
       template,
     });
@@ -656,16 +664,17 @@ const featchMealPlanForClient = async (req, res, next) => {
     const { clientId } = req.params;
     
     if (!clientId) {
-      return res.status(400).json({ error: "clientId ID is required" });
+      return res.status(400).json({success: false, error: "clientId ID is required" });
     }
 
     const template = await Template.find({clientId});
 
     if (!template) {
-      return res.status(404).json({ error: "Meal plan not found" });
+      return res.status(404).json({success: false, error: "Meal plan not found" });
     }
 
     return res.status(200).json({
+      success: true,
       message: "Meal plan fetched successfully",
       template,
     });
