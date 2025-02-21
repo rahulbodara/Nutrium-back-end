@@ -2,6 +2,7 @@ const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const Template = require("../model/mealTemplate");
 const Food = require('../model/Food');
+const FoodDiary = require('../model/FoodDiary');
 const { findById } = require("../model/Food");
 
 const createMealTemplate = async (req, res) => {
@@ -70,6 +71,18 @@ const createMealTemplate = async (req, res) => {
     if (clientId) templateData.clientId = clientId;
   
     const newTemplate = await Template.create(templateData);
+    const today = new Date().toISOString();
+    console.log(today);
+
+    const newFoodDiary = await FoodDiary.create({
+      userId,
+      clientId,
+      foodDiaryData: [
+        {
+          registrationDate: today,
+        },
+      ],
+    });
 
     return res.status(201).json({
       message: "Template created successfully",

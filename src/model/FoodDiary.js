@@ -1,5 +1,30 @@
 const mongoose = require('mongoose');
 
+const mealScheduleSchema = new mongoose.Schema({
+  mealType: {
+    type: String,
+  },
+  time: {
+    type: String,
+  },
+  meal: {
+    type: [String], 
+    default: [], 
+  },
+  notes: {
+    type: String,
+    default: "",
+  },
+});
+
+const foodDiaryDataSchema = new mongoose.Schema({
+  registrationDate: {
+    type: Date,
+    required: true,
+  },
+  mealSchedule: [mealScheduleSchema]
+});
+
 const foodDiary = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -7,38 +32,12 @@ const foodDiary = new mongoose.Schema({
     ref: 'user',
   },
   clientId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'Clients',
-  },
-  registrationDate: {
-    type: Date,
-    required: true,
-  },
-  mealSchedule: [
-    {
-      mealType: {
-        type: String,
-        required: true,
-      },
-      time: {
-        type: String,
-        required: true,
-      },
-      meal:{
-        type: String,
-      },
-      photo:{
-        type: String,
-      },
-      comments:{
-        type: String,
-      },
-    },
-  ],
-  observation: {
     type: String,
+    //type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    //ref: 'Clients',
   },
+  foodDiaryData: [foodDiaryDataSchema],
 });
 
 module.exports = mongoose.model('FoodDiaries', foodDiary);
