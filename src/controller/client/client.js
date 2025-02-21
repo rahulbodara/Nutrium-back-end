@@ -2383,54 +2383,35 @@ const getMeasurementById = async (req, res, next) => {
     const clientId = req.params.clientId;
 
     const measurement = await Measurements.findOne({ clientId: clientId });
+
     if (!measurement) {
       return res.status(400).json({
         success: false,
-        message: "measurement not found",
+        message: "Measurement not found",
       });
     }
-    const allMeasurement = await Measurements.findOne({
-      clientId: clientId,
-    });
 
-    allMeasurement.measurements.forEach((measurementType) => {
+    measurement.measurements.forEach((measurementType) => {
       measurementType.entries.sort((a, b) => {
-        const datePartsA = a.date.split("-");
-        const datePartsB = b.date.split("-");
+        if (!a.date || !b.date) return 0;
 
-        const dayA = parseInt(datePartsA[0]);
-        const monthA = parseInt(datePartsA[1]);
-        const yearA = parseInt(datePartsA[2]);
+        const [yearA, monthA, dayA] = a.date.split("-").map(Number);
+        const [yearB, monthB, dayB] = b.date.split("-").map(Number);
 
-        const dayB = parseInt(datePartsB[0]);
-        const monthB = parseInt(datePartsB[1]);
-        const yearB = parseInt(datePartsB[2]);
-
-        // First, compare years
-        if (yearA !== yearB) {
-          return yearB - yearA;
-        }
-
-        // If years are the same, compare months
-        if (monthA !== monthB) {
-          return monthB - monthA;
-        }
-        if (dayA - dayB !== 0) {
-          return dayB - dayA;
-        } else {
-          return (
-            measurementType.entries.findIndex((e) => e._id === b._id) -
-            measurementType.entries.findIndex((e) => e._id === a._id)
-          );
-        }
+        return (
+          yearB - yearA || 
+          monthB - monthA || 
+          dayB - dayA 
+        );
       });
     });
 
     return res.status(200).json({
       success: true,
-      Measurement: allMeasurement,
+      measurement,
     });
   } catch (error) {
+    console.error("🚀 ~ getMeasurementById ~ error:", error);
     next(error);
   }
 };
