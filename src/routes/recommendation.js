@@ -19,7 +19,10 @@ const {
   getPhysicalActivityByClient,
   updatePhysicalActivityByClient,
   deletePhysicalActivityByClient,
-  deleteAllPhysicalActivitiesByClient
+  deleteAllPhysicalActivitiesByClient,
+  getQuickAccessActivityByClient,
+  getOtherRecommendation,
+  getFoodAvoid
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
@@ -55,5 +58,11 @@ router.put("/update-physical-activity/:clientId/:activityId", isAuthenticated, u
 router.delete("/delete-physical-activity/:clientId/:activityId", isAuthenticated, deletePhysicalActivityByClient)
 
 router.delete("/delete-physical-activity/:clientId", isAuthenticated, deleteAllPhysicalActivitiesByClient)
+
+router.get("/get-quick-access-activity/:clientId", isAuthenticated, getQuickAccessActivityByClient)
+
+router.get("/get-other-recommendation/:clientId", isAuthenticated, getOtherRecommendation)
+
+router.get("/get-food-avoid/:clientId", isAuthenticated, getFoodAvoid)
 
 module.exports = router;                                                             

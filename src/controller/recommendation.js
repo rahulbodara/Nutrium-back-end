@@ -626,6 +626,80 @@ const deleteAllPhysicalActivitiesByClient = async (req, res) => {
 };
 
 
+const getQuickAccessActivityByClient = async (req, res) => {
+    try {
+        const { clientId } = req.params;
+
+        const clientData = await Recommendation.findOne(
+            { clientId },
+            { clientId: 1, userId: 1, timestamp: 1, physicalActivity: 1, _id: 1 }
+        );
+
+        if (!clientData) {
+            return res.status(404).json({ message: "No records found for this client." });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Data retrieved successfully",
+            data: clientData,
+        });
+    } catch (error) {
+        console.error("❌ Error in getQuickAccessActivityByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+
+const getOtherRecommendation = async (req, res) => {
+    try {
+        const { clientId } = req.params;
+
+        const clientData = await Recommendation.findOne(
+            { clientId },
+            { clientId: 1, userId: 1, timestamp: 1, recommendation: 1, _id: 1 }
+        );
+
+        if (!clientData) {
+            return res.status(404).json({ message: "No records found for this client." });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Data retrieved successfully",
+            data: clientData,
+        });
+    } catch (error) {
+        console.error("❌ Error in getQuickAccessActivityByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+}
+
+const getFoodAvoid = async (req, res) => {
+    try {
+        const { clientId } = req.params;
+
+        const clientData = await Recommendation.findOne(
+            { clientId },
+            { clientId: 1, userId: 1, timestamp: 1, foodAvoids: 1, _id: 1 }
+        );
+
+        if (!clientData) {
+            return res.status(404).json({ message: "No records found for this client." });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Data retrieved successfully",
+            data: clientData,
+        });
+    } catch (error) {
+        console.error("❌ Error in getQuickAccessActivityByClient:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+}
 
 
 
@@ -648,5 +722,8 @@ module.exports = {
     getPhysicalActivityByClient,
     updatePhysicalActivityByClient,
     deletePhysicalActivityByClient,
-    deleteAllPhysicalActivitiesByClient
+    deleteAllPhysicalActivitiesByClient,
+    getQuickAccessActivityByClient,
+    getOtherRecommendation,
+    getFoodAvoid
 }
