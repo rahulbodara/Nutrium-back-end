@@ -2399,9 +2399,9 @@ const getMeasurementById = async (req, res, next) => {
         const [yearB, monthB, dayB] = b.date.split("-").map(Number);
 
         return (
-          yearB - yearA || 
-          monthB - monthA || 
-          dayB - dayA 
+          yearB - yearA ||
+          monthB - monthA ||
+          dayB - dayA
         );
       });
     });
@@ -2700,46 +2700,70 @@ const addOrUpdateClientMeasurement = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
     const { measurementtype, date, value, unit } = req.body;
+    const userId = req.userId
 
-    const existingMeasurement = await Measurements.findOne({ clientId });
 
-    if (!existingMeasurement) {
-      return res.status(404).json({
+    if (!measurementtype || !date || !value || !unit) {
+      return res.status(400).json({
         success: false,
-        message: "Measurement record not found for this client.",
+        message: "Missing required fields: measurementtype, date, value, or unit.",
       });
     }
 
-    let updated = false;
+    let existingMeasurement = await Measurements.findOne({ clientId });
 
-    existingMeasurement.measurements.forEach((measurement) => {
-      if (measurement.measurementtype === measurementtype) {
-        const entryIndex = measurement.entries.findIndex(
-          (entry) => entry.date === date && entry.createdByClient
-        );
 
-        if (entryIndex !== -1) {
-          measurement.entries[entryIndex].value = value;
-          measurement.entries[entryIndex].unit = unit;
-          updated = true;
-        } else {
-          measurement.entries.push({ date, value, unit, createdByClient: true });
-        }
-      }
-    });
+    if (!existingMeasurement) {
+      existingMeasurement = new Measurements({
+        clientId,
+        userId,
+        measurements: [
+          {
+            measurementtype,
+            entries: [{ date, value, unit, createdByClient: true }],
+          },
+        ],
+      });
 
-    if (!existingMeasurement.measurements.some((m) => m.measurementtype === measurementtype)) {
+      await existingMeasurement.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "New measurement record created.",
+        measurement: existingMeasurement,
+      });
+    }
+
+    // Find the measurement type
+    let measurementType = existingMeasurement.measurements.find(
+      (m) => m.measurementtype === measurementtype
+    );
+
+    if (!measurementType) {
+      // If measurement type doesn't exist, create a new one
       existingMeasurement.measurements.push({
         measurementtype,
         entries: [{ date, value, unit, createdByClient: true }],
       });
+    } else {
+      // Find existing entry by date & createdByClient flag
+      let existingEntry = measurementType.entries.find(
+        (entry) => entry.date === date && entry.createdByClient
+      );
+
+      if (existingEntry) {
+        existingEntry.value = value;
+        existingEntry.unit = unit;
+      } else {
+        measurementType.entries.push({ date, value, unit, createdByClient: true });
+      }
     }
 
     await existingMeasurement.save();
 
     return res.status(200).json({
       success: true,
-      message: updated ? "Measurement updated successfully" : "New measurement added",
+      message: measurementType ? "Measurement updated successfully" : "New measurement added",
       measurement: existingMeasurement,
     });
   } catch (error) {
