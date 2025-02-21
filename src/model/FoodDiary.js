@@ -40,4 +40,4 @@ const foodDiary = new mongoose.Schema({
   foodDiaryData: [foodDiaryDataSchema],
 });
 
-module.exports = mongoose.model('FoodDiaries', foodDiary);
+module.exports = mongoose.model('FoodDiarys', foodDiary);
