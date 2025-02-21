@@ -9,7 +9,7 @@ const DietHistory = require("../../model/DietHistory");
 const createAppointment = require("../../model/ScheduleApointment");
 const eatingBehaviour = require("../../model/eatingBehaviour");
 const ClientFile = require("../../model/ClientFile");
-const FoodDiares = require("../../model/FoodDiares");
+const FoodDiares = require("../../model/FoodDiary");
 const Goals = require("../../model/Goals");
 const Measurements = require("../../model/Measurements");
 const pregnancyHistory = require("../../model/pregnancyHistory");
@@ -2435,8 +2435,6 @@ const getMeasurementById = async (req, res, next) => {
   }
 };
 
-
-
 const deleteMeasurementObject = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
@@ -2717,6 +2715,59 @@ const getClientInfo = async (req, res, next) => {
   }
 };
 
+const addOrUpdateClientMeasurement = async (req, res, next) => {
+  try {
+    const clientId = req.params.clientId;
+    const { measurementtype, date, value, unit } = req.body;
+
+    const existingMeasurement = await Measurements.findOne({ clientId });
+
+    if (!existingMeasurement) {
+      return res.status(404).json({
+        success: false,
+        message: "Measurement record not found for this client.",
+      });
+    }
+
+    let updated = false;
+
+    existingMeasurement.measurements.forEach((measurement) => {
+      if (measurement.measurementtype === measurementtype) {
+        const entryIndex = measurement.entries.findIndex(
+          (entry) => entry.date === date && entry.createdByClient
+        );
+
+        if (entryIndex !== -1) {
+          measurement.entries[entryIndex].value = value;
+          measurement.entries[entryIndex].unit = unit;
+          updated = true;
+        } else {
+          measurement.entries.push({ date, value, unit, createdByClient: true });
+        }
+      }
+    });
+
+    if (!existingMeasurement.measurements.some((m) => m.measurementtype === measurementtype)) {
+      existingMeasurement.measurements.push({
+        measurementtype,
+        entries: [{ date, value, unit, createdByClient: true }],
+      });
+    }
+
+    await existingMeasurement.save();
+
+    return res.status(200).json({
+      success: true,
+      message: updated ? "Measurement updated successfully" : "New measurement added",
+      measurement: existingMeasurement,
+    });
+  } catch (error) {
+    console.error("Error in addOrUpdateClientMeasurement:", error);
+    next(error);
+  }
+};
+
+
 const updateBmi = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
@@ -2938,6 +2989,7 @@ module.exports = {
   sendClientEmail,
   clientLogin,
   clientGoogleLogin,
+  addOrUpdateClientMeasurement
 
 };
 

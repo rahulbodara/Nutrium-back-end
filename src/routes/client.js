@@ -48,7 +48,8 @@ const {
   updateClientPassword,
   sendClientEmail,
   clientLogin,
-  clientGoogleLogin
+  clientGoogleLogin,
+  addOrUpdateClientMeasurement
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
@@ -69,7 +70,7 @@ router.put(
 //===================import History===================//
 
 
-router.post('/client/import-history',isAuthenticated,addImportHistory);
+router.post('/client/import-history', isAuthenticated, addImportHistory);
 
 
 //===================Appointment information===================//
@@ -88,7 +89,7 @@ router.put(
     { name: 'afterPicture2', maxCount: 1 },
     { name: 'afterPicture3', maxCount: 1 },
     { name: 'afterPicture4', maxCount: 1 },
-    { name: 'afterPicture5', maxCount: 1},]),
+    { name: 'afterPicture5', maxCount: 1 },]),
   isAuthenticated,
   updatePersonalHistory
 );
@@ -192,7 +193,7 @@ router.post('/client/goals/:id', isAuthenticated, createGoal);
 
 router.delete('/client/goals/:clientId/:id', isAuthenticated, deleteGoal);
 
-router.get('/client/goals/:clientId/:measurementType',isAuthenticated, getGoalByMeasurementType);
+router.get('/client/goals/:clientId/:measurementType', isAuthenticated, getGoalByMeasurementType);
 
 router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
 
@@ -225,15 +226,17 @@ router.put(
   isAuthenticated,
   updateMeasurementObject);
 
+router.post("/client/update-measurements/:clientId", isAuthenticated, addOrUpdateClientMeasurement)
+
 
 //===================planning===================//
 router.get('/client-getWeight/:clientId', isAuthenticated, getClientInfo);
 
 router.put('/client-updateBmi/:clientId', isAuthenticated, updateBmi);
 
-router.put('/setPassword/:clientId',updateClientPassword)
+router.put('/setPassword/:clientId', updateClientPassword)
 
-router.get('/sendEmail/:clientId',isAuthenticated,sendClientEmail);
+router.get('/sendEmail/:clientId', isAuthenticated, sendClientEmail);
 
 //===================getpdfData===================//
 router.post('/client-getpdfData/:clientId', isAuthenticated, getPdfData)
