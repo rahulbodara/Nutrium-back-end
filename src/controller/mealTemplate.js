@@ -69,11 +69,11 @@ const createMealTemplate = async (req, res) => {
     };
 
     if (clientId) templateData.clientId = clientId;
-  
-    const newTemplate = await Template.create(templateData);
-    const today = new Date().toISOString();
-    console.log(today);
 
+    const newTemplate = await Template.create(templateData);
+
+    if(clientId){
+    const today = new Date().toISOString();
     const newFoodDiary = await FoodDiary.create({
       userId,
       clientId,
@@ -83,6 +83,8 @@ const createMealTemplate = async (req, res) => {
         },
       ],
     });
+    
+    }
 
     return res.status(201).json({
       message: "Template created successfully",
@@ -724,8 +726,4 @@ const mealUpdateResponse = {
       __v: 8
   }
 };
-
-
-
-
 

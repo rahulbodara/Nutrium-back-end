@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const Lookup = require("./model/lookupUser");
 const Template = require("./model/mealTemplate");
-const foodDiary = require("./model/FoodDiary");
+const FoodDiary = require('./model/FoodDiary');
 
 cron.schedule("* * * * *", async () => {
     console.log("Cron job started...");
@@ -18,33 +18,44 @@ cron.schedule("0 0 * * *", async () => {
     console.log(" Running scheduled task at 12:00 AM...");
 
     try {
-        // const templates = await Template.find({
-        //     userId: { $exists: true },
-        //     clientId: { $exists: true }
-        // });
-        // console.log("templates",templates);
-        
-        // const Diary = await foodDiary.find(); 
+        const diaries = await FoodDiary.find();
+       
+        const today = new Date();
+        const isoDate = today.toISOString(); 
+        const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
 
-        // console.log("foodDiaries",foodDiary);
-        // for (const template of templates){
-        //     const { userId, clientId } = template;
-        //     const existingEntry = await foodDiary.findOne({ userId, clientId });
-        //     if (!existingEntry) {
-        //         await foodDiary.create({
-        //             userId,
-        //             clientId,
-        //             registrationDate,
-        //             mealSchedule
-        //         })
-        //     }
 
-        // }
-        
-        
+        const userClientPairs = diaries.map(d => ({ userId: d.userId, clientId: d.clientId }));
+        const templates = await Template.find({ $or: userClientPairs });
+
+        const templateMap = new Map();
+        templates.forEach(template => {
+            templateMap.set(`${template.userId}-${template.clientId}`, template);
+        });
+
+        for (const diary of diaries) {
+            const { userId, clientId } = diary;
+            const template = templateMap.get(`${userId}-${clientId}`);
+
+            if (template) {
+                const index = template.mealTemplate.findIndex(item => item.days.includes(dayName));
+                const data = {
+                    registrationDate: isoDate,
+                    mealSchedule: (index !== -1)
+                        ? template.mealTemplate[index].mealSchedule
+                        : template.mealTemplate[0].mealSchedule
+                };
+
+                diary.foodDiaryData.push(data);
+                await diary.save(); 
+            }
+        }
+
+        console.log("✅ Food diary updates completed.");
     } catch (error) {
         console.error("❌ [Job 2] Error:", error);
     }
 });
+
 
 module.exports = cron;
