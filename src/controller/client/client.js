@@ -2830,7 +2830,7 @@ const updateClientPassword = async (req, res) => {
       return res.status(404).json({ message: "Client not found." });
     }
 
-    res.status(200).json({ message: "Password updated successfully." });
+    res.status(200).json({ success: true, message: "Password updated successfully." });
   } catch (error) {
     console.error("Error updating client password:", error);
     res
@@ -2838,6 +2838,40 @@ const updateClientPassword = async (req, res) => {
       .json({ message: "An error occurred while updating the password." });
   }
 };
+
+const setClientPassword = async (req, res) => {
+  const { clientId } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({
+      message: "password required.",
+    });
+  }
+
+  try {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      clientId,
+      { password: hashedPassword },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedClient) {
+      return res.status(404).json({ message: "Client not found." });
+    }
+
+    res.status(200).json({ success: true, message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Error updating client password:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while updating the password." });
+  }
+
+}
 
 const sendClientEmail = async (req, res) => {
   try {
@@ -2994,7 +3028,8 @@ module.exports = {
   sendClientEmail,
   clientLogin,
   clientGoogleLogin,
-  addOrUpdateClientMeasurement
+  addOrUpdateClientMeasurement,
+  setClientPassword
 
 };
 
