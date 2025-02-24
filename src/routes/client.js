@@ -49,7 +49,8 @@ const {
   sendClientEmail,
   clientLogin,
   clientGoogleLogin,
-  addOrUpdateClientMeasurement
+  addOrUpdateClientMeasurement,
+  setClientPassword
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
@@ -66,6 +67,8 @@ router.put(
   isAuthenticated,
   updateClient
 );
+
+router.put("/client/set-client-password/:clientId", isAuthenticated, setClientPassword)
 
 //===================import History===================//
 
