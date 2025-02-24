@@ -595,7 +595,7 @@ const deletePhysicalActivityByClient = async (req, res) => {
         });
     } catch (error) {
         console.error("Error in deletePhysicalActivityByClient:", error);
-        return res.status(500).json({ message: "Server error", error });
+        return res.status(500).json({ success: true, message: "Server error", error });
     }
 };
 
@@ -621,7 +621,7 @@ const deleteAllPhysicalActivitiesByClient = async (req, res) => {
         });
     } catch (error) {
         console.error("Error in deleteAllPhysicalActivitiesByClient:", error);
-        return res.status(500).json({ message: "Server error", error });
+        return res.status(500).json({ success: true, message: "Server error", error });
     }
 };
 
@@ -647,7 +647,7 @@ const getQuickAccessActivityByClient = async (req, res) => {
         });
     } catch (error) {
         console.error("❌ Error in getQuickAccessActivityByClient:", error);
-        return res.status(500).json({ message: "Server error", error });
+        return res.status(500).json({ success: true, message: "Server error", error });
     }
 };
 
@@ -672,7 +672,7 @@ const getOtherRecommendation = async (req, res) => {
         });
     } catch (error) {
         console.error("❌ Error in getQuickAccessActivityByClient:", error);
-        return res.status(500).json({ message: "Server error", error });
+        return res.status(500).json({ sucess: true, message: "Server error", error });
     }
 }
 
@@ -686,7 +686,7 @@ const getFoodAvoid = async (req, res) => {
         );
 
         if (!clientData) {
-            return res.status(404).json({ message: "No records found for this client." });
+            return res.status(404).json({ success: true, message: "No records found for this client." });
         }
 
 

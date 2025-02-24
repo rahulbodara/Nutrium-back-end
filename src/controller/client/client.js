@@ -540,7 +540,7 @@ const deleteClient = async (req, res, next) => {
   try {
     const clientId = req.params.id;
     const deletedClient = await Client.findOneAndDelete(
-      { _id: clientId, isActive: 1 },
+      { _id: clientId },
       { new: true }
     );
 
