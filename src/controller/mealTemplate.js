@@ -657,6 +657,35 @@ const deleteMealScheduleInTemplate = async (req, res, next) => {
   }
 };
 
+const createNote = async (req, res, next) => {
+  try {
+
+    const { templateId, mealId, mealType ,note} = req.body;
+
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
+
+    const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
+
+    if (index !== -1) {
+      template.mealTemplate[index].mealSchedule.forEach((entry)=>{ 
+        if(entry.mealType === `${mealType}`) entry.Notes = note
+      })
+  }
+    
+    template.markModified("mealTemplate");
+    await template.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal updated successfully",
+      template,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 //***********************************/ Mobile Apis /***********************************
 
 const featchMealPlanForClient = async (req, res, next) => {
@@ -696,7 +725,8 @@ module.exports = {
   deleteDayInTemplate,
   deleteFoodInTemplate,
   deleteMealScheduleInTemplate,
-  featchMealPlanForClient
+  featchMealPlanForClient,
+  createNote
 };
 
 
