@@ -1,11 +1,9 @@
 const express = require('express');
 const { isAuthenticated } = require('../middleware/auth');
-const {
-    createFoodDiary,
-} = require('../controller/client/foodDiary');
+const { fetchFoodDiary } = require('../controller/client/foodDiary');
+
 const router = express.Router();
 
-router.post('/food-diary', createFoodDiary);
-
+router.get('/food-diary/:clientId', fetchFoodDiary);
 
 module.exports = router;
