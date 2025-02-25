@@ -686,6 +686,30 @@ const createNote = async (req, res, next) => {
     next(error);
   }
 };
+
+const chnageTemplateName = async (req, res, next) => {
+  try {
+
+    const { templateId, name} = req.body;
+
+    const template = await Template.findById(templateId);
+    if (!template) return res.status(404).json({success: false, error: "Template not found" });
+
+    template.templateName = name
+
+    await template.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal updated successfully",
+      template,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 //***********************************/ Mobile Apis /***********************************
 
 const featchMealPlanForClient = async (req, res, next) => {
@@ -726,7 +750,8 @@ module.exports = {
   deleteFoodInTemplate,
   deleteMealScheduleInTemplate,
   featchMealPlanForClient,
-  createNote
+  createNote,
+  chnageTemplateName
 };
 
 
