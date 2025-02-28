@@ -190,7 +190,7 @@ const updateAppointementStatus = async (req, res, next) => {
 const getAppointmentByClientId = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
-    const appointment = await Appointment.findOne({ clientId: clientId });
+    const appointment = await Appointment.find({ clientId: clientId });
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found!" });
