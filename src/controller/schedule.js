@@ -1,20 +1,20 @@
 const Schedule = require("../model/Schedule");
 
-const getAllSchedules = async (req, res, next) => {
-  try {
-    const schedules = await Schedule.find();
-    if (!schedules || schedules.length === 0) {
-      return res.status(404).json({ message: "No schedules found" });
-    }
-    res.status(200).json(schedules);
-  } catch (error) {
-    next({ status: 500, message: "Error fetching schedules", error });
-  }
-};
+// const getAllSchedules = async (req, res, next) => {
+//   try {
+//     const schedules = await Schedule.find();
+//     if (!schedules || schedules.length === 0) {
+//       return res.status(404).json({ message: "No schedules found" });
+//     }
+//     res.status(200).json(schedules);
+//   } catch (error) {
+//     next({ status: 500, message: "Error fetching schedules", error });
+//   }
+// };
 
 const setSchedule = async (req, res, next) => {
   try {
-    const { userId } = req.params; // Get userId from request parameters
+    const { userId } = req.userId;
     if (!userId) {
       return res.status(400).json({ message: "User ID is required in the URL" });
     }
@@ -50,7 +50,7 @@ const setSchedule = async (req, res, next) => {
 
 const getScheduleById = async (req, res, next) => {
   try {
-    const { userId } = req.params; // Get userId from request parameters
+    const userId = req.userId;
     if (!userId) {
       return res.status(400).json({ message: "User ID is required in the URL" });
     }
@@ -67,7 +67,7 @@ const getScheduleById = async (req, res, next) => {
 };
 
 module.exports = {
-  getAllSchedules,
+  // getAllSchedules,
   setSchedule,
   getScheduleById,
 };

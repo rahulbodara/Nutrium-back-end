@@ -496,10 +496,44 @@ const addPhysicalActivityByClient = async (req, res) => {
 
         await clientData.save();
 
+        let recommendation = await Recommendation.findOne({ clientId });
+
+        if (!recommendation) {
+            recommendation = new Recommendation({
+                userId,
+                clientId,
+                physicalActivity: []
+            });
+        }
+
+        let flatActivities = recommendation.physicalActivity.flat();
+
+        physicalActivity.forEach(newActivity => {
+            let existingActivity = flatActivities.find(existing => existing.activity === newActivity.activity);
+
+            if (existingActivity) {
+                existingActivity.time = newActivity.time;
+                existingActivity.timeunit = newActivity.timeunit;
+                existingActivity.durations = newActivity.durations;
+                existingActivity.met = newActivity.met;
+                existingActivity.byactivity = newActivity.byactivity;
+                existingActivity.dailyaverage = newActivity.dailyaverage;
+            } else {
+                flatActivities.push(newActivity);
+            }
+        });
+
+            recommendation.physicalActivity = flatActivities.map(activity => [activity]);
+
+        await recommendation.save();
+
         return res.status(200).json({
             success: true,
-            message: "Activity added successfully",
-            data: clientData,
+            message: "Activity added successfully and updated in quick access",
+            data: {
+                clientData,
+                recommendation
+            },
         });
     } catch (error) {
         console.error("Error in addPhysicalActivityByClient:", error);

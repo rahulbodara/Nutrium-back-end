@@ -165,5 +165,48 @@ const createSubscriptionDoc = async (req, res, next) => {
 };
 
 
+const getPaymentData = async (req, res, next) => {
+  try {
+    const { subscriptionId } = req.params;
 
-module.exports = { getSubscription, createSubscription, updateSubscription, createSubscriptionDoc };
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "Subscription ID is required" });
+    }
+
+    let actualSubscriptionId = subscriptionId;
+    if (subscriptionId.startsWith("cs_")) {
+      const session = await stripe.checkout.sessions.retrieve(subscriptionId);
+      actualSubscriptionId = session.subscription;
+      if (!actualSubscriptionId) {
+        return res.status(404).json({ message: "No subscription found for this session." });
+      }
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(actualSubscriptionId);
+
+    if (!subscription.latest_invoice) {
+      return res.status(404).json({ message: "No invoices found for this subscription." });
+    }
+
+    const invoice = await stripe.invoices.retrieve(subscription.latest_invoice);
+
+    if (!invoice.payment_intent) {
+      return res.status(404).json({ message: "No payment intent found for this invoice." });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+
+    res.status(200).json({
+      success: true,
+      paymentData: paymentIntent,
+      subscription: subscription,
+    });
+  } catch (error) {
+    console.error("Error fetching payment data:", error);
+    res.status(500).json({ message: "Error fetching payment data" });
+  }
+};
+
+
+
+module.exports = { getSubscription, createSubscription, updateSubscription, createSubscriptionDoc, getPaymentData };
