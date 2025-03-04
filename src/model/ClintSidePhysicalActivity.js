@@ -23,7 +23,7 @@ const ClientSidePhysicalActivitySchema = new mongoose.Schema(
             durations: {
                 type: String,
             },
-            activities: {
+            activity: {
                 type: String,
             },
             met: {
