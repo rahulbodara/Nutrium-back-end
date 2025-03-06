@@ -361,45 +361,86 @@ const updateWaterIntake = async (req, res) => {
             return res.status(404).json({ message: "Water record for the specified date not found." });
         }
 
-        if (date) {
-            existingDateRecord.date = new Date(date);
-        }
-
-        let recordTime;
-        if (time) {
-            const [hours, minutes] = time.split(":").map(Number);
-            recordTime = new Date(Date.UTC(
-                new Date().getUTCFullYear(),
-                new Date().getUTCMonth(),
-                new Date().getUTCDate(),
-                hours, minutes, 0
-            )).toISOString().split("T")[1].split(".")[0];
-        } else {
-            recordTime = new Date().toISOString().split("T")[1].split(".")[0];
-        }
-
         let existingWaterRecord = existingDateRecord.waterIntakeAmount.find(entry =>
             entry._id.toString() === waterIntakeAmountId
         );
 
-        if (existingWaterRecord) {
-            existingWaterRecord.amount = waterIntake !== undefined ? `${waterIntake}ml` : existingWaterRecord.amount;
-            existingWaterRecord.time = recordTime;
+        if (!existingWaterRecord) {
+            return res.status(404).json({ message: "Water intake entry not found." });
+        }
+
+        let oldDate = existingDateRecord.date.toISOString().split("T")[0];
+        let newDate = date ? new Date(date).toISOString().split("T")[0] : oldDate;
+
+        let recordTime = existingWaterRecord.time;
+        if (time) {
+            const [hours, minutes, seconds] = time.split(":").map(Number);
+            recordTime = new Date(Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate(),
+                hours, minutes, seconds || 0
+            )).toISOString().split("T")[1].split(".")[0];
+        }
+
+        if (newDate === oldDate) {
+
+            existingDateRecord.waterIntakeAmount.push({
+                _id: new mongoose.Types.ObjectId(),
+                amount: waterIntake && !isNaN(parseInt(waterIntake))
+                    ? `${waterIntake}ml`
+                    : "0ml",
+                time: formattedTime
+            });
+
         } else {
-            let existingTimeRecord = existingDateRecord.waterIntakeAmount.find(entry =>
-                entry.time === recordTime
+            let newDateRecord = waterIntakeData.waterIntakeRecords.find(record =>
+                record.date.toISOString().split("T")[0] === newDate
             );
 
-            if (existingTimeRecord) {
-                existingTimeRecord.amount = waterIntake !== undefined ? `${waterIntake}ml` : existingTimeRecord.amount;
-            } else {
-                existingDateRecord.waterIntakeAmount.push({
+            if (!newDateRecord) {
+                newDateRecord = {
                     _id: new mongoose.Types.ObjectId(),
-                    amount: waterIntake !== undefined ? `${waterIntake}ml` : "0ml",
-                    time: recordTime,
-                });
+                    date: new Date(newDate),
+                    DailyGoal: existingDateRecord.DailyGoal,
+                    waterIntakeAmount: [{
+                        _id: existingWaterRecord._id,
+                        amount: waterIntake && !isNaN(parseInt(waterIntake))
+                            ? `${waterIntake}ml`
+                            : existingWaterRecord.amount,
+                        time: recordTime
+                    }]
+                };
+                waterIntakeData.waterIntakeRecords.push(newDateRecord);
+            } else {
+                let existingNewTimeRecord = newDateRecord.waterIntakeAmount.find(
+                    entry => entry.time === recordTime
+                );
+
+                if (existingNewTimeRecord) {
+                    const oldAmount = parseInt(existingNewTimeRecord.amount) || 0;
+                    const newAmount = parseInt(waterIntake) || 0;
+                    existingNewTimeRecord.amount = `${oldAmount + newAmount}ml`;
+                } else {
+                    newDateRecord.waterIntakeAmount.push({
+                        _id: existingWaterRecord._id,
+                        amount: waterIntake && !isNaN(parseInt(waterIntake))
+                            ? `${waterIntake}ml`
+                            : existingWaterRecord.amount,
+                        time: recordTime
+                    });
+                }
+            }
+
+            existingDateRecord.waterIntakeAmount = existingDateRecord.waterIntakeAmount.filter(
+                entry => entry._id.toString() !== waterIntakeAmountId
+            );
+
+            if (existingDateRecord.waterIntakeAmount.length === 0) {
+                existingDateRecord.waterIntakeAmount = [];
             }
         }
+
         await waterIntakeData.save();
 
         return res.status(200).json({
@@ -412,6 +453,7 @@ const updateWaterIntake = async (req, res) => {
         return res.status(500).json({ message: "Internal server error." });
     }
 };
+
 
 
 
@@ -523,7 +565,7 @@ const addPhysicalActivityByClient = async (req, res) => {
             }
         });
 
-            recommendation.physicalActivity = flatActivities.map(activity => [activity]);
+        recommendation.physicalActivity = flatActivities.map(activity => [activity]);
 
         await recommendation.save();
 
