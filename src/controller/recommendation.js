@@ -405,7 +405,7 @@ const updateWaterIntake = async (req, res) => {
                     DailyGoal: existingDateRecord.DailyGoal,
                     waterIntakeAmount: [{
                         _id: existingWaterRecord._id,
-                        amount: waterIntake && !isNaN(parseInt(waterIntake))
+                        amount: waterIntake
                             ? `${waterIntake}ml`
                             : existingWaterRecord.amount,
                         time: recordTime
