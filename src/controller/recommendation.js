@@ -390,7 +390,7 @@ const updateWaterIntake = async (req, res) => {
                 amount: waterIntake && !isNaN(parseInt(waterIntake))
                     ? `${waterIntake}ml`
                     : "0ml",
-                time: formattedTime
+                time: recordTime
             });
 
         } else {
