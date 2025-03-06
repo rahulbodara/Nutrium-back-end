@@ -631,16 +631,57 @@ const updatePhysicalActivityByClient = async (req, res) => {
 
         await clientData.save();
 
+        let recommendation = await Recommendation.findOne({ clientId });
+
+        if (!recommendation) {
+            recommendation = new Recommendation({
+                userId: clientData.userId,
+                clientId,
+                physicalActivity: [],
+            });
+        }
+
+        let updated = false;
+
+        recommendation.physicalActivity = recommendation.physicalActivity.map((group) => {
+            return group.map((activity) => {
+                if (activity._id.toString() === activityId) {
+                    updated = true;
+                    return {
+                        ...activity.toObject(),
+                        ...updateData,
+                        date: updateData.date ? new Date(updateData.date) : activity.date,
+                    };
+                }
+                return activity;
+            });
+        });
+
+        if (!updated) {
+            recommendation.physicalActivity.push([
+                {
+                    _id: activityId,
+                    ...updateData,
+                    date: updateData.date ? new Date(updateData.date) : new Date(),
+                },
+            ]);
+        }
+
+        await recommendation.save();
+
         return res.status(200).json({
             success: true,
-            message: "Activity updated successfully",
-            data: clientData.physicalActivity[activityIndex],
+            message: "Activity updated successfully in client and recommendation",
+            data: {
+                clientActivity: clientData.physicalActivity[activityIndex],
+                recommendation,
+            },
         });
     } catch (error) {
-        console.error("Error in updatePhysicalActivityByClient:", error);
         return res.status(500).json({ message: "Server error", error });
     }
 };
+
 
 
 
