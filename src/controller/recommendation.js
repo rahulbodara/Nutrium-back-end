@@ -369,75 +369,46 @@ const updateWaterIntake = async (req, res) => {
             return res.status(404).json({ message: "Water intake entry not found." });
         }
 
-        let oldDate = existingDateRecord.date.toISOString().split("T")[0];
-        let newDate = date ? new Date(date).toISOString().split("T")[0] : oldDate;
-
-        let recordTime = existingWaterRecord.time;
-        if (time) {
-            const [hours, minutes, seconds] = time.split(":").map(Number);
-            recordTime = new Date(Date.UTC(
-                new Date().getUTCFullYear(),
-                new Date().getUTCMonth(),
-                new Date().getUTCDate(),
-                hours, minutes, seconds || 0
-            )).toISOString().split("T")[1].split(".")[0];
+        if (waterIntake && !isNaN(parseInt(waterIntake))) {
+            const oldAmount = parseInt(existingWaterRecord.amount) || 0;
+            const newAmount = parseInt(waterIntake);
+            existingWaterRecord.amount = `${oldAmount + newAmount}ml`;
         }
 
-        if (newDate === oldDate) {
+        if (time) {
+            existingWaterRecord.time = time;
+        }
 
-            existingDateRecord.waterIntakeAmount.push({
-                _id: new mongoose.Types.ObjectId(),
-                amount: waterIntake && !isNaN(parseInt(waterIntake))
-                    ? `${waterIntake}ml`
-                    : "0ml",
-                time: recordTime
-            });
+        if (date) {
+            const newDate = new Date(date).toISOString().split("T")[0];
+            const oldDate = existingDateRecord.date.toISOString().split("T")[0];
 
-        } else {
-            let newDateRecord = waterIntakeData.waterIntakeRecords.find(record =>
-                record.date.toISOString().split("T")[0] === newDate
-            );
-
-            if (!newDateRecord) {
-                newDateRecord = {
-                    _id: new mongoose.Types.ObjectId(),
-                    date: new Date(newDate),
-                    DailyGoal: existingDateRecord.DailyGoal,
-                    waterIntakeAmount: [{
-                        _id: existingWaterRecord._id,
-                        amount: waterIntake
-                            ? `${waterIntake}ml`
-                            : existingWaterRecord.amount,
-                        time: recordTime
-                    }]
-                };
-                waterIntakeData.waterIntakeRecords.push(newDateRecord);
-            } else {
-                let existingNewTimeRecord = newDateRecord.waterIntakeAmount.find(
-                    entry => entry.time === recordTime
+            if (newDate !== oldDate) {
+                let newDateRecord = waterIntakeData.waterIntakeRecords.find(record =>
+                    record.date.toISOString().split("T")[0] === newDate
                 );
 
-                if (existingNewTimeRecord) {
-                    const oldAmount = parseInt(existingNewTimeRecord.amount) || 0;
-                    const newAmount = parseInt(waterIntake) || 0;
-                    existingNewTimeRecord.amount = `${oldAmount + newAmount}ml`;
+                if (!newDateRecord) {
+                    newDateRecord = {
+                        _id: new mongoose.Types.ObjectId(),
+                        date: new Date(newDate),
+                        DailyGoal: existingDateRecord.DailyGoal,
+                        waterIntakeAmount: [existingWaterRecord]
+                    };
+                    waterIntakeData.waterIntakeRecords.push(newDateRecord);
                 } else {
-                    newDateRecord.waterIntakeAmount.push({
-                        _id: existingWaterRecord._id,
-                        amount: waterIntake && !isNaN(parseInt(waterIntake))
-                            ? `${waterIntake}ml`
-                            : existingWaterRecord.amount,
-                        time: recordTime
-                    });
+                    newDateRecord.waterIntakeAmount.push(existingWaterRecord);
                 }
-            }
 
-            existingDateRecord.waterIntakeAmount = existingDateRecord.waterIntakeAmount.filter(
-                entry => entry._id.toString() !== waterIntakeAmountId
-            );
+                existingDateRecord.waterIntakeAmount = existingDateRecord.waterIntakeAmount.filter(
+                    entry => entry._id.toString() !== waterIntakeAmountId
+                );
 
-            if (existingDateRecord.waterIntakeAmount.length === 0) {
-                existingDateRecord.waterIntakeAmount = [];
+                if (existingDateRecord.waterIntakeAmount.length === 0) {
+                    waterIntakeData.waterIntakeRecords = waterIntakeData.waterIntakeRecords.filter(
+                        record => record._id.toString() !== waterRecordId
+                    );
+                }
             }
         }
 
@@ -453,6 +424,7 @@ const updateWaterIntake = async (req, res) => {
         return res.status(500).json({ message: "Internal server error." });
     }
 };
+
 
 
 
@@ -643,9 +615,9 @@ const updatePhysicalActivityByClient = async (req, res) => {
 
         let updated = false;
 
-        recommendation.physicalActivity = recommendation.physicalActivity.map((group) => {
-            return group.map((activity) => {
-                if (activity._id.toString() === activityId) {
+        recommendation.physicalActivity = recommendation.physicalActivity.map(group => {
+            return group.map(activity => {
+                if (activity.activity === updateData.activity) {  // Match by activity name
                     updated = true;
                     return {
                         ...activity.toObject(),
@@ -657,17 +629,9 @@ const updatePhysicalActivityByClient = async (req, res) => {
             });
         });
 
-        if (!updated) {
-            recommendation.physicalActivity.push([
-                {
-                    _id: activityId,
-                    ...updateData,
-                    date: updateData.date ? new Date(updateData.date) : new Date(),
-                },
-            ]);
+        if (updated) {
+            await recommendation.save();
         }
-
-        await recommendation.save();
 
         return res.status(200).json({
             success: true,
@@ -681,6 +645,7 @@ const updatePhysicalActivityByClient = async (req, res) => {
         return res.status(500).json({ message: "Server error", error });
     }
 };
+
 
 
 
