@@ -15,7 +15,8 @@ const getBillingInformation = async (req, res, next) => {
     return res.json(500).json({ message: error })
   }
 };
-const createBillingInformation = async (res, userId, billingData) => {
+
+const createBillingInformation = async (_, res, userId, billingData) => {
   try {
     const user = await User.findOne({ _id: userId });
     if (!user) {
@@ -37,7 +38,7 @@ const createBillingInformation = async (res, userId, billingData) => {
 
     const savedBillingInformation = await newBillingInformation.save();
 
-    res.status(200).json(savedBillingInformation);
+    return res.status(200).json(savedBillingInformation);
   } catch (error) {
     console.error("Error creating billing information:", error);
   }
@@ -86,8 +87,42 @@ const updateBillingInformation = async (req, res, next) => {
   }
 };
 
+const createBillingInformationAPI = async (req, res) => {
+  const userId = req.userId
+  const billingData = req.body
+  try {
+
+    const user = await User.findOne({ _id: userId })
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const { name, vatIdentificationNumber, address, city, zipcode } =
+      billingData;
+    const { fullName, country } = user;
+
+    const newBillingInformation = new BillingInformation({
+      userId,
+      name: fullName,
+      country,
+      vatIdentificationNumber,
+      address,
+      city,
+      zipcode,
+    });
+
+    const savedBillingInformation = await newBillingInformation.save();
+
+    return res.status(200).json({ success: true, data: savedBillingInformation });
+  } catch (error) {
+    console.error("Error creating billing information:", error);
+    return res.status(500).json({ message: error })
+  }
+};
+
 module.exports = {
   createBillingInformation,
   updateBillingInformation,
   getBillingInformation,
+  createBillingInformationAPI
 };

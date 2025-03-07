@@ -58,12 +58,7 @@ const createProfessionalPreference = async (userId) => {
             },
             "emailandprintingpreference": {
                 "mealplanemailsubject": "Meal plan",
-                "mealplanemailbody": `Hello [patient_first_name]. The meal plan created on [meal_plan_last_update_date] is sent in attachment. \
-                Remember that you can check the meal plan in the mobile app, available for Android and iOS. \
-                \
-                I'm available to help you with any question you have. \
-                \
-                Best regards,${user.fullName} `,
+                "mealplanemailbody": `"Hello [patient_first_name].\n\nThe meal plan created on [meal_plan_last_update_date] is sent in attachment.\n\nRemember that you can check the meal plan in the mobile app, available for Android and iOS.\n\nI'm available to help you with any question you have.\n\nBest regards,\n${user?.fullName}"`,
                 "mealplansections": ["Client information", "Meal plan", "Recommendations", "Other information", "Recipes", "Signature"],
                 "printingdesign": "Simple design (2018)",
                 "multipledaysprintinglayout": "Layout with columns",

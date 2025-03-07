@@ -21,6 +21,8 @@ router.put(
 
 router.post("/subscriptiondoc", isAuthenticated, subscriptionController.createSubscriptionDoc)
 
+router.get("/subscription-data/:subscriptionId", isAuthenticated, subscriptionController.getPaymentData)
+
 // router.post("/savepayment", isAuthenticated, subscriptionController.savePayment)
 
 module.exports = router;

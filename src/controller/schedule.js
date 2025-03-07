@@ -14,9 +14,10 @@ const Schedule = require("../model/Schedule");
 
 const setSchedule = async (req, res, next) => {
   try {
-    const { userId } = req.userId;
+    const userId = req.userId;
+
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required in the URL" });
+      return res.status(400).json({ message: "User ID is required" });
     }
 
     const { schedules } = req.body;
@@ -30,23 +31,17 @@ const setSchedule = async (req, res, next) => {
       schedule = new Schedule({ userId, schedules: [] });
     }
 
-    schedules.forEach((newSchedule) => {
-      const existingSchedule = schedule.schedules.find((s) => s.day === newSchedule.day);
-
-      if (existingSchedule) {
-        existingSchedule.isEnabled = newSchedule.isEnabled;
-        existingSchedule.workplace = newSchedule.workplace;
-      } else {
-        schedule.schedules.push(newSchedule);
-      }
-    });
+    // Filter out schedules that are not in the request (i.e., remove unmentioned days)
+    schedule.schedules = schedules.filter((newSchedule) => newSchedule.isEnabled !== false);
 
     const savedSchedule = await schedule.save();
-    res.status(200).json({ userId, schedules: savedSchedule.schedules });
+    res.status(200).json({ message: "Schedule updated successfully", userId, schedules: savedSchedule.schedules });
   } catch (error) {
+    console.error("❌ Error in setSchedule:", error);
     next({ status: 500, message: "Error saving schedule", error });
   }
 };
+
 
 const getScheduleById = async (req, res, next) => {
   try {
