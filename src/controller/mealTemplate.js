@@ -500,39 +500,57 @@ const createVersion = async (req, res) => {
   }
 };
 
-const addFoodInTemplate = async(req, res)=> {
-try {
-    const { templateId ,mealId, mealType ,foodId} =req.body
+const addFoodInTemplate = async (req, res) => {
+  try {
+    const { templateId, mealId, mealType, foodId } = req.body;
+
     const userId = req.userId;
 
     const template = await Template.findById(templateId);
-    if (!template) return res.status(404).json({success: false, error: "Template not found" });
+    if (!template) {
+      return res.status(404).json({ success: false, error: "Template not found" });
+    }
 
-    const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
-    const food = await Food.findOne({ _id: foodId });
-    
-    template.mealTemplate[index].mealSchedule.forEach((entry)=>{ 
-      if(entry.mealType === `${mealType}`) entry.meal.push({
-         displayName:`${food.displayName}`,
-        foodId : `${food._id}`,
-        or : [],
-        foodIndex: new mongoose.Types.ObjectId(),
-      });
-    })
-    
+    const mealIndex = template.mealTemplate.findIndex(
+      (entry) => entry._id.toString() === mealId
+    );
+
+    if (mealIndex === -1) {
+      return res.status(404).json({ success: false, error: "Meal not found in template" });
+    }
+
+    const food = await Food.findById(foodId);
+    if (!food) {
+      return res.status(404).json({ success: false, error: "Food not found" });
+    }
+
+    template.mealTemplate[mealIndex].mealSchedule.forEach((entry) => {
+      if (entry.mealType === mealType) {
+        if (!entry.meal) {
+          entry.meal = [];
+        }
+        entry.meal.push({
+          displayName: food.displayName,
+          foodId: food._id,
+          or: [],
+          foodIndex: new mongoose.Types.ObjectId(),
+        });
+      }
+    });
+
     template.markModified("mealTemplate");
     await template.save();
-   
+
     return res.status(201).json({
       success: true,
       message: "Meal added successfully",
-      template: template,
+      template,
     });
-} catch (error) {
-  console.error("Error adding meal:", error);
-  return res.status(500).json({ error: "Internal Server Error" });
-}
-}
+  } catch (error) {
+    console.error("Error adding meal:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 const updateTimeAndSubMealTypeName = async (req, res) => {
   try {
