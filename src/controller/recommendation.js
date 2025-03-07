@@ -372,7 +372,7 @@ const updateWaterIntake = async (req, res) => {
         if (waterIntake && !isNaN(parseInt(waterIntake))) {
             const oldAmount = parseInt(existingWaterRecord.amount) || 0;
             const newAmount = parseInt(waterIntake);
-            existingWaterRecord.amount = `${oldAmount + newAmount}ml`;
+            existingWaterRecord.amount = `${newAmount ? newAmount : oldAmount}ml`;
         }
 
         if (time) {
