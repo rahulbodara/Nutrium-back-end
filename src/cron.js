@@ -14,7 +14,7 @@ cron.schedule("* * * * *", async () => {
     }
 });
 //"0 0 * * *"  "*/30 * * * *"
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("1 0 * * *", async () => {
     console.log(" Running scheduled task at 12:00 AM...");
 
     try {
@@ -23,7 +23,6 @@ cron.schedule("0 0 * * *", async () => {
         const today = new Date();
         const isoDate = today.toISOString(); 
         const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
-
 
         const userClientPairs = diaries.map(d => ({ userId: d.userId, clientId: d.clientId }));
         const templates = await Template.find({ $or: userClientPairs });
@@ -50,12 +49,10 @@ cron.schedule("0 0 * * *", async () => {
                 await diary.save(); 
             }
         }
-
         console.log("✅ Food diary updates completed.");
     } catch (error) {
         console.error("❌ [Job 2] Error:", error);
     }
 });
-
 
 module.exports = cron;
