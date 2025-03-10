@@ -161,6 +161,40 @@ const getAllFood = async (req, res, next) => {
   }
 };
 
+const searchFood = async (req, res, next) => {
+  try {
+    const { query, source } = req.query;
+    const userId = req.userId;
+
+    const filter = source ? { source } : {};
+    if (source === "My foods" && userId) {
+      filter.userId = userId;
+    }
+
+    if (query) {
+      filter.$or = [
+        { name: { $regex: query, $options: "i" } },
+        { category: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ];
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const foods = await Food.find(filter).skip(skip).limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      foods,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 const getFoodById = async (req, res, next) => {
   try {
     const foodId = req.params.foodId;
@@ -363,6 +397,7 @@ const deleteCommonMeasure = async(req, res, next) => {
 module.exports = {
   addFood,
   getAllFood,
+  searchFood,
   getFoodById,
   getFoodsByUser,
   deleteFood,

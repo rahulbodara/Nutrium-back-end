@@ -3,6 +3,7 @@ const { isAuthenticated } = require('../middleware/auth');
 const {
   addFood,
   getAllFood,
+  searchFood,
   getFoodById,
   getFoodsByUser,
   deleteFood,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post('/foods', isAuthenticated, addFood);
 router.get('/foods', getAllFood);
+router.get('/search-foods', isAuthenticated, searchFood);
 router.get('/foods/:foodId', isAuthenticated, getFoodById);
 router.get('/user-foods', isAuthenticated, getFoodsByUser);
 router.delete('/foods/:foodId', isAuthenticated, deleteFood);
