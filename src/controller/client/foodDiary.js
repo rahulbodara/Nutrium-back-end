@@ -1,7 +1,7 @@
 const FoodDiary = require("../../model/FoodDiary");
 const mealTemplate = require("../../model/mealTemplate");
 const mongoose = require("mongoose");
-const Food = require('../../model/Food');
+const Food = require("../../model/Food");
 
 const fetchFoodDiary = async (req, res, next) => {
   try {
@@ -35,7 +35,7 @@ const fetchFoodDiary = async (req, res, next) => {
 const addMealInDiary = async (req, res, next) => {
   try {
     const { clientId } = req.params;
-    const { registrationDate, mealType, time, foodId } = req.body;
+    const { registrationDate, mealType, time, foodId, comments } = req.body;
 
     const food = await Food.findById(foodId);
     if (!food) {
@@ -50,20 +50,19 @@ const addMealInDiary = async (req, res, next) => {
       _id: new mongoose.Types.ObjectId(),
     };
 
-    const pushData ={
-        displayName: food.displayName,
-        foodId: food._id,
-        photourl:"",
-        foodIndex: new mongoose.Types.ObjectId(),
-      }
+    const pushData = {
+      displayName: food.displayName,
+      foodId: food._id,
+      photourl: "",
+      comments,
+      foodIndex: new mongoose.Types.ObjectId(),
+    };
 
-      if (req.file && req.file.path) {
-        pushData.photourl = req.file.path;
-      }
+    if (req.file && req.file.path) {
+      pushData.photourl = req.file.path;
+    }
 
     mealItem.meal.push(pushData);
-
-
 
     if (!clientId) {
       return res
@@ -106,7 +105,76 @@ const addMealInDiary = async (req, res, next) => {
   }
 };
 
+const updateTimeAndCommentInDiary = async (req, res, next) => {
+  try {
+    const { clientId } = req.params;
+    const { registrationDate, scheduleId, time, comments, foodIndex } = req.body;
+
+    const foodDiary = await FoodDiary.findOne({ clientId });
+
+    if (!foodDiary) {
+      return res.status(404).json({
+        success: false,
+        error: "Food diary not found",
+      });
+    }
+
+    const updateFields = {};
+    const arrayFilters = [
+      { 'entry.registrationDate': new Date(registrationDate) },
+      { 'meal._id': scheduleId }
+    ];
+
+    if (time) {
+      updateFields['foodDiaryData.$[entry].mealSchedule.$[meal].time'] = time;
+    }
+
+    if (comments) {
+      updateFields['foodDiaryData.$[entry].mealSchedule.$[meal].meal.$[food].comments'] = comments;
+      arrayFilters.push({ 'food.foodIndex': foodIndex });
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided for update.",
+      });
+    }
+
+    const updatedUser = await FoodDiary.findOneAndUpdate(
+      { clientId },
+      { $set: updateFields },
+      {
+        arrayFilters,
+        new: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: "Meal not found in the food diary",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal updated successfully",
+      foodDiary: updatedUser,
+    });
+
+  } catch (error) {
+    console.error("Error updating meal in food diary:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
+
+
 module.exports = {
   fetchFoodDiary,
   addMealInDiary,
+  updateTimeAndCommentInDiary,
 };
