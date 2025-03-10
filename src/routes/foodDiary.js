@@ -7,6 +7,6 @@ const router = express.Router();
 
 router.get('/food-diary/:clientId', fetchFoodDiary);
 router.post('/food-diary-add-meal/:clientId',upload.single('photo'), addMealInDiary);
-router.put("/food-diary/:clientId/meal/:mealId", isAuthenticated, updateTimeAndCommentInDiary);
+router.put("/food-diary/:clientId", isAuthenticated, updateTimeAndCommentInDiary);
 
 module.exports = router;
