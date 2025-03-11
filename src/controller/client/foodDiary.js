@@ -172,9 +172,71 @@ const updateTimeAndCommentInDiary = async (req, res, next) => {
   }
 };
 
+const deleteFoodFromDiary = async (req, res, next) => {
+  try {
+    const { clientId } = req.params;
+    const { registrationDate, scheduleId, foodIndex } = req.body;
+
+    if (!clientId || !registrationDate || !scheduleId || !foodIndex) {
+      return res.status(400).json({
+        success: false,
+        error: "clientId, registrationDate, scheduleId, and foodIndex are required",
+      });
+    }
+
+    const foodDiary = await FoodDiary.findOne({ clientId });
+
+    if (!foodDiary) {
+      return res.status(404).json({
+        success: false,
+        error: "Food diary not found",
+      });
+    }
+
+    const updatedFoodDiary = await FoodDiary.findOneAndUpdate(
+      {
+        _id: foodDiary._id,
+      },
+      {
+        $pull: {
+          "foodDiaryData.$[entry].mealSchedule.$[meal].meal": {
+            foodIndex: new mongoose.Types.ObjectId(foodIndex),
+          },
+        },
+      },
+      {
+        arrayFilters: [
+          { "entry.registrationDate": new Date(registrationDate) },
+          { "meal._id": new mongoose.Types.ObjectId(scheduleId) },
+        ],
+        new: true,
+      }
+    );
+
+    if (!updatedFoodDiary) {
+      return res.status(404).json({
+        success: false,
+        error: "Food not found in the diary",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Food item deleted successfully",
+      foodDiary: updatedFoodDiary,
+    });
+  } catch (error) {
+    console.error("Error deleting food from diary:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+};
 
 module.exports = {
   fetchFoodDiary,
   addMealInDiary,
   updateTimeAndCommentInDiary,
+  deleteFoodFromDiary
 };
