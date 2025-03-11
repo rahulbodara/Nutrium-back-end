@@ -111,7 +111,7 @@ const sendEmail = async (email, resetToken, name) => {
       pass: process.env.MAIL_PASSWORD,
     },
   });
-  const resetUrl = `https://nutrium-front-end-six.vercel.app/accounts/changePassword?token=${resetToken}`;
+  const resetUrl = `https://nutrium-front-end-ci66-rahulbodaras-projects.vercel.app/accounts/changePassword?token=${resetToken}`;
   const mailOptions = {
     from: process.env.GMAIL,
     to: email,
@@ -122,6 +122,7 @@ const sendEmail = async (email, resetToken, name) => {
     <p>If you didn't request this, please ignore this email.</p>
     <p>Your password won't change until you access the link above and create a new one.</p>`,
   };
+
   await transporter.sendMail(mailOptions);
 };
 

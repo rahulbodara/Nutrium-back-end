@@ -133,8 +133,8 @@ const SignUp = async (req, res, next) => {
     await createPrivacyAndNotification(savedUser._id);
     await createBillingInformation(savedUser._id, req.body);
     const lookupEntry = new Lookup({
-      userId: savedUser._id,  // Assuming Lookup requires userId
-      timestamp: new Date(),  // Add a timestamp if needed
+      userId: savedUser._id,
+      timestamp: new Date(),
     });
     await lookupEntry.save();
 
@@ -145,6 +145,7 @@ const SignUp = async (req, res, next) => {
       role: savedUser.role
     });
   } catch (error) {
+    console.log("🚀 ~ SignUp ~ error:", error)
     next(error);
   }
 };

@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema(
       enum: [
         'Nutritionist',
         'Dietitian',
-        'Nutritional therapist',
+        'Nutritional Therapist',
         'Health Coach',
         'Student',
         'Other',

@@ -58,6 +58,8 @@ const clientSchema = new mongoose.Schema(
     },
     image: {
       type: String,
+      required: true,
+      default: '',
     },
     occupation: {
       type: String,
