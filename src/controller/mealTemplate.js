@@ -106,22 +106,17 @@ const createMealTemplate = async (req, res) => {
 
 const getMealTemplate = async (req, res, next) => {
   try {
-    const { clientId } = req.query;
-
+    const query = {
+      userId: req.userId,
+    };
     if (!req.userId) {
       return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
     }
-
-    const query = {userId: req.userId};
-    if (clientId) {
-      query.clientId = clientId;
+    const templet = await Template.find(query);
+    if (!templet) {
+      return res.status(404).json({success: false, message: "templet Not Found!!" });
     }
-
-    const template = await Template.find(query);
-    if (!template || template.length === 0) {
-      return res.status(404).json({ success: false, message: "Template not found!" });
-    }
-    res.status(200).json({success: true, template});
+    res.status(200).json({success: true, templet});
   } catch (error) {
     console.error(error);
     next(error);
