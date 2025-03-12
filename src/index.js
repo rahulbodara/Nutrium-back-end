@@ -38,6 +38,7 @@ const privacyandnotification = require('./routes/privacyAndnotification');
 const CommonMeasures = require('./routes/CommonMeasures')
 const Message = require('./model/Message');
 const lookup = require('./routes/lookup');
+const labTest = require('./routes/LabTestRequest');
 const foodDiary = require('./routes/foodDiary');
 const os = require('os');
 const https = require('https');
@@ -133,7 +134,7 @@ io.on("connection", (socket) => {
       const roomId = getRoomId(senderId, receiverId);
       let fileUrl = null;
       if (file) {
-          fileUrl = file;
+        fileUrl = file;
       }
       const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
       await newMessage.save();
@@ -203,6 +204,7 @@ app.use('/api/v1', privacyandnotification);
 app.use('/api/v1', CommonMeasures);
 app.use("/api/v1", lookup);
 app.use("/api/v1", foodDiary);
+app.use("/api/v1", labTest)
 
 
 

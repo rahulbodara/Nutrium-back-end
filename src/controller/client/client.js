@@ -24,6 +24,7 @@ const {
   EmailForm,
   generateResetToken,
 } = require("../../utils/EmailSender");
+const LabTestRequest = require("../../model/LabTestReqest");
 
 const registerClient = async (req, res, next) => {
   try {
@@ -2980,6 +2981,127 @@ const clientGoogleLogin = async (req, res, next) => {
   }
 };
 
+const addLabTestRequest = async (req, res) => {
+  try {
+    const { requestDate, description, labTests, otherLabTests } = req.body;
+    const userId = req.userId;
+    const clientId = req.params.clientId;
+
+    if (!clientId || !requestDate || !labTests.length) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const newRequest = await LabTestRequest.create({
+      userId,
+      clientId,
+      requestDate,
+      description,
+      labTests,
+      otherLabTests,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Lab test request added successfully",
+      data: newRequest,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+const getAllLabTest = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.clientId
+
+    const labTests = await LabTestRequest.find({ userId, clientId });
+
+    if (!labTests.length) {
+      return res.status(404).json({ success: false, message: "No lab tests found" });
+    }
+
+    return res.status(200).json({ success: true, data: labTests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}
+
+const getOneLabTest = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.clientId
+    const labTestId = req.params.labTestId
+
+    const labTest = await LabTestRequest.findById({ userId, clientId, _id: labTestId });
+
+    if (!labTest) {
+      return res.status(404).json({ success: false, message: "Lab test not found" });
+    }
+
+    return res.status(200).json({ success: true, data: labTest });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+
+}
+
+const updateLabTestRequest = async (req, res) => {
+  try {
+    const { labTestId } = req.params;
+    const updates = req.body;
+
+    const updatedLabTest = await LabTestRequest.findByIdAndUpdate(
+      labTestId,
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedLabTest) {
+      return res.status(404).json({ success: false, message: "Lab test request not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Lab test request updated", data: updatedLabTest });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+  }
+};
+
+const deleteLabTestRequest = async (req, res) => {
+  try {
+    const { labTestId } = req.params;
+
+    const deletedLabTest = await LabTestRequest.findByIdAndDelete(labTestId);
+
+    if (!deletedLabTest) {
+      return res.status(404).json({ success: false, message: "Lab test request not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Lab test request deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+  }
+};
+
+
+
 module.exports = {
   registerClient,
   updateClientPassword,
@@ -3029,7 +3151,12 @@ module.exports = {
   clientLogin,
   clientGoogleLogin,
   addOrUpdateClientMeasurement,
-  setClientPassword
+  setClientPassword,
+  addLabTestRequest,
+  getAllLabTest,
+  getOneLabTest,
+  updateLabTestRequest,
+  deleteLabTestRequest,
 
 };
 
