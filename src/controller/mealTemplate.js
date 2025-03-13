@@ -108,6 +108,7 @@ const getMealTemplate = async (req, res, next) => {
   try {
     const query = {
       userId: req.userId,
+      clientId: { $exists: false },
     };
     if (!req.userId) {
       return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
