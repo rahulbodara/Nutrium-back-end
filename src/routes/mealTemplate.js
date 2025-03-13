@@ -15,12 +15,14 @@ const {
   deleteMealScheduleInTemplate,
   featchMealPlanForClient,
   createNote,
-  chnageTemplateName
+  chnageTemplateName,
+  getMealTemplateForClient
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
 router.post('/createMealTemplate',isAuthenticated, createMealTemplate);
 router.get('/get-meal-templet', isAuthenticated, getMealTemplate);
+router.get('/get-meal-templet-for-client/:clientId?', isAuthenticated, getMealTemplateForClient);
 router.get('/get-meal-templet/:id', isAuthenticated, getMealTemplateById);
 router.delete('/delete-meal-templet/:id', isAuthenticated, deleteMealTemplate);
 router.post('/addNewMeal', addNewMeal);
@@ -36,4 +38,3 @@ router.post('/meal-plan-chnageTemplateName', isAuthenticated, chnageTemplateName
 router.get('/meal-plan/:clientId', featchMealPlanForClient);
 
 module.exports = router;
-

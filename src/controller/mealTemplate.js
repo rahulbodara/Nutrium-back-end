@@ -123,6 +123,35 @@ const getMealTemplate = async (req, res, next) => {
   }
 };
 
+const getMealTemplateForClient = async (req, res, next) => {
+  try {
+    console.log("api called");
+    
+    if (!req.userId) {
+      return res.status(401).json({ success: false, error: "Unauthorized, user ID missing" });
+    }
+
+    const query = [
+      { userId: req.userId }
+    ];
+
+    if (req.params.clientId) {
+      query.push({ clientId: req.params.clientId });
+    }
+
+    const templet = await Template.find({ $and: query });
+
+    if (templet.length === 0) {
+      return res.status(404).json({ success: false, message: "Template not found!" });
+    }
+    res.status(200).json({success: true, templet});
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+    console.log("🚀 ~ getMealTemplate ~ req.userId:", req.userId)
+};
+
 const getMealTemplateById = async (req, res, next) => {
   try {
     const query = {
@@ -776,43 +805,6 @@ module.exports = {
   deleteMealScheduleInTemplate,
   featchMealPlanForClient,
   createNote,
-  chnageTemplateName
+  chnageTemplateName,
+  getMealTemplateForClient
 };
-
-
-const mealUpdateResponse = {
-  message: "Meal updated successfully",
-  template: {
-      _id: "67a59074b6f1658ed08f89b9",
-      templateName: "Meal plan template",
-      userId: "674fe376aa235b41d1ef6af6",
-      mealTemplate: [
-          {
-              days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-              mealSchedule: [
-                  { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-                  { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
-              ],
-              _id: "67ad6c5f90622b34b99ea11f"
-          },
-          {
-              days: ["Saturday"],
-              mealSchedule: [
-                  { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-                  { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
-              ],
-              _id: "67ad6c7a90622b34b99ea132"
-          },
-          {
-              days: ["Sunday"],
-              mealSchedule: [
-                  { mealType: "Breakfast", time: "7:00 AM", meal: [], notes: "" },
-                  { mealType: "Morning snack", time: "10:00 AM", meal: [], notes: "" },
-              ],
-              _id: "67ad6c7a90622b34b99ea133"
-          }
-      ],
-      __v: 8
-  }
-};
-
