@@ -113,11 +113,11 @@ const getMealTemplate = async (req, res, next) => {
     if (!req.userId) {
       return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
     }
-    const templet = await Template.find(query);
-    if (!templet) {
-      return res.status(404).json({success: false, message: "templet Not Found!!" });
+    const template = await Template.find(query);
+    if (!template) {
+      return res.status(404).json({success: false, message: "template Not Found!!" });
     }
-    res.status(200).json({success: true, templet});
+    res.status(200).json({success: true, template});
   } catch (error) {
     console.error(error);
     next(error);
@@ -126,7 +126,6 @@ const getMealTemplate = async (req, res, next) => {
 
 const getMealTemplateForClient = async (req, res, next) => {
   try {
-    console.log("api called");
     
     if (!req.userId) {
       return res.status(401).json({ success: false, error: "Unauthorized, user ID missing" });
@@ -140,18 +139,19 @@ const getMealTemplateForClient = async (req, res, next) => {
       query.push({ clientId: req.params.clientId });
     }
 
-    const templet = await Template.find({ $and: query });
+    const template = await Template.findOne({ $and: query });
 
-    if (templet.length === 0) {
+    if (!template) {
       return res.status(404).json({ success: false, message: "Template not found!" });
     }
-    res.status(200).json({success: true, templet});
+
+    res.status(200).json({ success: true, template });
   } catch (error) {
     console.error(error);
     next(error);
   }
-    console.log("🚀 ~ getMealTemplate ~ req.userId:", req.userId)
 };
+
 
 const getMealTemplateById = async (req, res, next) => {
   try {
