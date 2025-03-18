@@ -36,6 +36,7 @@ const dailyplan = require('./routes/dailyplan');
 const professionalPreference = require('./routes/professionalpreference');
 const privacyandnotification = require('./routes/privacyAndnotification');
 const CommonMeasures = require('./routes/CommonMeasures')
+const foodToAvoidTamplate = require("./routes/FoodToAvoidTamplate")
 const Message = require('./model/Message');
 const lookup = require('./routes/lookup');
 const labTest = require('./routes/LabTestRequest');
@@ -205,6 +206,7 @@ app.use('/api/v1', CommonMeasures);
 app.use("/api/v1", lookup);
 app.use("/api/v1", foodDiary);
 app.use("/api/v1", labTest)
+app.use("/api/v1", foodToAvoidTamplate)
 
 
 
