@@ -124,6 +124,24 @@ const getMealTemplate = async (req, res, next) => {
   }
 };
 
+const getMealAllTemplate = async (req, res, next) => {
+  try {
+
+    if (!req.userId) {
+      return res.status(401).json({ success: false,error: "Unauthorized, user ID missing" });
+    }
+    const template = await Template.find({clientId: { $exists: false }});
+    if (!template) {
+      return res.status(404).json({success: false, message: "template Not Found!!" });
+    }
+   
+    res.status(200).json({success: true, template});
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 const getMealTemplateForClient = async (req, res, next) => {
   try {
     
@@ -151,7 +169,6 @@ const getMealTemplateForClient = async (req, res, next) => {
     next(error);
   }
 };
-
 
 const getMealTemplateById = async (req, res, next) => {
   try {
@@ -288,7 +305,7 @@ const createVersion = async (req, res) => {
     if (!template) return res.status(404).json({success: false, error: "Template not found" });
     const allDays = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === "null") {
+    if (copyMealsOfMealPlan === "Do not copy" && creationMethod === null) {
       const newMeal = {
         days: selectedDesiredDays,
         mealSchedule: [
@@ -331,7 +348,7 @@ const createVersion = async (req, res) => {
       await template.save();
     }
 
-    if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === "null") {
+    if (copyMealsOfMealPlan !== "Do not copy" && creationMethod === null) {
       const newMeal = {
         days: selectedDesiredDays,
       };
@@ -807,5 +824,6 @@ module.exports = {
   featchMealPlanForClient,
   createNote,
   chnageTemplateName,
-  getMealTemplateForClient
+  getMealTemplateForClient,
+  getMealAllTemplate
 };
