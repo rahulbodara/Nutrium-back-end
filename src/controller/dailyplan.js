@@ -5,7 +5,7 @@ const createDailyPlan = async (req, res, next) => {
   try {
     const userId = req.userId;
     const clientId = req.params.clientId;
-    const { mealId, name, note, categories } = req.body;
+    const { mealId, name, notes, categories } = req.body;
 
     const existingMealPlan = await Mealplan.findOne({ clientId: clientId });
 
@@ -30,7 +30,7 @@ const createDailyPlan = async (req, res, next) => {
         clientId,
         mealId: savedDefaultMealPlan._id,
         name,
-        note,
+        notes,
         categories,
       });
 
@@ -43,7 +43,7 @@ const createDailyPlan = async (req, res, next) => {
         clientId,
         mealId: existingMealPlan._id,
         name,
-        note,
+        notes,
         categories,
       });
 

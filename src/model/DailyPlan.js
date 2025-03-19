@@ -17,7 +17,7 @@ const dailyPlanSchema = new mongoose.Schema({
     ref: 'Mealplan',
   },
   name: String,
-  note: String,
+  notes: String,
   categories: [
     {
       name: String,

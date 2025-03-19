@@ -16,13 +16,13 @@ const createMealTemplate = async (req, res) => {
           mealType: "Breakfast",
           time: "7:00 AM",
           meal: [],
-          Notes: "",
+          notes: "",
         },
         {
           mealType: "Morning snack",
           time: "10:00 AM",
           meal: [],
-          Notes: "",
+          notes: "",
         },
         {
           mealType: "Lunch",
@@ -31,13 +31,13 @@ const createMealTemplate = async (req, res) => {
           Dish: [],
           Dessert: [],
           Beverage: [],
-          Notes: "",
+          notes: "",
         },
         {
           mealType: "Afternoon snack",
           time: "4:00 PM",
           meal: [],
-          Notes: "",
+          notes: "",
         },
         {
           mealType: "Dinner",
@@ -46,13 +46,13 @@ const createMealTemplate = async (req, res) => {
           Dish: [],
           Dessert: [],
           Beverage: [],
-          Notes: "",
+          notes: "",
         },
         {
           mealType: "Super",
           time: "10:00 PM",
           meal: [],
-          Notes: "",
+          notes: "",
         },
       ],
       _id: new mongoose.Types.ObjectId()
@@ -238,7 +238,7 @@ const addNewMeal = async (req, res) => {
       mealType: newMealType,
       time: "",
       meal: [],
-      Notes: "",
+      notes: "",
     };
     
     if (mealType === "Dinner" || mealType === "Lunch") {
@@ -352,9 +352,17 @@ const createVersion = async (req, res) => {
       const newMeal = {
         days: selectedDesiredDays,
       };
-      const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
+      const matchedEntry = template.mealTemplate.find((entry) => {
+         const entrySet = new Set(entry.days); 
+         const copyMealSet = new Set(copyMealsOfMealPlan); 
+         const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
+      if (matchedEntry) {
+        newMeal.mealSchedule = matchedEntry.mealSchedule;
+      }
+      
+      newMeal._id = new mongoose.Types.ObjectId();
+      console.log(JSON.stringify(newMeal, null, 2));
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
 
@@ -732,7 +740,7 @@ const deleteMealScheduleInTemplate = async (req, res, next) => {
 const createNote = async (req, res, next) => {
   try {
 
-    const { templateId, mealId, mealType ,note} = req.body;
+    const { templateId, mealId, mealType ,notes} = req.body;
 
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({success: false, error: "Template not found" });
@@ -741,7 +749,7 @@ const createNote = async (req, res, next) => {
 
     if (index !== -1) {
       template.mealTemplate[index].mealSchedule.forEach((entry)=>{ 
-        if(entry.mealType === `${mealType}`) entry.Notes = note
+        if(entry.mealType === `${mealType}`) entry.notes = notes
       })
   }
     
