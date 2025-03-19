@@ -489,6 +489,7 @@ const createVersion = async (req, res) => {
       const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
       if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
 
+      newMeal._id = new mongoose.Types.ObjectId();
       const updateMealTemplate = (template, newMeal) => {
         template.mealTemplate = template.mealTemplate.map((entry) => {
 
@@ -520,35 +521,57 @@ const createVersion = async (req, res) => {
 
     if ( copyMealsOfMealPlan !== "Do not copy" && creationMethod === "Create a version for each day") {
 
-      const newMeal = selectedDesiredDays.map((entry)=>({
-        days : [entry],
-      }))
-      const matchedEntry = template.mealTemplate.find((entry) => { const entrySet = new Set(entry.days); const copyMealSet = new Set(copyMealsOfMealPlan); const isMatch = entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day)); return isMatch;});
-      if (matchedEntry) newMeal.mealSchedule = matchedEntry.mealSchedule;
-
-      const updateMealTemplate = (template, newMeal) => {
-        template.mealTemplate = template.mealTemplate.map((entry) => {
-         
-          if (entry.days === "Everyday") {
-            entry.days = [];
-          }
-          return entry;
+      for (const entry of selectedDesiredDays) { 
+        const newMeal = {
+          days: [entry],
+        };
+    
+        const matchedEntry = template.mealTemplate.find((item) => {
+          const entrySet = new Set(item.days);
+          const copyMealSet = new Set(copyMealsOfMealPlan);
+    
+          return entrySet.size === copyMealSet.size && [...entrySet].every((day) => copyMealSet.has(day));
         });
-        function getNewMealDays(newMeal) {
-          return newMeal.flatMap(item => item.days);
+    
+        if (matchedEntry) {
+          newMeal.mealSchedule = matchedEntry.mealSchedule;
         }
+        console.log(JSON.stringify(matchedEntry, null, 2));
+        newMeal._id = new mongoose.Types.ObjectId();
+        console.log(JSON.stringify(newMeal, null, 2));
+    
+        const updateMealTemplate = (template, newMeal) => {
+          template.mealTemplate = template.mealTemplate.map((entry) => {
+            if (entry.days.includes("Everyday")) {
+              entry.days = [];
+            }
+            return entry;
+          });
+    
+          function getNewMealDays(newMeal) {
+            return newMeal.flatMap(item => item.days);
+          }
+    
+          function mergeMealData(template, newMeal) {
+            const newMealDays = new Set(getNewMealDays([newMeal]));
+            const updatedTemplate = template.mealTemplate
+              .map(entry => {
+                const filteredDays = entry.days.filter(day => !newMealDays.has(day));
+                return { ...entry, days: filteredDays };
+              })
+              .filter(entry => entry.days.length > 0);
+    
+            return [...updatedTemplate, newMeal];
+          }
+    
+          return mergeMealData(template, newMeal);
+        };
+    
+        template.mealTemplate = updateMealTemplate(template, newMeal);
+        template.markModified("mealTemplate");
+        await template.save();
+      }
   
-        function mergeMealData(template, newMeal) {
-          const newMealDays = new Set(getNewMealDays(newMeal));
-          const updatedTemplate = template.mealTemplate.map(entry => { const filteredDays = entry.days.filter(day => !newMealDays.has(day)); return { ...entry, days: filteredDays };}).filter(entry => entry.days.length > 0);
-          return [...updatedTemplate, ...newMeal];
-        }
-        const result = mergeMealData(template, newMeal);
-      };
-  
-      updateMealTemplate(template, newMeal);
-      template.markModified("mealTemplate");
-      await template.save();     
     }
 
     return res.status(201).json({
@@ -650,12 +673,10 @@ const deleteDayInTemplate = async (req, res, next) => {
     
     const template = await Template.findById(templateId);
     if (!template) return res.status(404).json({success: false, error: "Template not found" });
-    console.log("template",template.mealTemplate);
     
     const index = template.mealTemplate.findIndex((entry) => entry._id.toString() === mealId);
     if (index !== -1) {
       const copiedDays = template.mealTemplate[index].days;
-      console.log("copiedDays",copiedDays);
       
       template.mealTemplate.splice(index, 1);
       template.mealTemplate[0].days.push(...copiedDays);
