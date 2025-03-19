@@ -244,6 +244,7 @@ const SignIn = async (req, res, next) => {
       if (userDetails) {
         isClient = true;
         isActive = 1;
+        await Client.updateOne({ email }, { $set: { isActive: 1 } });
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -320,6 +321,8 @@ const VerifyExistingUser = async (req, res, next) => {
       JWT_SECRET,
       // { expiresIn: "2h" }
     );
+
+    await userDe
 
     return res.status(200).json({
       token,

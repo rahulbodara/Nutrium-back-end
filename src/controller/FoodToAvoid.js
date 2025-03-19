@@ -130,5 +130,32 @@ const DeleteFoodAvoidTamplate = async (req, res) => {
     }
 }
 
+const getFoodAvoidTemplateId = async (req, res) => {
+    try {
+        const { id } = req.params
+        const template = await FoodAvoidTemplate.findById(id)
+        if (!template) {
+            return res.status(404).json({
+                success: false,
+                message: "Food avoid template not found"
+            })
+        }
 
-module.exports = { addFoodAvoidTemplate, fetchFoodAvoidTemplates, GetAllFoodAvoidTamplate, EditFoodAvoid, DeleteFoodAvoidTamplate }
+
+        return res.status(200).json({
+            success: true,
+            message: "Food avoid template fetched successfully",
+            data: template
+        })
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        })
+    }
+}
+
+
+module.exports = { addFoodAvoidTemplate, fetchFoodAvoidTemplates, GetAllFoodAvoidTamplate, EditFoodAvoid, DeleteFoodAvoidTamplate, getFoodAvoidTemplateId }
