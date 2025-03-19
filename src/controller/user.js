@@ -322,7 +322,6 @@ const VerifyExistingUser = async (req, res, next) => {
       // { expiresIn: "2h" }
     );
 
-    await userDe
 
     return res.status(200).json({
       token,
