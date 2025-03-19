@@ -40,6 +40,7 @@ const foodToAvoidTamplate = require("./routes/FoodToAvoidTamplate")
 const Message = require('./model/Message');
 const lookup = require('./routes/lookup');
 const labTest = require('./routes/LabTestRequest');
+const RecommendationTemplate = require('./routes/RecommendationTemplate');
 const foodDiary = require('./routes/foodDiary');
 const os = require('os');
 const https = require('https');
@@ -207,6 +208,7 @@ app.use("/api/v1", lookup);
 app.use("/api/v1", foodDiary);
 app.use("/api/v1", labTest)
 app.use("/api/v1", foodToAvoidTamplate)
+app.use("/api/v1", RecommendationTemplate)
 
 
 
