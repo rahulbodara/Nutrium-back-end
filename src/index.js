@@ -74,7 +74,7 @@ const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/', "https://nutrium-front-end-ci66-rahulbodaras-projects.vercel.app"],
+  origin: "*",
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
