@@ -7,6 +7,7 @@ const createService = async (req, res, next) => {
       ...req.body,
       userId: userId,
     };
+    console.log("🚀 ~ createService ~ serviceData:", serviceData)
     const service = new Service(serviceData);
     const savedService = await service.save();
 

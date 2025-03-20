@@ -8,7 +8,7 @@ const RecommendationTemplateSchema = mongoose.Schema(
             required: true,
             ref: 'user',
         },
-        tamplateName: {
+        templateName: {
             type: String,
             required: true,
         },
