@@ -104,14 +104,14 @@ const addFood = async (req, res, next) => {
     if (!group) {
       return res.status(400).json({ message: 'group is required' });
     }
-   
+
     let displayName;
-    if (!commonMeasures?.[0]?.[0]){
-       displayName = `100 grams of ${name}`
-    }else{
+    if (!commonMeasures?.[0]?.[0]) {
+      displayName = `100 grams of ${name}`
+    } else {
       displayName = `${commonMeasures?.[0][0].quantity.value} ${commonMeasures?.[0][0].pluralName.value} of ${name} (${commonMeasures?.[0][0].totalGrams.value})`
     }
-   
+
     const newFood = await Food.create({
       userId,
       name,
@@ -138,18 +138,7 @@ const addFood = async (req, res, next) => {
 const getAllFood = async (req, res, next) => {
   try {
 
-    const { source } = req.query;
-    const userId = req.userId;
-    const filter = source ? { source } : {};
-    if (source === "My foods" && userId) {
-      filter.userId = userId;
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const skip = (page - 1) * limit;
-
-    const foods = await Food.find(filter).skip(skip).limit(limit);
+    const foods = await Food.find()
 
     return res.status(200).json({
       success: true,
@@ -273,23 +262,23 @@ const updateFood = async (req, res, next) => {
     const updateFields = req.body;
     const measureId = req.body.measureId;
 
-    const commonMeasure = await Food.findOne({userId: userId,_id:foodId});
+    const commonMeasure = await Food.findOne({ userId: userId, _id: foodId });
 
-    if(measureId) {
+    if (measureId) {
       const data = commonMeasure.commonMeasures.findIndex((food) => {
         return measureId.toString() === food._id.toString()
-     })
- 
-       if(data !== -1){
-         commonMeasure.commonMeasures.splice(data,1);
-       }
-       else{
-         return res.status(404).json({message:'commonMeasure not found'});
-       }
- 
-       await commonMeasure.save();
+      })
+
+      if (data !== -1) {
+        commonMeasure.commonMeasures.splice(data, 1);
+      }
+      else {
+        return res.status(404).json({ message: 'commonMeasure not found' });
+      }
+
+      await commonMeasure.save();
     }
-    
+
     const existing = await Food.findOne({ _id: foodId });
 
     if (!existing) {
@@ -365,31 +354,31 @@ const updateFood = async (req, res, next) => {
   }
 };
 
-const deleteCommonMeasure = async(req, res, next) => {
+const deleteCommonMeasure = async (req, res, next) => {
   try {
 
     const userId = req.userId;
     const foodId = req.params.foodId;
     const measureId = req.body.measureId;
-    const commonMeasure = await Food.findOne({userId: userId,_id:foodId});
-    if(!commonMeasure){
-      return res.status(404).json({message: 'food not found'});
+    const commonMeasure = await Food.findOne({ userId: userId, _id: foodId });
+    if (!commonMeasure) {
+      return res.status(404).json({ message: 'food not found' });
     }
     const data = commonMeasure.commonMeasures.findIndex((food) => {
-       return measureId.toString() === food._id.toString()
+      return measureId.toString() === food._id.toString()
     })
 
-      if(data !== -1){
-        commonMeasure.commonMeasures.splice(data,1);
-      }
-      else{
-        return res.status(404).json({message:'commonMeasure not found'});
-      }
+    if (data !== -1) {
+      commonMeasure.commonMeasures.splice(data, 1);
+    }
+    else {
+      return res.status(404).json({ message: 'commonMeasure not found' });
+    }
 
     const result = await commonMeasure.save();
-    return res.status(200).json({success:true, data:result});
+    return res.status(200).json({ success: true, data: result });
   }
-  catch (err){
+  catch (err) {
     next(err);
   }
 }

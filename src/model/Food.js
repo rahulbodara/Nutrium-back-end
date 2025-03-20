@@ -22,7 +22,7 @@ const FoodSchema = new mongoose.Schema({
       'Baby Foods',
       'Fats and Oils',
       'Poultry Products',
-      'Soup,Sauces,and Gravies',
+      'Soups, Sauces, and Gravies',
       'Sausages and Luncheon Meats',
       'Breakfast Cereals',
       'Fruits and Fruit Juices',

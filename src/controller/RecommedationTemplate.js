@@ -130,5 +130,32 @@ const deleteRecommendationTemplate = async (req, res) => {
     }
 }
 
+const getRecommendationtempletId = async (req, res) => {
+    try {
+        const { id } = req.params
+        const userId = req.userId
+        const template = await RecommendationTemplate.findById(id)
+        if (!template) {
+            return res.status(404).json({
+                success: false,
+                message: "Recommendation template not found"
+            })
+        }
 
-module.exports = { addRecommendationTemplate, fetchRecommendationTemplate, getAllRecommendationTemplate, editRecommendationTemplate, deleteRecommendationTemplate }
+        return res.status(200).json({
+            success: true,
+            message: "Recommendation template fetched successfully",
+            data: template
+        })
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        })
+    }
+}
+
+
+module.exports = { addRecommendationTemplate, fetchRecommendationTemplate, getAllRecommendationTemplate, editRecommendationTemplate, deleteRecommendationTemplate, getRecommendationtempletId }

@@ -59,7 +59,6 @@ const SignUp = async (req, res, next) => {
       image,
       countryCode
     } = req.body;
-    console.log("🚀 ~ SignUp ~ countryCode:", countryCode)
 
     const salt = bcrypt.genSaltSync(10);
     let hashedPassword;
