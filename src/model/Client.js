@@ -135,6 +135,9 @@ const clientSchema = new mongoose.Schema(
     googleId: {
       type: String,
     },
+    deviceToken: {
+      type: String,
+    }
   },
   { timestamps: true }
 );

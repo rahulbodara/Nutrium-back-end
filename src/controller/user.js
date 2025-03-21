@@ -229,7 +229,8 @@ const verifyEmail = async (req, res, next) => {
 
 const SignIn = async (req, res, next) => {
   try {
-    const { email, password, isWebLogin } = req.body;
+    const { email, password, isWebLogin, deviceToken } = req.body;
+    console.log("🚀 ~ SignIn ~ deviceToken:", deviceToken)
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
@@ -243,7 +244,7 @@ const SignIn = async (req, res, next) => {
       if (userDetails) {
         isClient = true;
         isActive = 1;
-        await Client.updateOne({ email }, { $set: { isActive: 1 } });
+        await Client.updateOne({ email }, { $set: { isActive: 1, deviceToken } });
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
