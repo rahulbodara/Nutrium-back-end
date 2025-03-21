@@ -430,6 +430,14 @@ const createVersion = async (req, res) => {
       };
 
       updateMealTemplate(template, newMeal);
+      // let entryWithAllDays = template.mealTemplate.find(entry =>
+      //   allDays.every(day => entry.days.includes(day))
+      // );
+  
+      // if (entryWithAllDays) {
+      //   entryWithAllDays.days = "Everyday"
+      // }
+
       template.markModified("mealTemplate");
       await template.save();
     }
@@ -811,6 +819,60 @@ const chnageTemplateName = async (req, res, next) => {
   }
 };
 
+const DeleteDaysInTemplate = async (req, res, next) => {
+  try {
+    const { templateId } = req.params;
+    const { dayToRemove } = req.body;
+
+    const template = await Template.findById(templateId);
+    if (!template) {
+      return res.status(404).json({ success: false, error: "Template not found" });
+    }
+
+    let mealTemplate = template.mealTemplate;
+
+    let entryIndex = mealTemplate.findIndex(entry =>
+      entry.days.some(day => dayToRemove.includes(day))
+    );
+
+    if (entryIndex === -1) {
+      return res.status(400).json({ success: false, error: "Day not found in any entry" });
+    }
+
+    let removedEntry = mealTemplate.splice(entryIndex, 1)[0];
+
+    if (mealTemplate.length > 0) {
+      let mergeIndex = mealTemplate.findIndex(entry => entry._id !== removedEntry._id);
+      if (mergeIndex !== -1) {
+        mealTemplate[mergeIndex].days.push(...removedEntry.days);
+        mealTemplate[mergeIndex].days = [...new Set(mealTemplate[mergeIndex].days)]; 
+      }
+    }
+
+    const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    let entryWithAllDays = mealTemplate.find(entry =>
+      allDays.every(day => entry.days.includes(day))
+    );
+
+    if (entryWithAllDays) {
+      entryWithAllDays.days = "Everyday"
+    }
+
+    template.mealTemplate = mealTemplate;
+    await template.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal updated successfully",
+      template,
+    });
+
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 //***********************************/ Mobile Apis /***********************************
 
 const featchMealPlanForClient = async (req, res, next) => {
@@ -854,5 +916,6 @@ module.exports = {
   createNote,
   chnageTemplateName,
   getMealTemplateForClient,
-  getMealAllTemplate
+  getMealAllTemplate,
+  DeleteDaysInTemplate
 };

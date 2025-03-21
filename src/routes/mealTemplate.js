@@ -17,7 +17,8 @@ const {
   createNote,
   chnageTemplateName,
   getMealTemplateForClient,
-  getMealAllTemplate
+  getMealAllTemplate,
+  DeleteDaysInTemplate
 } = require('../controller/mealTemplate');
 
 // Routes for Meal Plans
@@ -36,6 +37,7 @@ router.post('/deleteFoodInTemplate', isAuthenticated, deleteFoodInTemplate);
 router.post('/deleteMealScheduleInTemplate', isAuthenticated, deleteMealScheduleInTemplate);
 router.post('/meal-plan-createNote', isAuthenticated, createNote);
 router.post('/meal-plan-chnageTemplateName', isAuthenticated, chnageTemplateName);
+router.delete('/meal-template/:templateId', isAuthenticated, DeleteDaysInTemplate);
 
 router.get('/meal-plan/:clientId', featchMealPlanForClient);
 
