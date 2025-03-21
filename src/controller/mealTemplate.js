@@ -430,13 +430,13 @@ const createVersion = async (req, res) => {
       };
 
       updateMealTemplate(template, newMeal);
-      // let entryWithAllDays = template.mealTemplate.find(entry =>
-      //   allDays.every(day => entry.days.includes(day))
-      // );
+      let entryWithAllDays = template.mealTemplate.find(entry =>
+        allDays.every(day => entry.days.includes(day))
+      );
   
-      // if (entryWithAllDays) {
-      //   entryWithAllDays.days = "Everyday"
-      // }
+      if (entryWithAllDays) {
+        entryWithAllDays.days = "Everyday"
+      }
 
       template.markModified("mealTemplate");
       await template.save();
@@ -523,6 +523,12 @@ const createVersion = async (req, res) => {
       };
 
       updateMealTemplate(template, newMeal);
+      let entryWithAllDays = template.mealTemplate.find(entry =>
+        allDays.every(day => entry.days.includes(day))
+      );
+      if (entryWithAllDays) {
+        entryWithAllDays.days = "Everyday"
+      }
       template.markModified("mealTemplate");
       await template.save();
     }
