@@ -121,7 +121,6 @@ function getRoomId(senderId, receiverId) {
 }
 
 io.on("connection", (socket) => {
-  console.log('New client connected', socket.id);
 
   socket.on("join", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
@@ -131,7 +130,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
-    console.log("🚀 ~ socket.on ~ file:", file)
     try {
       const roomId = getRoomId(senderId, receiverId);
       let fileUrl = null;
@@ -141,7 +139,6 @@ io.on("connection", (socket) => {
       const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
       await newMessage.save();
 
-      console.log(`Sending message to room ${roomId}`);
 
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', newMessage);
@@ -152,7 +149,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on('getHistory', async ({ userId, otherUserId }) => {
-    console.log("Getting history between:", userId, otherUserId);
     try {
       const messages = await Message.find({
         $or: [
@@ -160,7 +156,6 @@ io.on("connection", (socket) => {
           { senderId: otherUserId, receiverId: userId },
         ]
       }).sort({ timestamp: 1 });
-      console.log("🚀 ~ socket.on ~ messages:", messages)
 
       io.to(socket.id).emit("chatHistory", messages);
     } catch (error) {

@@ -45,8 +45,7 @@ const createBillingInformation = async (_, res, userId, billingData) => {
 };
 const updateBillingInformation = async (req, res, next) => {
   try {
-    const billingInformationId = req.params.id;
-
+    const userId = req.userId;
     const {
       name,
       country,
@@ -55,6 +54,11 @@ const updateBillingInformation = async (req, res, next) => {
       city,
       zipcode,
     } = req.body;
+
+    const billingInfo = await BillingInformation.findOne({ userId: userId });
+
+    const billingInformationId = billingInfo?._id;
+
 
     const updateFields = {};
     if (name) updateFields.name = name;

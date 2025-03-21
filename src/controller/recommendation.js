@@ -249,17 +249,14 @@ const setWaterIntake = async (req, res) => {
             return res.status(400).json({ message: 'Water intake amount is required.' });
         }
 
-        // Get current UTC date at midnight
         let recordDate = date ? new Date(date) : new Date();
         recordDate.setUTCHours(0, 0, 0, 0);
 
-        // Validate time input
         let recordTime;
-        if (time && /^\d{2}:\d{2}$/.test(time)) {
-            let [hours, minutes] = time.split(':').map(Number);
+        if (time && /^(\d{2}):(\d{2})(?::(\d{2}))?$/.test(time)) {
+            let [hours, minutes, seconds = "00"] = time.split(':').map(Number);
 
-            // If minutes are invalid, default to current time
-            if (minutes >= 60) {
+            if (minutes >= 60 || seconds >= 60) {
                 console.warn("Invalid time format. Using current UTC time.");
                 const nowUtc = new Date();
                 recordTime = nowUtc.toISOString().split('T')[1].split('.')[0];
@@ -268,7 +265,7 @@ const setWaterIntake = async (req, res) => {
                     recordDate.getUTCFullYear(),
                     recordDate.getUTCMonth(),
                     recordDate.getUTCDate(),
-                    hours, minutes, 0
+                    hours, minutes, seconds
                 ));
                 recordTime = utcTime.toISOString().split('T')[1].split('.')[0]; // Store as HH:mm:ss
             }
@@ -323,6 +320,7 @@ const setWaterIntake = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 };
+
 
 const getWaterIntake = async (req, res, next) => {
     try {

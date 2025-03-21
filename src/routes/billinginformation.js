@@ -12,7 +12,7 @@ router.get("/billingInformation", isAuthenticated, getBillingInformation);
 router.post("/billingInformation", isAuthenticated, createBillingInformation);
 router.post("/billingInformation-api", isAuthenticated, createBillingInformationAPI);
 router.put(
-  "/billingInformation/:id",
+  "/billingInformation",
   isAuthenticated,
   updateBillingInformation
 );

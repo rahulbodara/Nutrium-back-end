@@ -230,7 +230,6 @@ const verifyEmail = async (req, res, next) => {
 const SignIn = async (req, res, next) => {
   try {
     const { email, password, isWebLogin, deviceToken } = req.body;
-    console.log("🚀 ~ SignIn ~ deviceToken:", deviceToken)
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
