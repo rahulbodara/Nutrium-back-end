@@ -4,8 +4,8 @@ const fs = require("fs");
 
 const createWorkplace = async (req, res, next) => {
   try {
-    const userId = req.userId; 
-    const { associateAddress, isPublic,countryCode, name, country, phoneNumber, address } = req.body;
+    const userId = req.userId;
+    const { associateAddress, isPublic, countryCode, name, country, phoneNumber, address } = req.body;
 
     if (!name || !country) {
       return res.status(400).json({ message: 'Name and country are required.' });
@@ -49,7 +49,7 @@ const createWorkplace = async (req, res, next) => {
     const workplace = new Workplace(workplaceData);
     const savedWorkplace = await workplace.save();
 
-    res.status(201).json(savedWorkplace);
+    return res.status(200).json({ success: true, data: savedWorkplace, message: 'Workplace saved successfully' })
   } catch (error) {
     console.error('Error creating workplace:', error);
     res.status(500).json({ message: 'Internal server error.' });
@@ -67,7 +67,7 @@ const getAllWorkplaces = async (req, res, next) => {
     if (!workplace) {
       return res.status(404).json({ message: "Workplace Not Found!" });
     }
-    res.status(200).json(workplace);
+    return res.status(200).json({ success: true, message: "Workplace fetch successfully", data: workplace });
   } catch (error) {
     next(error);
   }
@@ -158,7 +158,7 @@ const deleteWorkplace = async (req, res, next) => {
     });
 
     if (deletedWorkplace) {
-      res.status(200).json({ message: "Workplace deleted successfully" });
+      return res.status(200).json({ success: true, message: "Workplace deleted successfully" });
     } else {
       res.status(404).json({ message: "Workplace not found" });
     }

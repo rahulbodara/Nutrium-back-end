@@ -42,22 +42,19 @@ const registerClient = async (req, res, next) => {
       isEmailSend,
     } = req.body;
 
-    const exist = await Client.findOne({ email });
-    if (exist) {
+    const existingUser = await Promise.all([
+      Client.findOne({ email }),
+      User.findOne({ email }),
+    ]);
+
+    if (existingUser.some(user => user)) {
       return res.status(400).json({
         success: false,
-        message: "This email already exists",
+        message: "This email is already registered",
       });
     }
 
-    const userExist = await User.findOne({ email });
-    if (userExist) {
-      return res.status(400).json({
-        success: false,
-        message: "This email already exists",
-      });
-    }
-
+    // Create client
     const client = await Client.create({
       userId,
       fullName,
@@ -70,21 +67,37 @@ const registerClient = async (req, res, next) => {
       country,
       zipcode,
       isEmailSend,
-      isActive: 0
+      isActive: 0,
     });
 
-
-    const user = await User.findOne({ _id: userId });
-    const { token } = await generateResetToken(user);
-
-    if (client && client.isEmailSend === true) {
-      await EmailForm(user.email, client.email, client, user, token);
-      // await getScheduleAppointmentInfo(client._id);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    return res.status(200).json({
+    let token;
+    try {
+      const { token: resetToken } = await generateResetToken(user);
+      token = resetToken;
+    } catch (err) {
+      console.error("Token generation failed:", err.message);
+    }
+
+    if (client.isEmailSend === false && token) {
+      try {
+        await EmailForm(user.email, client.email, client, user, token);
+        client.isEmailSend = true;
+        await client.save()
+      } catch (err) {
+        console.error("Failed to send email:", err.message);
+      }
+    }
+    return res.status(201).json({
       success: true,
-      message: "Client added successfully",
+      message: "Client registered successfully",
       client,
     });
 
@@ -93,7 +106,7 @@ const registerClient = async (req, res, next) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -1210,63 +1223,10 @@ const deletePregnancyHistory = async (req, res, next) => {
 };
 
 const updatePersonalHistory = async (req, res, next) => {
-  console.log("req.file.path", req.files);
   try {
     const clientId = req.params.id;
-    const {
-      bowelMovements,
-      bowelMovementsInfo,
-      sleepQuality,
-      sleepQualityInfo,
-      smoker,
-      smokerInfo,
-      alcoholConsumption,
-      alcoholConsumptionInfo,
-      maritalStatus,
-      maritalStatusInfo,
-      physicalActivity,
-      race,
-      bmr,
-      bloodGroup,
-      caloriesReq,
-      overWeight,
-      underWeight,
-      idealBodyWeight,
-      targetWeight,
-      pa_h,
-      F_H,
-      sCholesterol,
-      sTriglyceride,
-      hdl,
-      ldl,
-      vldl,
-      sTSH,
-      sT3,
-      sT4,
-      sB12,
-      svitD3,
-      hb,
-      bp,
-      hb1ac,
-      validityDate,
-      rbs,
-      fbs,
-      pp2bs,
-      selectProgram,
-      session,
-      months,
-      occupation,
-      time,
-      milk,
-      oil,
-      salt,
-      fastingDay,
-      fastFood,
-      hotelFood,
-      AnythingElse,
-      Habit,
-      otherInfo,
-    } = req.body;
+    const userId = req.userId;
+
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
         success: false,
@@ -1274,95 +1234,47 @@ const updatePersonalHistory = async (req, res, next) => {
       });
     }
 
-    const userId = req.userId;
-    const newPersonalHistory = {
-      userId: userId,
-      bowelMovements,
-      bowelMovementsInfo,
-      sleepQuality,
-      sleepQualityInfo,
-      smoker,
-      smokerInfo,
-      alcoholConsumption,
-      alcoholConsumptionInfo,
-      maritalStatus,
-      maritalStatusInfo,
-      physicalActivity,
-      race,
-      bmr,
-      bloodGroup,
-      caloriesReq,
-      overWeight,
-      underWeight,
-      idealBodyWeight,
-      targetWeight,
-      pa_h,
-      F_H,
-      sCholesterol,
-      sTriglyceride,
-      hdl,
-      ldl,
-      vldl,
-      sTSH,
-      sT3,
-      sT4,
-      sB12,
-      svitD3,
-      hb,
-      bp,
-      hb1ac,
-      validityDate,
-      rbs,
-      fbs,
-      pp2bs,
-      selectProgram,
-      session,
-      months,
-      occupation,
-      time,
-      milk,
-      oil,
-      salt,
-      fastingDay,
-      fastFood,
-      hotelFood,
-      AnythingElse,
-      Habit,
-      otherInfo,
-    };
+    const existingPersonalHistory = await PersonalHistory.findOne({ clientId });
 
-    if (req.files) {
-      const pictureFields = [
-        'beforePicture1', 'beforePicture2', 'beforePicture3', 'beforePicture4', 'beforePicture5',
-        'afterPicture1', 'afterPicture2', 'afterPicture3', 'afterPicture4', 'afterPicture5',
-      ];
-      pictureFields.forEach(field => {
-        if (req.files[field]) {
-          newPersonalHistory[field] = req.files[field][0].path;
-        }
+    if (!existingPersonalHistory) {
+      return res.status(404).json({
+        success: false,
+        message: "Personal History not found",
       });
     }
 
+    const updatedData = { ...req.body };
+
+    const pictureFields = [
+      'beforePicture1', 'beforePicture2', 'beforePicture3', 'beforePicture4', 'beforePicture5',
+      'afterPicture1', 'afterPicture2', 'afterPicture3', 'afterPicture4', 'afterPicture5',
+    ];
+
+    pictureFields.forEach(field => {
+      if (req.files && req.files[field]) {
+        updatedData[field] = req.files[field][0].path;
+      }
+      else if (req.body[field] === null || req.body[field] === "") {
+        updatedData[field] = "";
+      }
+    });
 
     const updatedPersonalHistory = await PersonalHistory.findOneAndUpdate(
       { clientId: clientId },
-      newPersonalHistory,
-      { new: true, upsert: true }
+      { $set: updatedData },
+      { new: true, upsert: false }
     );
-
-    const message = updatedPersonalHistory._id
-      ? "Personal History updated successfully"
-      : "New Personal History created";
 
     return res.status(200).json({
       success: true,
-      message: message,
+      message: "Personal History updated successfully",
       personalHistory: updatedPersonalHistory,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 const addObservation = async (req, res, next) => {
   try {

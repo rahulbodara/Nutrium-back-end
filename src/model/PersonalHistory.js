@@ -188,6 +188,9 @@ const personalHistorySchema = new mongoose.Schema({
   occupation: {
     type: String,
   },
+  foodChoice: {
+    type: String
+  },
   time: {
     type: String,
   },
