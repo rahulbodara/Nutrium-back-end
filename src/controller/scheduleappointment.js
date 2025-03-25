@@ -1,3 +1,4 @@
+const Client = require("../model/Client");
 const Appointment = require("../model/ScheduleApointment");
 const mongoose = require("mongoose");
 const videoConsultationValues = {
@@ -192,11 +193,16 @@ const getAppointmentByClientId = async (req, res, next) => {
     const clientId = req.params.clientId;
     const appointment = await Appointment.find({ clientId: clientId });
 
+    const clientData = await Client.find({ _id: clientId }).select("image gender")
+    if (!clientData) {
+      return res.status(404).json({ message: "Client not found!" });
+    }
+
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found!" });
     }
 
-    res.status(200).json(appointment);
+    res.status(200).json({ appointment, client: clientData });
   } catch (error) {
     console.error("Error getting appointment:", error);
     next(error);
