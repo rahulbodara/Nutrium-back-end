@@ -191,23 +191,32 @@ const updateAppointementStatus = async (req, res, next) => {
 const getAppointmentByClientId = async (req, res, next) => {
   try {
     const clientId = req.params.clientId;
-    const appointment = await Appointment.find({ clientId: clientId });
 
-    const clientData = await Client.find({ _id: clientId }).select("image gender")
-    if (!clientData) {
-      return res.status(404).json({ message: "Client not found!" });
-    }
+    let appointments = await Appointment.find({ clientId: clientId });
 
-    if (!appointment) {
+    if (!appointments || appointments.length === 0) {
       return res.status(404).json({ message: "Appointment not found!" });
     }
 
-    res.status(200).json({ appointment, client: clientData });
+    const clientData = await Client.findOne({ _id: clientId }).select("image gender");
+
+    if (clientData) {
+      appointments = appointments.map(appointment => {
+        return {
+          ...appointment.toObject(),
+          image: clientData.image,
+          gender: clientData.gender
+        };
+      });
+    }
+
+    res.status(200).json(appointments);
   } catch (error) {
     console.error("Error getting appointment:", error);
     next(error);
   }
-}
+};
+
 
 const updateStartAppointment = async (req, res, next) => {
   try {
