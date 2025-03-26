@@ -119,8 +119,8 @@ const createSubscriptionDoc = async (req, res, next) => {
         price: plan.plan_id,
         quantity: 1,
       }],
-      success_url: `http://localhost:3000/admin/professionals/Subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:3000/admin/professionals/Subscription/fails`,
+      success_url: `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/admin/professionals/Subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/admin/professionals/Subscription/fails`,
       customer: customer.id,
     });
 

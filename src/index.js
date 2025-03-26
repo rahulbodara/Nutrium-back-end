@@ -102,7 +102,7 @@ app.get('/downloads', async (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
