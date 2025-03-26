@@ -741,7 +741,7 @@ const getOtherRecommendation = async (req, res) => {
         );
 
         if (!clientData) {
-            return res.status(404).json({ success: true, data: [], message: "No records found for this client." });
+            return res.status(200).json({ success: true, data: [], message: "No records found for this client." });
         }
 
 
