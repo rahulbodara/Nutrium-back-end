@@ -766,7 +766,7 @@ const getFoodAvoid = async (req, res) => {
         );
 
         if (!clientData) {
-            return res.status(200s).json({ success: true, message: "No records found for this client.", data: [] });
+            return res.status(200).json({ success: true, message: "No records found for this client.", data: [] });
         }
 
 
