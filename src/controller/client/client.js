@@ -2169,9 +2169,10 @@ const getAllGoals = async (req, res, next) => {
     });
 
     if (goalsData.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "Goals not found for the client",
+        allGoals: []
       });
     }
 
@@ -2298,7 +2299,7 @@ const getMeasurementById = async (req, res, next) => {
     const measurement = await Measurements.findOne({ clientId: clientId });
 
     if (!measurement) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "Measurement not found",
       });
