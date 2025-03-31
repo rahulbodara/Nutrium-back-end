@@ -102,7 +102,7 @@ app.get('/downloads', async (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app",
+    origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -114,59 +114,117 @@ const activeRooms = new Map();
 function getRoomId(senderId, receiverId) {
   const sortedIds = [senderId, receiverId].sort();
   const roomId = sortedIds.join('-');
-  if (!activeRooms.has(roomId)) {
-    activeRooms.set(roomId, uuidv4());
-  }
-  return activeRooms.get(roomId);
+
 }
 
 io.on("connection", (socket) => {
-
-  socket.on("join", ({ userId, otherUserId }) => {
+  socket.on("join", async ({ userId, otherUserId }) => {
+    socket.data.userId = userId;
     const roomId = getRoomId(userId, otherUserId);
     socket.join(roomId);
     console.log(`User ${userId} joined room ${roomId}`);
 
-  });
-
-  socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
     try {
-      const roomId = getRoomId(senderId, receiverId);
-      let fileUrl = null;
-      if (file) {
-        fileUrl = file;
-      }
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
-      await newMessage.save();
+      const unseenMessages = await Message.countDocuments({
+        senderId: otherUserId,
+        receiverId: userId,
+        seen: false
+      });
 
-
-      io.to(roomId).emit('receiveMessage', newMessage);
-      io.to(socket.id).emit('messageSent', newMessage);
-
+      io.to(socket.id).emit("unseenMessages", { count: unseenMessages });
     } catch (error) {
-      console.log("Error in sendMessage:", error);
+      console.error("Error fetching unseen messages:", error);
     }
   });
 
-  socket.on('getHistory', async ({ userId, otherUserId }) => {
+  socket.on("getHistory", async ({ userId, otherUserId }) => {
     try {
       const messages = await Message.find({
         $or: [
           { senderId: userId, receiverId: otherUserId },
           { senderId: otherUserId, receiverId: userId },
         ]
-      }).sort({ timestamp: 1 });
+      }).sort({ createdAt: 1 });
+
+      const roomId = getRoomId(userId, otherUserId);
+
+      await Message.updateMany(
+        { senderId: otherUserId, receiverId: userId, seen: false },
+        { $set: { seen: true } }
+      );
 
       io.to(socket.id).emit("chatHistory", messages);
+      io.to(roomId).emit("messagesSeen", { senderId: otherUserId, receiverId: userId });
+
     } catch (error) {
-      console.log("Error in getHistory:", error);
+      console.error("Error in getHistory:", error);
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  })
+  socket.on("markAsSeen", async ({ userId, otherUserId }) => {
+    try {
+      const roomId = getRoomId(userId, otherUserId);
+
+      const unseenMessages = await Message.countDocuments({
+        senderId: otherUserId,
+        receiverId: userId,
+        seen: false
+      });
+
+      if (unseenMessages > 0) {
+        await Message.updateMany(
+          { senderId: otherUserId, receiverId: userId, seen: false },
+          { $set: { seen: true } }
+        );
+
+        io.to(roomId).emit("messagesSeen", { senderId: otherUserId, receiverId: userId });
+      }
+
+    } catch (error) {
+      console.error("Error in markAsSeen:", error);
+    }
+  });
+
+
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
+    try {
+      const roomId = getRoomId(senderId, receiverId);
+      const newMessage = new Message({
+        senderId,
+        receiverId,
+        message,
+        fileUrl: file || null,
+        roomId,
+        seen: false,
+        createdAt: new Date(),
+      });
+
+      await newMessage.save();
+
+      io.to(roomId).emit("receiveMessage", newMessage);
+      io.to(socket.id).emit("messageSent", newMessage);
+
+      const socketsInRoom = await io.in(roomId).fetchSockets();
+      const isReceiverInRoom = socketsInRoom.some(sock => sock.data.userId === receiverId);
+
+      if (isReceiverInRoom) {
+        await Message.updateMany(
+          { senderId, receiverId, seen: false },
+          { $set: { seen: true } }
+        );
+        io.to(roomId).emit("messagesSeen", { senderId, receiverId });
+      }
+
+    } catch (error) {
+      console.error("Error in sendMessage:", error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User ${socket.data.userId || "unknown"} disconnected`);
+  });
 });
+
 
 
 

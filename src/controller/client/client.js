@@ -3013,6 +3013,35 @@ const deleteLabTestRequest = async (req, res) => {
   }
 };
 
+const clientFormEmailSend = async (req, res) => {
+  const clientId = req.params.id
+  const userId = req.userId
+  try {
+    const client = await Client.findById({ _id: clientId })
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found.' });
+    }
+
+    const user = await User.findById({ _id: userId })
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const { token } = await generateResetToken(user)
+
+
+    await EmailForm(user.email, client.email, client, token);
+
+    return res.status(200).json({ message: "email sent successfully" })
+
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message })
+
+
+  }
+}
+
 
 
 module.exports = {
@@ -3070,6 +3099,8 @@ module.exports = {
   getOneLabTest,
   updateLabTestRequest,
   deleteLabTestRequest,
+  clientFormEmailSend
+
 
 };
 

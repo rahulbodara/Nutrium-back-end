@@ -111,7 +111,7 @@ const sendEmail = async (email, resetToken, name) => {
       pass: process.env.MAIL_PASSWORD,
     },
   });
-  const resetUrl = `https://nutrium-front-end-ci66-rahulbodaras-projects.vercel.app/accounts/changePassword?token=${resetToken}`;
+  const resetUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/changePassword?token=${resetToken}`;
   const mailOptions = {
     from: process.env.GMAIL,
     to: email,
@@ -172,7 +172,7 @@ const clientEmailSend = async (sender, receiver, clientId) => {
     },
   });
 
-  const updateUrl = `http://localhost:3000/accounts/clientPassword/resetPassword?clientId=${clientId}`;
+  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/clientPassword/resetPassword?clientId=${clientId}`;
 
   const templatePath = path.join(__dirname, '../view', 'password.ejs');
   const html = await ejs.renderFile(templatePath, { updateUrl });
@@ -196,7 +196,7 @@ const EmailForm = async (sender, receiver, client, user, token) => {
     },
   });
 
-  const updateUrl = `http://localhost:3000/accounts/assessmentForm?token=${token}&&clientId=${client._id}`;
+  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/assessmentForm?token=${token}&&clientId=${client._id}`;
   const clientName = client.fullName;
   const userName = user.fullName;
 

@@ -18,6 +18,10 @@ const messageSchema = new mongoose.Schema({
     },
     fileUrl: {
         type: String
+    },
+    seen: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
