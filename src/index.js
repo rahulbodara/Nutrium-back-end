@@ -167,7 +167,6 @@ io.on("connection", (socket) => {
 
   socket.on('getHistory', async ({ userId, otherUserId }) => {
     try {
-      // Fetch messages
       const messages = await Message.find({
         $or: [
           { senderId: userId, receiverId: otherUserId },
@@ -175,7 +174,6 @@ io.on("connection", (socket) => {
         ]
       }).sort({ createdAt: 1 });
 
-      // Get message IDs that should be marked as seen
       const unseenMessageIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
@@ -186,12 +184,10 @@ io.on("connection", (socket) => {
           { seen: true }
         );
 
-        // Notify the sender that their messages have been seen
         const roomId = getRoomId(userId, otherUserId);
         io.to(roomId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
       }
 
-      // Emit the chat history
       io.to(socket.id).emit("chatHistory", messages);
 
     } catch (error) {
