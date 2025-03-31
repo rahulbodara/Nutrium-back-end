@@ -147,15 +147,18 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("messageSeen", async ({ messageId, senderId, receiverId }) => {
+  socket.on("messageSeen", async ({ messageIds, senderId, receiverId }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
 
-      await Message.findByIdAndUpdate(messageId, { seen: true });
+      await Message.updateMany(
+        { _id: { $in: messageIds }, receiverId: receiverId },
+        { seen: true }
+      );
 
-      console.log(`Message ${messageId} seen by user ${receiverId}`);
+      console.log(`Messages seen by user ${receiverId}`);
 
-      io.to(roomId).emit("messagesSeen", { messageId, senderId, receiverId });
+      io.to(roomId).emit("messagesSeen", { messageIds, senderId, receiverId });
 
     } catch (error) {
       console.log("Error in messageSeen:", error);
@@ -164,6 +167,7 @@ io.on("connection", (socket) => {
 
   socket.on('getHistory', async ({ userId, otherUserId }) => {
     try {
+      // Fetch messages
       const messages = await Message.find({
         $or: [
           { senderId: userId, receiverId: otherUserId },
@@ -171,11 +175,30 @@ io.on("connection", (socket) => {
         ]
       }).sort({ createdAt: 1 });
 
+      // Get message IDs that should be marked as seen
+      const unseenMessageIds = messages
+        .filter(msg => msg.receiverId === userId && !msg.seen)
+        .map(msg => msg._id);
+
+      if (unseenMessageIds.length > 0) {
+        await Message.updateMany(
+          { _id: { $in: unseenMessageIds } },
+          { seen: true }
+        );
+
+        // Notify the sender that their messages have been seen
+        const roomId = getRoomId(userId, otherUserId);
+        io.to(roomId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+      }
+
+      // Emit the chat history
       io.to(socket.id).emit("chatHistory", messages);
+
     } catch (error) {
       console.log("Error in getHistory:", error);
     }
   });
+
 
   socket.on('disconnect', () => {
     console.log('user disconnected');
