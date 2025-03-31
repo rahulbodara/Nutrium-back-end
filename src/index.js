@@ -134,33 +134,31 @@ io.on("connection", (socket) => {
       const roomId = getRoomId(senderId, receiverId);
       let fileUrl = file || null;
 
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId });
+      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen: false });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);
 
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', newMessage);
+
     } catch (error) {
       console.log("Error in sendMessage:", error);
     }
   });
 
-  socket.on("markAsSeen", async ({ senderId, receiverId }) => {
+  socket.on("messageSeen", async ({ messageId, senderId, receiverId }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
 
-      await Message.updateMany(
-        { senderId, receiverId, seen: false },
-        { $set: { seen: true } }
-      );
+      await Message.findByIdAndUpdate(messageId, { seen: true });
 
-      console.log(`Messages from ${senderId} to ${receiverId} marked as seen`);
+      console.log(`Message ${messageId} seen by user ${receiverId}`);
 
-      io.to(roomId).emit("messagesSeen", { senderId, receiverId });
+      io.to(roomId).emit("messagesSeen", { messageId, senderId, receiverId });
 
     } catch (error) {
-      console.log("Error in markAsSeen:", error);
+      console.log("Error in messageSeen:", error);
     }
   });
 
@@ -171,7 +169,7 @@ io.on("connection", (socket) => {
           { senderId: userId, receiverId: otherUserId },
           { senderId: otherUserId, receiverId: userId },
         ]
-      }).sort({ timestamp: 1 });
+      }).sort({ createdAt: 1 });
 
       io.to(socket.id).emit("chatHistory", messages);
     } catch (error) {
@@ -183,6 +181,7 @@ io.on("connection", (socket) => {
     console.log('user disconnected');
   });
 });
+
 
 
 
