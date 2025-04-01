@@ -130,6 +130,7 @@ io.on("connection", (socket) => {
     }
     userSockets.get(userId).add(socket.id);
 
+    // Fetch unseen messages where userId is the receiver
     const unseenMessages = await Message.find({
       senderId: otherUserId,
       receiverId: userId,
@@ -139,22 +140,17 @@ io.on("connection", (socket) => {
     if (unseenMessages.length > 0) {
       const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
+      // Mark these messages as seen in the database
+      await Message.updateMany(
+        { _id: { $in: unseenMessageIds } },
+        { $set: { seen: true } }
+      );
+
+      // Notify the receiver of unread messages
       io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
-    }
 
-    const isOtherUserInRoom = io.sockets.adapter.rooms.get(roomId)?.has(otherUserId);
-    if (isOtherUserInRoom) {
-      const otherUnseenMessages = await Message.find({
-        senderId: userId,
-        receiverId: otherUserId,
-        seen: false
-      });
-
-      if (otherUnseenMessages.length > 0) {
-        const otherUnseenMessageIds = otherUnseenMessages.map(msg => msg._id);
-
-        io.to(socket.id).emit("unreadMessages", { messageIds: otherUnseenMessageIds, messages: otherUnseenMessages });
-      }
+      // Notify the sender that their messages were seen
+      io.to(otherUserId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
     }
   });
 
