@@ -110,37 +110,64 @@ const io = socketIo(server, {
 })
 
 const activeRooms = new Map();
+const userSockets = new Map(); // Now supports multiple sockets per user
 
 function getRoomId(senderId, receiverId) {
   const sortedIds = [senderId, receiverId].sort();
-  const roomId = sortedIds.join('-');
-  if (!activeRooms.has(roomId)) {
-    activeRooms.set(roomId, uuidv4());
-  }
-  return activeRooms.get(roomId);
+  return sortedIds.join('-');
 }
 
 io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
-  socket.on("join", ({ userId, otherUserId }) => {
+  socket.on("join", async ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
     socket.join(roomId);
     console.log(`User ${userId} joined room ${roomId}`);
+
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set());
+    }
+    userSockets.get(userId).add(socket.id);
+
+    // Handle unseen messages
+    const unseenMessages = await Message.find({
+      senderId: otherUserId,
+      receiverId: userId,
+      seen: false
+    });
+
+    if (unseenMessages.length > 0) {
+      const unseenMessageIds = unseenMessages.map(msg => msg._id);
+
+      await Message.updateMany({ _id: { $in: unseenMessageIds } }, { seen: true });
+
+      io.to(roomId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+    }
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
+      const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
       let fileUrl = file || null;
+      let seen = false;
 
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen: false });
+      if (isReceiverInRoom) {
+        seen = true;
+      }
+
+      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);
 
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', newMessage);
+
+      if (seen) {
+        io.to(roomId).emit("messagesSeen", { messageIds: [newMessage._id], senderId, receiverId });
+      }
 
     } catch (error) {
       console.log("Error in sendMessage:", error);
@@ -149,23 +176,31 @@ io.on("connection", (socket) => {
 
   socket.on("messageSeen", async ({ messageIds, senderId, receiverId }) => {
     try {
-      const roomId = getRoomId(senderId, receiverId);
+      const unseenMessages = await Message.find({
+        _id: { $in: messageIds },
+        receiverId: receiverId,
+        seen: false,
+      });
 
-      await Message.updateMany(
-        { _id: { $in: messageIds }, receiverId: receiverId },
-        { seen: true }
-      );
+      if (unseenMessages.length > 0) {
+        await Message.updateMany(
+          { _id: { $in: unseenMessages.map(msg => msg._id) } },
+          { $set: { seen: true } }
+        );
 
-      console.log(`Messages seen by user ${receiverId}`);
+        console.log(`Messages seen by user ${receiverId}`);
 
-      io.to(roomId).emit("messagesSeen", { messageIds, senderId, receiverId });
+        io.to(senderId).emit("messagesSeen", { senderId, receiverId, messageIds });
+      }
 
     } catch (error) {
       console.log("Error in messageSeen:", error);
     }
   });
 
-  socket.on('getHistory', async ({ userId, otherUserId }) => {
+
+
+  socket.on("getHistory", async ({ userId, otherUserId }) => {
     try {
       const messages = await Message.find({
         $or: [
@@ -178,30 +213,43 @@ io.on("connection", (socket) => {
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
 
-      if (unseenMessageIds.length > 0) {
-        await Message.updateMany(
-          { _id: { $in: unseenMessageIds } },
-          { seen: true }
-        );
-
-        const roomId = getRoomId(userId, otherUserId);
-        io.to(roomId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
-      }
-
       io.to(socket.id).emit("chatHistory", messages);
 
+      if (unseenMessageIds.length > 0) {
+        io.to(socket.id).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+      }
     } catch (error) {
       console.log("Error in getHistory:", error);
     }
   });
 
 
+  socket.on("leave", ({ userId, otherUserId }) => {
+    const roomId = getRoomId(userId, otherUserId);
+    socket.leave(roomId);
+    console.log(`User ${userId} left room ${roomId}`);
+  });
+
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log(`User disconnected: ${socket.id}`);
+
+    let userToRemove = null;
+    for (const [userId, socketSet] of userSockets.entries()) {
+      if (socketSet.has(socket.id)) {
+        socketSet.delete(socket.id);
+        if (socketSet.size === 0) {
+          userToRemove = userId; // Mark user for removal
+        }
+        break;
+      }
+    }
+
+    if (userToRemove) {
+      userSockets.delete(userToRemove);
+      console.log(`User ${userToRemove} removed from active connections`);
+    }
   });
 });
-
-
 
 
 
