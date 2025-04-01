@@ -110,7 +110,7 @@ const io = socketIo(server, {
 })
 
 const activeRooms = new Map();
-const userSockets = new Map(); // Now supports multiple sockets per user
+const userSockets = new Map();
 
 function getRoomId(senderId, receiverId) {
   const sortedIds = [senderId, receiverId].sort();
@@ -130,7 +130,6 @@ io.on("connection", (socket) => {
     }
     userSockets.get(userId).add(socket.id);
 
-    // Handle unseen messages
     const unseenMessages = await Message.find({
       senderId: otherUserId,
       receiverId: userId,
@@ -140,9 +139,22 @@ io.on("connection", (socket) => {
     if (unseenMessages.length > 0) {
       const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
-      await Message.updateMany({ _id: { $in: unseenMessageIds } }, { seen: true });
+      io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
+    }
 
-      io.to(roomId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+    const isOtherUserInRoom = io.sockets.adapter.rooms.get(roomId)?.has(otherUserId);
+    if (isOtherUserInRoom) {
+      const otherUnseenMessages = await Message.find({
+        senderId: userId,
+        receiverId: otherUserId,
+        seen: false
+      });
+
+      if (otherUnseenMessages.length > 0) {
+        const otherUnseenMessageIds = otherUnseenMessages.map(msg => msg._id);
+
+        io.to(socket.id).emit("unreadMessages", { messageIds: otherUnseenMessageIds, messages: otherUnseenMessages });
+      }
     }
   });
 
@@ -205,8 +217,6 @@ io.on("connection", (socket) => {
     }
   });
 
-
-
   socket.on("getHistory", async ({ userId, otherUserId }) => {
     try {
       const messages = await Message.find({
@@ -229,7 +239,6 @@ io.on("connection", (socket) => {
       console.log("Error in getHistory:", error);
     }
   });
-
 
   socket.on("leave", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
@@ -257,7 +266,6 @@ io.on("connection", (socket) => {
     }
   });
 });
-
 
 
 
