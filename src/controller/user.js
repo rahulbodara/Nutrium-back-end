@@ -239,11 +239,16 @@ const SignIn = async (req, res, next) => {
     let isClient = false;
 
     if (!userDetails) {
-      userDetails = await Client.findOne({ email })
+      userDetails = await Client.findOne({ email });
       if (userDetails) {
         isClient = true;
+
+        if (deviceToken) {
+          await Client.updateOne({ email }, { $set: { deviceToken } });
+        }
+
         isActive = 1;
-        await Client.updateOne({ email }, { $set: { isActive: 1, deviceToken } });
+        await Client.updateOne({ email }, { $set: { isActive: 1 } });
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -280,6 +285,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
