@@ -4,6 +4,7 @@ const workplaceSchema = new mongoose.Schema({
   startTime: { type: String, default: "9:00 AM" },
   endTime: { type: String, default: "5:00 PM" },
   workplaceName: { type: String, required: true }, // New field
+  note: { type: String }
 });
 
 

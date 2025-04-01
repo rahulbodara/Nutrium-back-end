@@ -1,17 +1,5 @@
 const Schedule = require("../model/Schedule");
 
-// const getAllSchedules = async (req, res, next) => {
-//   try {
-//     const schedules = await Schedule.find();
-//     if (!schedules || schedules.length === 0) {
-//       return res.status(404).json({ message: "No schedules found" });
-//     }
-//     res.status(200).json(schedules);
-//   } catch (error) {
-//     next({ status: 500, message: "Error fetching schedules", error });
-//   }
-// };
-
 const setSchedule = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -31,8 +19,16 @@ const setSchedule = async (req, res, next) => {
       schedule = new Schedule({ userId, schedules: [] });
     }
 
-    // Filter out schedules that are not in the request (i.e., remove unmentioned days)
-    schedule.schedules = schedules.filter((newSchedule) => newSchedule.isEnabled !== false);
+    schedule.schedules = schedules.map((newSchedule) => {
+      if (newSchedule.isEnabled === false) return null;
+
+      const updatedWorkplace = newSchedule.workplace.map(workplace => {
+        workplace.notes = workplace.notes || "";
+        return workplace;
+      });
+
+      return { ...newSchedule, workplace: updatedWorkplace };
+    }).filter(Boolean);
 
     const savedSchedule = await schedule.save();
     res.status(200).json({ message: "Schedule updated successfully", userId, schedules: savedSchedule.schedules });
@@ -41,7 +37,6 @@ const setSchedule = async (req, res, next) => {
     next({ status: 500, message: "Error saving schedule", error });
   }
 };
-
 
 const getScheduleById = async (req, res, next) => {
   try {
@@ -62,7 +57,6 @@ const getScheduleById = async (req, res, next) => {
 };
 
 module.exports = {
-  // getAllSchedules,
   setSchedule,
   getScheduleById,
 };

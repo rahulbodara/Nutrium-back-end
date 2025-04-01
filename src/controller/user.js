@@ -245,9 +245,12 @@ const SignIn = async (req, res, next) => {
 
         if (deviceToken) {
           await Client.updateOne({ email }, { $set: { deviceToken } });
+        } else {
+          if (!userDetails.deviceToken) {
+            await Client.updateOne({ email }, { $set: { deviceToken: null } });
+          }
         }
 
-        isActive = 1;
         await Client.updateOne({ email }, { $set: { isActive: 1 } });
       } else {
         return res.status(404).json({ message: 'User not found.' });
