@@ -149,6 +149,13 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
+
+      const lastMessage = await Message.findOne({ roomId }).sort({ createdAt: -1 }).limit(1);
+
+      if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) {
+        return;
+      }
+
       const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
       let fileUrl = file || null;
       let seen = false;
