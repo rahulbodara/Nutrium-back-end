@@ -226,19 +226,22 @@ io.on("connection", (socket) => {
         ]
       }).sort({ createdAt: 1 });
 
-      const unseenMessageIds = messages
-        .filter(msg => msg.receiverId === userId && !msg.seen)
-        .map(msg => msg._id);
+      const unseenMessages = messages.filter(msg => msg.receiverId === userId && !msg.seen);
+
+      if (unseenMessages.length > 0) {
+        await Message.updateMany(
+          { _id: { $in: unseenMessages.map(msg => msg._id) } },
+          { $set: { seen: true } }
+        );
+      }
 
       io.to(socket.id).emit("chatHistory", messages);
 
-      if (unseenMessageIds.length > 0) {
-        io.to(socket.id).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
-      }
     } catch (error) {
       console.log("Error in getHistory:", error);
     }
   });
+
 
   socket.on("leave", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
