@@ -139,22 +139,14 @@ io.on("connection", (socket) => {
     if (unseenMessages.length > 0) {
       const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
+      await Message.updateMany(
+        { _id: { $in: unseenMessageIds } },
+        { $set: { seen: true } }
+      );
+
       io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
-    }
 
-    const isOtherUserInRoom = io.sockets.adapter.rooms.get(roomId)?.has(otherUserId);
-    if (isOtherUserInRoom) {
-      const otherUnseenMessages = await Message.find({
-        senderId: userId,
-        receiverId: otherUserId,
-        seen: false
-      });
-
-      if (otherUnseenMessages.length > 0) {
-        const otherUnseenMessageIds = otherUnseenMessages.map(msg => msg._id);
-
-        io.to(socket.id).emit("unreadMessages", { messageIds: otherUnseenMessageIds, messages: otherUnseenMessages });
-      }
+      io.to(otherUserId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
     }
   });
 
@@ -163,7 +155,6 @@ io.on("connection", (socket) => {
       const roomId = getRoomId(senderId, receiverId);
 
       const lastMessage = await Message.findOne({ roomId }).sort({ createdAt: -1 }).limit(1);
-
       if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) {
         return;
       }
@@ -242,11 +233,15 @@ io.on("connection", (socket) => {
     }
   });
 
-
   socket.on("leave", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
     socket.leave(roomId);
     console.log(`User ${userId} left room ${roomId}`);
+  });
+
+  socket.on("userTyping", ({ userId, otherUserId, isTyping }) => {
+    const roomId = getRoomId(userId, otherUserId);
+    io.to(roomId).emit("userTyping", { userId, isTyping });
   });
 
   socket.on('disconnect', () => {
@@ -257,7 +252,7 @@ io.on("connection", (socket) => {
       if (socketSet.has(socket.id)) {
         socketSet.delete(socket.id);
         if (socketSet.size === 0) {
-          userToRemove = userId; // Mark user for removal
+          userToRemove = userId;
         }
         break;
       }
