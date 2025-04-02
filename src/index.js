@@ -120,44 +120,98 @@ function getRoomId(senderId, receiverId) {
 io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
-  socket.on("join", async ({ userId, otherUserId }) => {
-    const roomId = getRoomId(userId, otherUserId);
-    socket.join(roomId);
-    console.log(`User ${userId} joined room ${roomId}`);
+  // socket.on("join", async ({ userId, otherUserId }) => {
+  //   console.log("user joined", userId)
+  //   const roomId = getRoomId(userId, otherUserId);
+  //   socket.join(roomId);
+  //   console.log(`User ${userId} joined room ${roomId}`);
 
-    if (!userSockets.has(userId)) {
-      userSockets.set(userId, new Set());
-    }
-    userSockets.get(userId).add(socket.id);
+  //   if (!userSockets.has(userId)) {
+  //     userSockets.set(userId, new Set());
+  //   }
+  //   userSockets.get(userId).add(socket.id);
 
-    const unseenMessages = await Message.find({
-      senderId: otherUserId,
-      receiverId: userId,
-      seen: false
-    });
+  //   const unseenMessages = await Message.find({
+  //     senderId: otherUserId,
+  //     receiverId: userId,
+  //     seen: false
+  //   });
 
-    if (unseenMessages.length > 0) {
-      const unseenMessageIds = unseenMessages.map(msg => msg._id);
+  //   console.log("dev========", unseenMessages)
 
-      await Message.updateMany(
-        { _id: { $in: unseenMessageIds } },
-        { $set: { seen: true } }
-      );
+  //   if (unseenMessages.length > 0) {
+  //     const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
-      io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
+  //     await Message.updateMany(
+  //       { _id: { $in: unseenMessageIds } },
+  //       { $set: { seen: true } }
+  //     );
 
-      if (userSockets.has(otherUserId)) {
-        userSockets.get(otherUserId).forEach((socketId) => {
-          io.to(socketId).emit("messagesSeen", {
-            messageIds: unseenMessageIds,
-            senderId: otherUserId,
-            receiverId: userId,
-          });
-        });
+  //     io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
+
+  //     if (userSockets.has(otherUserId)) {
+  //       userSockets.get(otherUserId).forEach((socketId) => {
+  //         io.to(socketId).emit("messagesSeen", {
+  //           messageIds: unseenMessageIds,
+  //           senderId: otherUserId,
+  //           receiverId: userId,
+  //         });
+  //       });
+  //     }
+  //   }
+  // });
+
+  io.on("connection", (socket) => {
+    console.log('New client connected', socket.id);
+
+    socket.on("join", async ({ userId, otherUserId }) => {
+      console.log("user joined", userId)
+      const roomId = getRoomId(userId, otherUserId);
+      socket.join(roomId);
+      console.log(`User ${userId} joined room ${roomId}`);
+
+      if (!userSockets.has(userId)) {
+        userSockets.set(userId, new Set());
       }
-    }
-  });
+      userSockets.get(userId).add(socket.id);
 
+      // Only fetch messages where the joining user is the receiver
+      const unseenMessages = await Message.find({
+        senderId: otherUserId,
+        receiverId: userId,  // This ensures we only get messages where current user is receiver
+        seen: false
+      });
+
+      console.log("dev========", unseenMessages)
+
+      if (unseenMessages.length > 0) {
+        const unseenMessageIds = unseenMessages.map(msg => msg._id);
+
+        // Mark these messages as seen
+        await Message.updateMany(
+          { _id: { $in: unseenMessageIds } },
+          { $set: { seen: true } }
+        );
+
+        // Notify the current user about the previously unseen messages
+        io.to(socket.id).emit("unreadMessages", {
+          messageIds: unseenMessageIds,
+          messages: unseenMessages
+        });
+
+        // Notify the sender that their messages have been seen
+        if (userSockets.has(otherUserId)) {
+          userSockets.get(otherUserId).forEach((socketId) => {
+            io.to(socketId).emit("messagesSeen", {
+              messageIds: unseenMessageIds,
+              senderId: otherUserId,
+              receiverId: userId,
+            });
+          });
+        }
+      }
+    });
+  });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
     try {
@@ -224,6 +278,7 @@ io.on("connection", (socket) => {
 
 
   socket.on("getHistory", async ({ userId, otherUserId }) => {
+    console.log("devvv==", userId, otherUserId)
     try {
       const messages = await Message.find({
         $or: [
@@ -231,6 +286,8 @@ io.on("connection", (socket) => {
           { senderId: otherUserId, receiverId: userId },
         ]
       }).sort({ createdAt: 1 });
+
+      console.log("ve-----", messages)
 
       const unseenMessageIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
