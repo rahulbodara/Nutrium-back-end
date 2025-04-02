@@ -121,46 +121,7 @@ function getRoomId(senderId, receiverId) {
 io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
-  // socket.on("join", async ({ userId, otherUserId }) => {
-  //   console.log("user joined", userId)
-  //   const roomId = getRoomId(userId, otherUserId);
-  //   socket.join(roomId);
-  //   console.log(`User ${userId} joined room ${roomId}`);
 
-  //   if (!userSockets.has(userId)) {
-  //     userSockets.set(userId, new Set());
-  //   }
-  //   userSockets.get(userId).add(socket.id);
-
-  //   const unseenMessages = await Message.find({
-  //     senderId: otherUserId,
-  //     receiverId: userId,
-  //     seen: false
-  //   });
-
-  //   console.log("dev========", unseenMessages)
-
-  //   if (unseenMessages.length > 0) {
-  //     const unseenMessageIds = unseenMessages.map(msg => msg._id);
-
-  //     await Message.updateMany(
-  //       { _id: { $in: unseenMessageIds } },
-  //       { $set: { seen: true } }
-  //     );
-
-  //     io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
-
-  //     if (userSockets.has(otherUserId)) {
-  //       userSockets.get(otherUserId).forEach((socketId) => {
-  //         io.to(socketId).emit("messagesSeen", {
-  //           messageIds: unseenMessageIds,
-  //           senderId: otherUserId,
-  //           receiverId: userId,
-  //         });
-  //       });
-  //     }
-  //   }
-  // });
 
   io.on("connection", (socket) => {
     console.log('New client connected', socket.id);
@@ -176,33 +137,31 @@ io.on("connection", (socket) => {
       }
       userSockets.get(userId).add(socket.id);
 
-      // Only fetch messages where the joining user is the receiver
       const unseenMessages = await Message.find({
         senderId: otherUserId,
-        receiverId: userId,  // This ensures we only get messages where current user is receiver
+        receiverId: userId,
         seen: false
       });
 
 
-      console.log("dev-----", unseenMessages)
 
 
       if (unseenMessages.length > 0) {
         const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
-        // Mark these messages as seen
+
         await Message.updateMany(
           { _id: { $in: unseenMessageIds } },
           { $set: { seen: true } }
         );
 
-        // Notify the current user about the previously unseen messages
+
         io.to(socket.id).emit("unreadMessages", {
           messageIds: unseenMessageIds,
           messages: unseenMessages
         });
 
-        // Notify the sender that their messages have been seen
+
         if (userSockets.has(otherUserId)) {
           userSockets.get(otherUserId).forEach((socketId) => {
             io.to(socketId).emit("messagesSeen", {
@@ -331,6 +290,7 @@ io.on("connection", (socket) => {
     socket.leave(roomId);
     console.log(`User ${userId} left room ${roomId}`);
   });
+
 
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
