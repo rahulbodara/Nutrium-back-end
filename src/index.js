@@ -130,7 +130,6 @@ io.on("connection", (socket) => {
     }
     userSockets.get(userId).add(socket.id);
 
-    // Fetch unseen messages where userId is the receiver
     const unseenMessages = await Message.find({
       senderId: otherUserId,
       receiverId: userId,
@@ -140,19 +139,21 @@ io.on("connection", (socket) => {
     if (unseenMessages.length > 0) {
       const unseenMessageIds = unseenMessages.map(msg => msg._id);
 
-      // Mark these messages as seen in the database
       await Message.updateMany(
         { _id: { $in: unseenMessageIds } },
         { $set: { seen: true } }
       );
 
-      // Notify the receiver of unread messages
       io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
 
-      // Notify the sender that their messages were seen
-      io.to(otherUserId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+      if (userSockets.has(otherUserId)) {
+        userSockets.get(otherUserId).forEach(socketId => {
+          io.to(socketId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+        });
+      }
     }
   });
+
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
     try {
@@ -250,7 +251,7 @@ io.on("connection", (socket) => {
       if (socketSet.has(socket.id)) {
         socketSet.delete(socket.id);
         if (socketSet.size === 0) {
-          userToRemove = userId; // Mark user for removal
+          userToRemove = userId;
         }
         break;
       }
