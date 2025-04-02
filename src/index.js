@@ -50,6 +50,7 @@ const socketIo = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const multer = require("./middleware/messageMiddleware");
 const cloudinary = require("./db/cloudinary");
+const { sendNotification } = require("./firebase/sendNotification");
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -215,7 +216,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message, file }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file, fcmToken, senderName }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
 
@@ -240,6 +241,8 @@ io.on("connection", (socket) => {
 
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', newMessage);
+
+      await sendNotification(fcmToken, receiverId, message, senderName);
 
       if (seen) {
         io.to(roomId).emit("messagesSeen", { messageIds: [newMessage._id], senderId, receiverId });
