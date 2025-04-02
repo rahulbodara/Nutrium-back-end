@@ -147,8 +147,12 @@ io.on("connection", (socket) => {
       io.to(socket.id).emit("unreadMessages", { messageIds: unseenMessageIds, messages: unseenMessages });
 
       if (userSockets.has(otherUserId)) {
-        userSockets.get(otherUserId).forEach(socketId => {
-          io.to(socketId).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+        userSockets.get(otherUserId).forEach((socketId) => {
+          io.to(socketId).emit("messagesSeen", {
+            messageIds: unseenMessageIds,
+            senderId: otherUserId,
+            receiverId: userId,
+          });
         });
       }
     }
@@ -206,13 +210,18 @@ io.on("connection", (socket) => {
 
         console.log(`Messages seen by user ${receiverId}`);
 
-        io.to(senderId).emit("messagesSeen", { senderId, receiverId, messageIds });
+        if (userSockets.has(senderId)) {
+          userSockets.get(senderId).forEach(socketId => {
+            io.to(socketId).emit("messagesSeen", { senderId: receiverId, receiverId: senderId, messageIds });
+          });
+        }
       }
 
     } catch (error) {
       console.log("Error in messageSeen:", error);
     }
   });
+
 
   socket.on("getHistory", async ({ userId, otherUserId }) => {
     try {
@@ -229,8 +238,27 @@ io.on("connection", (socket) => {
 
       io.to(socket.id).emit("chatHistory", messages);
 
-      if (unseenMessageIds.length > 0) {
-        io.to(socket.id).emit("messagesSeen", { messageIds: unseenMessageIds, senderId: otherUserId, receiverId: userId });
+      if (unseenMessageIds.length > 0 && userId !== otherUserId) {
+        await Message.updateMany(
+          { _id: { $in: unseenMessageIds } },
+          { $set: { seen: true } }
+        );
+
+        io.to(socket.id).emit("messagesSeen", {
+          messageIds: unseenMessageIds,
+          senderId: otherUserId,
+          receiverId: userId,
+        });
+
+        if (userSockets.has(otherUserId)) {
+          userSockets.get(otherUserId).forEach((socketId) => {
+            io.to(socketId).emit("messagesSeen", {
+              messageIds: unseenMessageIds,
+              senderId: otherUserId,
+              receiverId: userId,
+            });
+          });
+        }
       }
     } catch (error) {
       console.log("Error in getHistory:", error);
