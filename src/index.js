@@ -165,10 +165,10 @@ io.on("connection", (socket) => {
     console.log('New client connected', socket.id);
 
     socket.on("join", async ({ userId, otherUserId }) => {
-      console.log("user joined", userId)
+      console.log("user joined", userId, otherUserId)
+
       const roomId = getRoomId(userId, otherUserId);
       socket.join(roomId);
-      console.log(`User ${userId} joined room ${roomId}`);
 
       if (!userSockets.has(userId)) {
         userSockets.set(userId, new Set());
@@ -182,7 +182,9 @@ io.on("connection", (socket) => {
         seen: false
       });
 
-      console.log("dev========", unseenMessages)
+
+      console.log("dev-----", unseenMessages)
+
 
       if (unseenMessages.length > 0) {
         const unseenMessageIds = unseenMessages.map(msg => msg._id);
@@ -287,11 +289,10 @@ io.on("connection", (socket) => {
         ]
       }).sort({ createdAt: 1 });
 
-      console.log("ve-----", messages)
-
       const unseenMessageIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
+      console.log("🚀 ~ socket.on ~ unseenMessageIds:", unseenMessageIds)
 
       io.to(socket.id).emit("chatHistory", messages);
 
