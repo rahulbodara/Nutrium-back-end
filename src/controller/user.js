@@ -245,12 +245,18 @@ const SignIn = async (req, res, next) => {
         isClient = true;
         let updateFields = { isActive: 1 };
 
+        // Update `deviceToken` only if it is provided in the payload
         if (deviceToken) {
-          updateFields.deviceToken = deviceToken; // Add `deviceToken` if provided
+          updateFields.deviceToken = deviceToken;
+        } else if (!userDetails.deviceToken) {
+          // If `deviceToken` is missing in both payload and database, explicitly set it to `null`
+          updateFields.deviceToken = null;
         }
 
-        // Ensure the `deviceToken` field is added if it's missing
-        await Client.updateOne({ email }, { $set: updateFields });
+        // Update the client only if necessary
+        if (Object.keys(updateFields).length > 0) {
+          await Client.updateOne({ email }, { $set: updateFields });
+        }
 
         // Fetch the updated client data to return the correct response
         userDetails = await Client.findOne({ email });
@@ -289,6 +295,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
