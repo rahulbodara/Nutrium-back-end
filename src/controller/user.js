@@ -240,18 +240,20 @@ const SignIn = async (req, res, next) => {
 
     if (!userDetails) {
       userDetails = await Client.findOne({ email });
+
       if (userDetails) {
         isClient = true;
+        let updateFields = { isActive: 1 };
 
         if (deviceToken) {
-          await Client.updateOne({ email }, { $set: { deviceToken } });
-        } else {
-          if (!userDetails.deviceToken) {
-            await Client.updateOne({ email }, { $set: { deviceToken: null } });
-          }
+          updateFields.deviceToken = deviceToken; // Add `deviceToken` if provided
         }
 
-        await Client.updateOne({ email }, { $set: { isActive: 1 } });
+        // Ensure the `deviceToken` field is added if it's missing
+        await Client.updateOne({ email }, { $set: updateFields });
+
+        // Fetch the updated client data to return the correct response
+        userDetails = await Client.findOne({ email });
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -271,8 +273,7 @@ const SignIn = async (req, res, next) => {
         id: isClient ? userDetails.userId : userDetails._id,
         role: isClient ? 'Client' : userDetails.role,
       },
-      JWT_SECRET,
-      // { expiresIn: '2h' }
+      JWT_SECRET
     );
 
     const { password: _, ...userData } = userDetails._doc;
@@ -288,6 +289,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
