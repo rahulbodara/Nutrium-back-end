@@ -42,6 +42,8 @@ const lookup = require('./routes/lookup');
 const labTest = require('./routes/LabTestRequest');
 const RecommendationTemplate = require('./routes/RecommendationTemplate');
 const foodDiary = require('./routes/foodDiary');
+const roleRoutes = require('./routes/Role/roleRoutes');
+const permissionRoutes = require('./routes/Role/permissionRoutes');
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -99,6 +101,7 @@ app.get('/downloads', async (req, res) => {
     clientData,
   });
 })
+
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -347,6 +350,9 @@ app.use("/api/v1", foodDiary);
 app.use("/api/v1", labTest)
 app.use("/api/v1", foodToAvoidTamplate)
 app.use("/api/v1", RecommendationTemplate)
+app.use('/api/roles', roleRoutes);
+app.use('/api/permissions', permissionRoutes);
+
 
 
 
