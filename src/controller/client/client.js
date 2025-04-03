@@ -42,12 +42,8 @@ const registerClient = async (req, res, next) => {
       isEmailSend,
     } = req.body;
 
-    const existingUser = await Promise.all([
-      Client.findOne({ email }),
-      User.findOne({ email }),
-    ]);
-
-    if (existingUser.some(user => user)) {
+    const existingUser = await Client.findOne({ email }) || await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "This email is already registered",

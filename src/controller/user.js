@@ -296,6 +296,38 @@ const SignIn = async (req, res, next) => {
   }
 };
 
+const SignOut = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required", status: 400 });
+    }
+
+    const user = await User.findOne({ email }) || await Client.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", status: 404 });
+    }
+
+    if (user instanceof User) {
+      await User.updateOne({ email }, { $set: { deviceToken: null, isActive: 0 } });
+    } else {
+      await Client.updateOne({ email }, { $set: { deviceToken: null, isActive: 0 } });
+    }
+
+    return res.status(200).json({ message: "Logout successful", status: 200 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      status: 500,
+      error: error.message,
+    });
+  }
+};
+
+
 
 
 
@@ -1004,5 +1036,7 @@ module.exports = {
   getPdfData,
   printPdfData,
   getUser,
-  uploadMessage
+  uploadMessage,
+  SignOut
+
 };

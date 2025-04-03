@@ -242,7 +242,6 @@ io.on("connection", (socket) => {
 
 
   socket.on("getHistory", async ({ userId, otherUserId }) => {
-    console.log("devvv==", userId, otherUserId)
     try {
       const messages = await Message.find({
         $or: [
