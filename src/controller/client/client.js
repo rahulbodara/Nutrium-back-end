@@ -25,6 +25,7 @@ const {
   generateResetToken,
 } = require("../../utils/EmailSender");
 const LabTestRequest = require("../../model/LabTestReqest");
+const { sendNotification } = require("../../firebase/sendNotification");
 
 const registerClient = async (req, res, next) => {
   try {
@@ -456,6 +457,7 @@ const updateClient = async (req, res, next) => {
     }
 
     const client = await Client.findById(clientId);
+    const receiverId = client._id.toString();
 
     if (!client) {
       return res.status(404).json({
@@ -485,11 +487,15 @@ const updateClient = async (req, res, next) => {
       });
     }
 
+    if(client.deviceToken){
+      await sendNotification(client.deviceToken, receiverId, "Profile updated!!")
+    }
     return res.status(200).json({
       success: true,
       message: "Client details updated successfully",
       client: updatedClient,
     });
+
   } catch (error) {
     console.log("error", error);
     next(error);
@@ -583,6 +589,9 @@ const updateAppointmentInfo = async (req, res, next) => {
       });
     }
 
+    const client = await Client.findById(clientId);
+    const receiverId = client._id.toString();
+
     const userId = req.userId;
     const newAppointmentInfo = {
       userId: userId,
@@ -604,6 +613,14 @@ const updateAppointmentInfo = async (req, res, next) => {
       ? "Appointment Information updated successfully"
       : "New Appointment Information created";
 
+      if (client.deviceToken) {
+        if (updatedAppointmentInfo._id) {
+          await sendNotification(client.deviceToken, receiverId, "Appointment information updated!!");
+        } else {
+          await sendNotification(client.deviceToken, receiverId, "Appointment information created!!");
+        }
+      }
+      
     return res.status(200).json({
       success: true,
       message: message,
@@ -749,6 +766,9 @@ const createPregnancyHistory = async (req, res, next) => {
       clientId,
       durationOfLactationInMonths,
     } = req.body;
+
+    const client = await Client.findById(clientId);
+    const receiverId = client._id.toString();
 
     const formatDate = (dateString) => {
       if (!dateString) return null;
@@ -935,6 +955,10 @@ const createPregnancyHistory = async (req, res, next) => {
 
     const data = await newPregnancyHistory.save();
 
+    if (client.deviceToken) {
+        await sendNotification(client.deviceToken, receiverId, "Pregnancy History added!!");
+    }
+
     const response = {
       success: true,
       message: "Pregnancy History added successfully",
@@ -970,7 +994,11 @@ const updatePregnancyHistory = async (req, res, next) => {
       beginningOfLactation,
       observations,
       durationOfLactationInMonths,
+      clientId
     } = req.body;
+
+    const client = await Client.findById(clientId);
+    const receiverId = client._id.toString();
 
     const formatDate = (dateString) => {
       if (!dateString) return null;
@@ -1145,6 +1173,10 @@ const updatePregnancyHistory = async (req, res, next) => {
       { new: true }
     );
 
+    if (client.deviceToken) {
+      await sendNotification(client.deviceToken, receiverId, "Pregnancy History updated!!");
+    }
+
     return res.status(200).json({
       success: true,
       message: "Pregnancy History updated successfully",
@@ -1222,6 +1254,8 @@ const updatePersonalHistory = async (req, res, next) => {
   try {
     const clientId = req.params.id;
     const userId = req.userId;
+    const client = await Client.findById(clientId);
+    const receiverId = client._id.toString();
 
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({
@@ -1260,6 +1294,10 @@ const updatePersonalHistory = async (req, res, next) => {
       { $set: updatedData },
       { new: true, upsert: false }
     );
+
+    if (client.deviceToken) {
+      await sendNotification(client.deviceToken, receiverId, "Personal History updated!!");
+    }
 
     return res.status(200).json({
       success: true,

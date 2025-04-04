@@ -27,7 +27,7 @@ const sendNotification = async (fcmToken, receiverId, message, senderName) => {
   const payload = {
     token: fcmToken,
     notification: {
-      title: senderName || "New Message",
+      title: senderName || "NutriumFit",
       body: message || "You have received a new message",
     },
     data: {
