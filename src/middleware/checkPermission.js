@@ -3,12 +3,12 @@ const { defineAbilityFor } = require("../helper/defineAbility");
 function checkPermission(action, subject) {
     return async (req, res, next) => {
         try {
-            const user = req.user;
+            const user = req.userId;
             if (!user) {
                 return res.status(401).json({ message: 'Unauthorized' });
             }
 
-            const ability = await defineAbilityFor(user._id);
+            const ability = await defineAbilityFor(user);
 
             if (ability.can(action, subject)) {
                 return next();

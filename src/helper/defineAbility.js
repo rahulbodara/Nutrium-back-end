@@ -1,12 +1,12 @@
-const { AbilityBuilder, Ability } = require('@casl/ability');
+const { AbilityBuilder, createMongoAbility } = require('@casl/ability');
+const { PureAbility } = require('@casl/ability');
+
 const UserRole = require('../model/Roles-Permission/UserRole');
 const RolePermission = require('../model/Roles-Permission/RolePermission');
 const Permission = require('../model/Roles-Permission/Permission');
-Permission
-
 
 async function defineAbilityFor(userId) {
-    const { can, cannot, build } = new AbilityBuilder(Ability);
+    const { can, cannot, build } = new AbilityBuilder(PureAbility);
 
     const userRoles = await UserRole.find({ userId }).populate('roleId');
 

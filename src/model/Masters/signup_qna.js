@@ -11,5 +11,5 @@ const SignupQNASchema = new mongoose.Schema({
     }
 })
 
-const SignupQNA = mongoose.model('SignupQNA', SignupQNASchema);
-module.exports = SignupQNA;
+const signup_qna = mongoose.model('signup_qna', SignupQNASchema);
+module.exports = signup_qna;

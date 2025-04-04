@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const NutriumProfessionSchema = new mongoose.Schema({
-    name: {
+const FoodDiarySchema = new mongoose.Schema({
+    option: {
         type: String,
         required: true,
         unique: true,
@@ -13,5 +13,5 @@ const NutriumProfessionSchema = new mongoose.Schema({
     }
 })
 
-const NutriumProfession = mongoose.model('NutriumProfession', NutriumProfessionSchema);
-module.exports = NutriumProfession;
+const food_diary = mongoose.model('food_diary', FoodDiarySchema);
+module.exports = food_diary;

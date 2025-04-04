@@ -44,6 +44,9 @@ const RecommendationTemplate = require('./routes/RecommendationTemplate');
 const foodDiary = require('./routes/foodDiary');
 const roleRoutes = require('./routes/Role/roleRoutes');
 const permissionRoutes = require('./routes/Role/permissionRoutes');
+const userRoleRoutes = require('./routes/Role/userRoleRoutes')
+const userPermission = require('./routes/Role/userPermission');
+const rolePermission = require('./routes/Role/rolePermission')
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -350,8 +353,12 @@ app.use("/api/v1", foodDiary);
 app.use("/api/v1", labTest)
 app.use("/api/v1", foodToAvoidTamplate)
 app.use("/api/v1", RecommendationTemplate)
-app.use('/api/roles', roleRoutes);
-app.use('/api/permissions', permissionRoutes);
+app.use('/api', roleRoutes);
+app.use('/api', permissionRoutes);
+app.use('/api', userRoleRoutes);
+app.use('/api', userPermission);
+app.use('/api', rolePermission);
+
 
 
 
