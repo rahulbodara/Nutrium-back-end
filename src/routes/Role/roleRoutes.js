@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { checkPermission } = require('../../middleware/checkPermission');
-const { createRole, getRoles } = require('../../controller/Role/roleController');
+const { createRole, getRoles, updateRole, deleteRole } = require('../../controller/Role/roleController');
+const { isAuthenticated } = require('../../middleware/auth');
 
 
-router.post('/', checkPermission('create', 'Role'), createRole);
-router.get('/', checkPermission('read', 'Role'), getRoles);
+router.post('/role', isAuthenticated, checkPermission('create', 'Role'), createRole);
+router.get('/role', isAuthenticated, checkPermission('read', 'Role'), getRoles);
+router.put('/role/:id', isAuthenticated, checkPermission('update', 'Role'), updateRole);
+router.delete('/role/:id', isAuthenticated, checkPermission('delete', 'Role'), deleteRole);
 
 module.exports = router;

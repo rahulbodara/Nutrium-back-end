@@ -1,27 +1,21 @@
 const { AbilityBuilder, createMongoAbility } = require('@casl/ability');
-const { PureAbility } = require('@casl/ability');
 
 const UserRole = require('../model/Roles-Permission/UserRole');
 const RolePermission = require('../model/Roles-Permission/RolePermission');
-const Permission = require('../model/Roles-Permission/Permission');
 
 async function defineAbilityFor(userId) {
-    const { can, cannot, build } = new AbilityBuilder(PureAbility);
+    const { can, cannot, build } = new AbilityBuilder(createMongoAbility);
 
     const userRoles = await UserRole.find({ userId }).populate('roleId');
-
-    if (!userRoles.length) {
-        return build();
-    }
+    if (!userRoles.length) return build();
 
     const roleIds = userRoles.map((ur) => ur.roleId._id);
-
-    const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionId');
+    const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
 
     rolePermissions.forEach((rp) => {
-        if (rp.permissionId) {
-            can(rp.permissionId.action, rp.permissionId.subject);
-        }
+        rp.permissionIds.forEach((perm) => {
+            can(perm.action, perm.subject);
+        });
     });
 
     return build();

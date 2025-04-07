@@ -263,7 +263,6 @@ io.on("connection", (socket) => {
       const unseenMessageIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
-      console.log("🚀 ~ socket.on ~ unseenMessageIds:", unseenMessageIds)
 
       io.to(socket.id).emit("chatHistory", messages);
 

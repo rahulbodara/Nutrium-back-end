@@ -8,14 +8,14 @@ require('dotenv').config();
 async function seed() {
     await mongoose.connect(process.env.MongoURL);
 
-    const adminRole = await Role.findOne({ name: 'Admin' });
-    const permissions = await Permission.find({});
+    const adminRole = await Role.findOne({ name: 'Nutritionist' });
+    const permissions = await Permission.find({ name: "Create Role permission" });
 
     await RolePermission.deleteMany({});
 
     const rolePermissions = permissions.map((perm) => ({
         roleId: adminRole._id,
-        permissionId: perm._id,
+        permissionIds: perm._id,
     }));
 
     await RolePermission.insertMany(rolePermissions);

@@ -20,4 +20,25 @@ const getRoles = async (req, res) => {
     }
 };
 
-module.exports = { getRoles, createRole }
+const updateRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        const updatedRole = await Role.findByIdAndUpdate(id, { name }, { new: true });
+        res.json({ message: 'Role updated', updatedRole });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+const deleteRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedRole = await Role.findByIdAndDelete(id);
+        res.json({ message: 'Role deleted', deletedRole });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+module.exports = { getRoles, createRole, updateRole, deleteRole }
