@@ -179,9 +179,10 @@ io.on("connection", (socket) => {
         }
       }
     });
+
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message, file, fcmToken, senderName }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file, fcmToken, senderName, tempId }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
 
@@ -199,13 +200,16 @@ io.on("connection", (socket) => {
         seen = true;
       }
 
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen });
+      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen, tempId });
       await newMessage.save();
 
       console.log(`Sending message to room ${roomId}`);
 
       io.to(roomId).emit('receiveMessage', newMessage);
-      io.to(socket.id).emit('messageSent', newMessage);
+      io.to(socket.id).emit('messageSent', {
+        ...newMessage.toObject(),
+        tempId
+      });
 
       await sendNotification(fcmToken, receiverId, message, senderName);
 
