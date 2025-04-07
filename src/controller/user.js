@@ -35,6 +35,8 @@ const Measurements = require('../model/Measurements');
 const Lookup = require('../model/lookupUser');
 const multer = require("../middleware/messageMiddleware");
 const cloudinary = require("../db/cloudinary");
+const UserRole = require('../model/Roles-Permission/UserRole');
+const RolePermission = require('../model/Roles-Permission/RolePermission');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -284,11 +286,30 @@ const SignIn = async (req, res, next) => {
 
     const { password: _, ...userData } = userDetails._doc;
 
+    let permissions = [];
+
+    if (!isClient) {
+      const userRoles = await UserRole.find({ userId: userDetails?._id }).populate('roleId');
+      const roleIds = userRoles.map((ur) => ur.roleId._id);
+
+      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+
+      rolePermissions.forEach((rp) => {
+        rp.permissionIds.forEach((perm) => {
+          permissions.push({
+            action: perm.action,
+            subject: perm.subject,
+          });
+        });
+      });
+    }
+
     return res.status(200).json({
       token,
       message: 'Login successful',
       status: 200,
       userData,
+      permissions,
     });
   } catch (error) {
     console.log(error);
