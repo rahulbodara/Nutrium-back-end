@@ -65,3 +65,43 @@ exports.deleteChallengeMaster = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+exports.getChallengeMasterKeyValues = async (req, res) => {
+    try {
+        const masters = await challenge_master.find({}, { _id: 1, type: 1 });
+
+        const response = masters.map(m => ({
+            _id: m._id,
+            key: m.type,
+            value: m.type
+        }));
+
+        res.status(200).json({ success: true, data: response });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getRewardRangesDropdown = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const master = await challenge_master.findById(id);
+        if (!master) return res.status(404).json({ message: 'Challenge master not found' });
+
+        const options = master.rewardRanges.map((range, index) => {
+            const label = `${range.min} - ${range.max}`;
+            return {
+                _id: `${range.min}-${range.max}-${index}`, // unique ID
+                key: label,
+                value: label
+            };
+        });
+
+        res.status(200).json({ success: true, data: options });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
