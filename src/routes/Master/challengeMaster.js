@@ -10,8 +10,8 @@ router.post('/', isAuthenticated, checkPermission("create", 'Challenge Master'),
 router.get('/:id', isAuthenticated, getChallengeMasterById);
 router.put('/:id', isAuthenticated, checkPermission("update", 'Challenge Master'), updateChallengeMaster);
 router.delete('/:id', isAuthenticated, checkPermission("delete", 'Challenge Master'), deleteChallengeMaster);
-router.get('/', getChallengeMasterKeyValues)
-router.get('/reward-ranges-dropdown/:id', getRewardRangesDropdown);
+router.get('/', isAuthenticated, getChallengeMasterKeyValues)
+router.get('/reward-ranges-dropdown/:id', isAuthenticated, getRewardRangesDropdown);
 
 
 module.exports = router;

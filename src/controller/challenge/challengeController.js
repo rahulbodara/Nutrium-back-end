@@ -53,6 +53,11 @@ exports.respondToChallenge = async (req, res) => {
         participant.status = response;
         participant.respondedAt = new Date();
 
+        if (response === 'accepted') {
+            participant.progress = 0;
+            participant.completedAt = null;
+        }
+
         await challenges.save();
         res.json({ message: `Challenge ${response}` });
     } catch (error) {
@@ -217,5 +222,33 @@ exports.joinPublicChallenge = async (req, res) => {
     } catch (error) {
         console.error("Error in joinPublicChallenge:", error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+
+exports.logProgress = async (req, res) => {
+    try {
+        const { challengeId, userId } = req.params;
+        const { value } = req.body;
+
+        const challenges = await challenge.findById(challengeId);
+        if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
+
+        const participant = challenges.participants.find(p => p.clientId.toString() === userId);
+        if (!participant || participant.status !== 'accepted') {
+            return res.status(403).json({ message: 'You are not a valid participant' });
+        }
+
+        participant.progress = (participant.progress || 0) + value;
+
+        if (participant.progress >= challenges.targetValue && !participant.completedAt) {
+            participant.completedAt = new Date();
+        }
+
+        await challenges.save();
+        res.json({ message: 'Progress logged', progress: participant.progress });
+    } catch (error) {
+        console.error('Progress log error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };

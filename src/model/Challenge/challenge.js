@@ -12,6 +12,13 @@ const participantSchema = new mongoose.Schema({
         default: 'pending'
     },
     respondedAt: Date,
+    progress: {
+        type: Number,
+        default: 0
+    },
+    completedAt: {
+        type: Date
+    }
 }, { _id: false });
 
 const challengeSchema = new mongoose.Schema({
@@ -24,9 +31,7 @@ const challengeSchema = new mongoose.Schema({
         enum: ['steps', 'calories', 'loss_weight', 'gain_weight'],
         required: true
     },
-    description: {
-        type: String,
-    },
+    description: String,
     startDate: {
         type: Date,
         required: true
@@ -43,9 +48,7 @@ const challengeSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    participationLimit: {
-        type: Number,
-    },
+    participationLimit: Number,
     privacy: {
         type: String,
         enum: ['public', 'private'],
@@ -60,8 +63,7 @@ const challengeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Clients',
         required: true
-    },
-
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('challenge', challengeSchema);
