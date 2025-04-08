@@ -3,9 +3,10 @@ const router = express.Router();
 const challengeController = require('../../controller/challenge/challengeController');
 
 router.post('/create/:userId', challengeController.createChallenge);
-router.post('/:userId/respond/:challengeId', challengeController.respondToChallenge);
-router.post('/:userId/reinvite/:challengeId/:clientId', challengeController.reinviteClient);
-router.get('/:userId/list', challengeController.getChallenges);
-router.get('/:userId/:challengeId/participants', challengeController.viewParticipants);
+router.post('/respond/:userId/:challengeId', challengeController.respondToChallenge);
+router.post('/reinvite/:challengeId/:clientId', challengeController.reinviteClient);
+router.get('/list/:userId', challengeController.getChallenges);
+router.get('/participants/:challengeId', challengeController.viewParticipants);
+router.get('/participanted/:userId', challengeController.getParticipatedChallenges)
 
 module.exports = router;

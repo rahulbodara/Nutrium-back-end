@@ -64,12 +64,12 @@ exports.reinviteClient = async (req, res) => {
     try {
         const challengeId = req.params.challengeId;
         const clientId = req.params.clientId;
-        const userId = req.params.userId;
+        // const userId = req.params.userId;
 
         const challenges = await challenge.findById(challengeId);
-        if (!challenges || challenges.createdBy.toString() !== userId) {
-            return res.status(403).json({ message: 'Unauthorized or challenge not found' });
-        }
+        // if (!challenges || challenges.createdBy.toString() !== userId) {
+        //     return res.status(403).json({ message: 'Unauthorized or challenge not found' });
+        // }
 
         const participant = challenges.participants.find(p => p.clientId.toString() === clientId);
         if (participant) {
@@ -124,18 +124,34 @@ exports.getChallenges = async (req, res) => {
 exports.viewParticipants = async (req, res) => {
     try {
         const challengeId = req.params.challengeId;
-        const userId = req.params.userId;
 
         const challenges = await challenge.findById(challengeId).populate('participants.clientId', 'fullName email');
-        if (!challenges || challenges.createdBy.toString() !== userId) {
-            return res.status(403).json({ message: 'Unauthorized or challenge not found' });
-        }
 
         const accepted = challenges.participants.filter(p => p.status === 'accepted');
         const rejected = challenges.participants.filter(p => p.status === 'rejected');
+        const pending = challenges.participants.filter(p => p.status === 'pending');
 
-        res.json({ accepted, rejected });
+        res.json({ accepted, rejected, pending });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+exports.getParticipatedChallenges = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const challenges = await challenge.find({
+            participants: { $elemMatch: { clientId: userId } }
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            challenges
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

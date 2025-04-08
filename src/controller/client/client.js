@@ -487,7 +487,7 @@ const updateClient = async (req, res, next) => {
       });
     }
 
-    if(client.deviceToken){
+    if (client.deviceToken) {
       await sendNotification(client.deviceToken, receiverId, "Profile updated!!")
     }
     return res.status(200).json({
@@ -613,14 +613,14 @@ const updateAppointmentInfo = async (req, res, next) => {
       ? "Appointment Information updated successfully"
       : "New Appointment Information created";
 
-      if (client.deviceToken) {
-        if (updatedAppointmentInfo._id) {
-          await sendNotification(client.deviceToken, receiverId, "Appointment information updated!!");
-        } else {
-          await sendNotification(client.deviceToken, receiverId, "Appointment information created!!");
-        }
+    if (client.deviceToken) {
+      if (updatedAppointmentInfo._id) {
+        await sendNotification(client.deviceToken, receiverId, "Appointment information updated!!");
+      } else {
+        await sendNotification(client.deviceToken, receiverId, "Appointment information created!!");
       }
-      
+    }
+
     return res.status(200).json({
       success: true,
       message: message,
@@ -956,7 +956,7 @@ const createPregnancyHistory = async (req, res, next) => {
     const data = await newPregnancyHistory.save();
 
     if (client.deviceToken) {
-        await sendNotification(client.deviceToken, receiverId, "Pregnancy History added!!");
+      await sendNotification(client.deviceToken, receiverId, "Pregnancy History added!!");
     }
 
     const response = {
@@ -3077,6 +3077,37 @@ const clientFormEmailSend = async (req, res) => {
 }
 
 
+const searchClients = async (req, res) => {
+  try {
+    const { query = '', page = 1, limit = 10 } = req.query;
+    // const userId = req.user?._id || req.params.userId;
+
+    const regex = new RegExp('^' + query, 'i');
+
+    const filter = {
+      // createdBy: userId,
+      fullName: regex,
+    };
+
+    const clients = await Client.find(filter)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ fullName: 1 });
+
+    const total = await Client.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      clients,
+      total,
+      page: Number(page),
+      limit: Number(limit)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 module.exports = {
   registerClient,
@@ -3085,6 +3116,7 @@ module.exports = {
   deleteClient,
   getClientByID,
   getAllClient,
+  searchClients,
   updateClient,
   getScheduleAppointmentInfo,
   updateAppointmentInfo,
