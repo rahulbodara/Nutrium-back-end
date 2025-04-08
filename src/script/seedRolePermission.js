@@ -1,4 +1,3 @@
-// scripts/seedRolePermissions.js
 const mongoose = require('mongoose');
 const Role = require('../model/Roles-Permission/Role');
 const Permission = require('../model/Roles-Permission/Permission');
@@ -8,15 +7,17 @@ require('dotenv').config();
 async function seed() {
     await mongoose.connect(process.env.MongoURL);
 
-    const adminRole = await Role.findOne({ name: 'Nutritionist' });
-    const permissions = await Permission.find({ name: "Create Role permission" });
+    const adminRole = await Role.findOne({ name: 'Admin' });
+    const permissions = await Permission.find();
+
+    console.log("🚀 ~ Permissions found:", permissions.length);
 
     await RolePermission.deleteMany({});
 
-    const rolePermissions = permissions.map((perm) => ({
+    const rolePermissions = [{
         roleId: adminRole._id,
-        permissionIds: perm._id,
-    }));
+        permissionIds: permissions.map(p => p._id),
+    }];
 
     await RolePermission.insertMany(rolePermissions);
 

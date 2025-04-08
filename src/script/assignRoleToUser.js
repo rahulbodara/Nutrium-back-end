@@ -23,4 +23,4 @@ async function assignRole(email, roleName) {
     mongoose.disconnect();
 }
 
-assignRole('vatsal.r.lakhani2626+88@gmail.com', 'Client');
+assignRole('vatsal.r.lakhani2626+88@gmail.com', 'Admin');
