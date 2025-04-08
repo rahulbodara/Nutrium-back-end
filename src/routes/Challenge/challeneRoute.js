@@ -8,5 +8,8 @@ router.post('/reinvite/:challengeId/:clientId', challengeController.reinviteClie
 router.get('/list/:userId', challengeController.getChallenges);
 router.get('/participants/:challengeId', challengeController.viewParticipants);
 router.get('/participanted/:userId', challengeController.getParticipatedChallenges)
+router.get('/public', challengeController.getAllPublicChallenges);
+router.get('/private/:userId', challengeController.getPrivateChallenges)
+
 
 module.exports = router;

@@ -155,3 +155,36 @@ exports.getParticipatedChallenges = async (req, res) => {
     }
 };
 
+exports.getAllPublicChallenges = async (req, res) => {
+    try {
+        const challenges = await challenge.find({
+            privacy: 'public'
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, challenges });
+    } catch (error) {
+        console.error("Error in getAllPublicChallenges:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getPrivateChallenges = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const challenges = await challenge.find({
+            privacy: 'private',
+            selectedClients: userId,
+            $or: [
+                { 'participants.clientId': { $ne: userId } },
+                { 'participants': { $elemMatch: { clientId: userId, status: 'pending' } } }
+            ]
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, challenges });
+    } catch (error) {
+        console.error("Error in getPrivateChallenges:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
