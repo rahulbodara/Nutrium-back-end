@@ -188,3 +188,34 @@ exports.getPrivateChallenges = async (req, res) => {
     }
 };
 
+exports.joinPublicChallenge = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const challengeId = req.params.challengeId;
+
+        const challenges = await challenge.findById(challengeId);
+        if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
+
+        if (challenges.privacy !== 'public') {
+            return res.status(400).json({ message: 'Challenge is not public' });
+        }
+
+        // Check if already joined
+        const alreadyJoined = challenges.participants.some(p => p.clientId.toString() === userId);
+        if (alreadyJoined) {
+            return res.status(400).json({ message: 'You have already joined this challenge' });
+        }
+
+        challenges.participants.push({
+            clientId: userId,
+            status: 'accepted',
+            respondedAt: new Date()
+        });
+
+        await challenges.save();
+        res.status(200).json({ message: 'You have successfully joined the challenge', challenge: challenges });
+    } catch (error) {
+        console.error("Error in joinPublicChallenge:", error);
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -10,6 +10,7 @@ router.get('/participants/:challengeId', challengeController.viewParticipants);
 router.get('/participanted/:userId', challengeController.getParticipatedChallenges)
 router.get('/public', challengeController.getAllPublicChallenges);
 router.get('/private/:userId', challengeController.getPrivateChallenges)
+router.post('/public/join/:userId/:challengeId', challengeController.joinPublicChallenge)
 
 
 module.exports = router;
