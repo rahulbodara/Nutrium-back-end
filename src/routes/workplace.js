@@ -10,7 +10,7 @@ router.post(
   "/workplaces",
   upload.single('image'),
   isAuthenticated,
-  checkPermission('create', 'Workplace'),
+  // checkPermission('create', 'Workplace'),
   workplaceController.createWorkplace
 );
 
