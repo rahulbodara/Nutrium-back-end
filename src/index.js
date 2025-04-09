@@ -49,6 +49,7 @@ const userPermission = require('./routes/Role/userPermission');
 const rolePermission = require('./routes/Role/rolePermission')
 const challengeMasterRoutes = require('./routes/Master/challengeMaster');
 const challenge = require('./routes/Challenge/challeneRoute')
+const leaderBoard = require("./routes/Challenge/leaderBoard")
 const os = require('os');
 const https = require('https');
 const fs = require('fs');
@@ -130,59 +131,60 @@ io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
 
+  socket.on('joinChallengeRoom', (challengeId) => {
+    socket.join(challengeId.toString());
+    console.log(`User joined challenge room: ${challengeId}`);
+  });
 
-  io.on("connection", (socket) => {
-    console.log('New client connected', socket.id);
 
-    socket.on("join", async ({ userId, otherUserId }) => {
-      console.log("user joined", userId, otherUserId)
+  socket.on("join", async ({ userId, otherUserId }) => {
+    console.log("user joined", userId, otherUserId)
 
-      const roomId = getRoomId(userId, otherUserId);
-      socket.join(roomId);
+    const roomId = getRoomId(userId, otherUserId);
+    socket.join(roomId);
 
-      if (!userSockets.has(userId)) {
-        userSockets.set(userId, new Set());
-      }
-      userSockets.get(userId).add(socket.id);
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set());
+    }
+    userSockets.get(userId).add(socket.id);
 
-      const unseenMessages = await Message.find({
-        senderId: otherUserId,
-        receiverId: userId,
-        seen: false
+    const unseenMessages = await Message.find({
+      senderId: otherUserId,
+      receiverId: userId,
+      seen: false
+    });
+
+
+
+
+    if (unseenMessages.length > 0) {
+      const unseenMessageIds = unseenMessages.map(msg => msg._id);
+
+
+      await Message.updateMany(
+        { _id: { $in: unseenMessageIds } },
+        { $set: { seen: true } }
+      );
+
+
+      io.to(socket.id).emit("unreadMessages", {
+        messageIds: unseenMessageIds,
+        messages: unseenMessages
       });
 
 
-
-
-      if (unseenMessages.length > 0) {
-        const unseenMessageIds = unseenMessages.map(msg => msg._id);
-
-
-        await Message.updateMany(
-          { _id: { $in: unseenMessageIds } },
-          { $set: { seen: true } }
-        );
-
-
-        io.to(socket.id).emit("unreadMessages", {
-          messageIds: unseenMessageIds,
-          messages: unseenMessages
-        });
-
-
-        if (userSockets.has(otherUserId)) {
-          userSockets.get(otherUserId).forEach((socketId) => {
-            io.to(socketId).emit("messagesSeen", {
-              messageIds: unseenMessageIds,
-              senderId: otherUserId,
-              receiverId: userId,
-            });
+      if (userSockets.has(otherUserId)) {
+        userSockets.get(otherUserId).forEach((socketId) => {
+          io.to(socketId).emit("messagesSeen", {
+            messageIds: unseenMessageIds,
+            senderId: otherUserId,
+            receiverId: userId,
           });
-        }
+        });
       }
-    });
-
+    }
   });
+
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file, fcmToken, senderName, tempId }) => {
     try {
@@ -325,7 +327,7 @@ io.on("connection", (socket) => {
 
 
 
-
+app.set('io', io);
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
 app.use('/api/v1', serviceRoutes);
@@ -365,6 +367,7 @@ app.use('/api', userPermission);
 app.use('/api', rolePermission);
 app.use('/api/v1/challenge-master', challengeMasterRoutes);
 app.use('/api/v1/challenge', challenge)
+app.use('/api/v1/leaderboard', leaderBoard)
 
 
 

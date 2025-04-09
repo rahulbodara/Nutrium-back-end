@@ -5,7 +5,7 @@ const clientSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      // required: true,
       ref: 'user',
     },
     workplaceId: {
@@ -139,6 +139,11 @@ const clientSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    isDemoClient: {
+      type: Boolean,
+      default: false,
+    }
+
   },
   { timestamps: true }
 );

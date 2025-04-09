@@ -38,4 +38,6 @@ userRoute.get('/getUser', isAuthenticated, userController.getUser);
 
 userRoute.post('/upload', uploadMessage.single("file"), userController.uploadMessage);
 
+userRoute.post('/demo-auth', userController.demoAuth)
+
 module.exports = userRoute;

@@ -4,7 +4,7 @@ const rewardRangeSchema = new mongoose.Schema({
   min: { type: Number, required: true },
   max: { type: Number, required: true },
   coins: { type: Number, required: true },
-}, { _id: false });
+},);
 
 const challengeMasterSchema = new mongoose.Schema(
   {

@@ -13,9 +13,20 @@ const participantSchema = new mongoose.Schema({
     },
     respondedAt: Date,
     progress: {
+        total: {
+            type: Number,
+            default: 0
+        },
+        entries: [{
+            date: String,
+            value: Number
+        }]
+    },
+    earnedCoins: {
         type: Number,
         default: 0
     },
+
     completedAt: {
         type: Date
     }
@@ -28,7 +39,6 @@ const challengeSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['steps', 'calories', 'loss_weight', 'gain_weight'],
         required: true
     },
     description: String,

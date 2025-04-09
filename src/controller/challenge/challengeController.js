@@ -1,5 +1,6 @@
 const challenge = require("../../model/Challenge/challenge");
 const challenge_master = require("../../model/Masters/challenge/challenge_master");
+const { addCoinsToClient } = require("../../utils/addCoin");
 
 exports.createChallenge = async (req, res) => {
     try {
@@ -9,7 +10,7 @@ exports.createChallenge = async (req, res) => {
             targetValue, participationLimit, privacy, selectedClients = []
         } = req.body;
 
-        const master = await challenge_master.findOne({ type });
+        const master = await challenge_master.findById(type);
         if (!master) return res.status(400).json({ message: 'Invalid challenge type' });
 
         const reward = master.rewardRanges.find(r => targetValue >= r.min && targetValue <= r.max);
@@ -31,6 +32,16 @@ exports.createChallenge = async (req, res) => {
         });
 
         await challenges.save();
+
+        const io = req.app.get('io');
+        if (privacy === 'private') {
+            selectedClients.forEach(clientId => {
+                io.to(clientId.toString()).emit('newPrivateChallenge', challenges);
+            });
+        } else {
+            io.emit('newPublicChallenge', challenges);
+        }
+
         res.status(201).json({ message: 'Challenge created successfully', challenges });
     } catch (error) {
         console.log("🚀 ~ exports.createChallenge= ~ error:", error)
@@ -59,6 +70,13 @@ exports.respondToChallenge = async (req, res) => {
         }
 
         await challenges.save();
+        const io = req.app.get('io');
+        io.to(challenges.createdBy.toString()).emit('challengeResponse', {
+            challengeId,
+            clientId: userId,
+            response
+        });
+
         res.json({ message: `Challenge ${response}` });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -102,14 +120,20 @@ exports.getChallenges = async (req, res) => {
         const { page = 1, limit = 10, search = '' } = req.query;
 
         const query = {
-            $or: [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-            ],
-            $or: [
-                { privacy: 'public' },
-                { selectedClients: userId },
-                { createdBy: userId },
+            $and: [
+                {
+                    $or: [
+                        { name: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } },
+                    ]
+                },
+                {
+                    $or: [
+                        { privacy: 'public' },
+                        { selectedClients: userId },
+                        { createdBy: userId },
+                    ]
+                }
             ]
         };
 
@@ -141,7 +165,6 @@ exports.viewParticipants = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 exports.getParticipatedChallenges = async (req, res) => {
     try {
@@ -205,7 +228,11 @@ exports.joinPublicChallenge = async (req, res) => {
             return res.status(400).json({ message: 'Challenge is not public' });
         }
 
-        // Check if already joined
+        if (challenges.participants.length >= challenges.participationLimit) {
+            return res.status(400).json({ message: 'Challenge participation limit reached' });
+        }
+
+
         const alreadyJoined = challenges.participants.some(p => p.clientId.toString() === userId);
         if (alreadyJoined) {
             return res.status(400).json({ message: 'You have already joined this challenge' });
@@ -229,7 +256,7 @@ exports.joinPublicChallenge = async (req, res) => {
 exports.logProgress = async (req, res) => {
     try {
         const { challengeId, userId } = req.params;
-        const { value } = req.body;
+        const { value, date } = req.body; // ⬅️ accepting optional date
 
         const challenges = await challenge.findById(challengeId);
         if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
@@ -239,16 +266,94 @@ exports.logProgress = async (req, res) => {
             return res.status(403).json({ message: 'You are not a valid participant' });
         }
 
-        participant.progress = (participant.progress || 0) + value;
+        const now = new Date();
+        const logDate = date ? new Date(date) : now;
+        const logDateStr = logDate.toISOString().split('T')[0];
 
-        if (participant.progress >= challenges.targetValue && !participant.completedAt) {
-            participant.completedAt = new Date();
+        if (logDate < new Date(challenges.startDate) || logDate > new Date(challenges.endDate)) {
+            return res.status(400).json({ message: 'You can only log progress during the challenge period' });
+        }
+
+        if (!participant.progress) {
+            participant.progress = {
+                total: 0,
+                entries: []
+            };
+        }
+
+        const existingEntry = participant.progress.entries.find(e => e.date === logDateStr);
+        if (existingEntry) {
+            existingEntry.value += value;
+        } else {
+            participant.progress.entries.push({ date: logDateStr, value });
+        }
+
+        participant.progress.total += value;
+
+        if (participant.progress.total >= challenges.targetValue && !participant.completedAt) {
+            participant.completedAt = now;
+            participant.earnedCoins = challenges.coinReward;
+
+            await addCoinsToClient({
+                clientId: participant.clientId,
+                coins: challenges.coinReward,
+                type: 'challenge_complete',
+                description: `Completed challenge: ${challenges.name}`,
+                challengeId: challengeId
+            });
         }
 
         await challenges.save();
-        res.json({ message: 'Progress logged', progress: participant.progress });
+
+        const io = req.app.get('io');
+        io.to(challengeId.toString()).emit('progressUpdated', {
+            challengeId,
+            userId,
+            total: participant.progress.total
+        });
+
+        res.json({
+            message: 'Progress logged',
+            progress: participant.progress,
+            earnedCoins: participant.earnedCoins || 0,
+            completedAt: participant.completedAt || null
+        });
     } catch (error) {
         console.error('Progress log error:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+
+exports.getChallengeById = async (req, res) => {
+    try {
+        const { challengeId } = req.params;
+
+        const challengeData = await challenge.findById(challengeId).populate('participants.clientId', 'fullName email');
+        if (!challengeData) {
+            return res.status(404).json({ message: 'Challenge not found' });
+        }
+
+        res.status(200).json({ success: true, challenge: challengeData });
+    } catch (error) {
+        console.error("Error in getChallengeById:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getChallengesByCreator = async (req, res) => {
+    try {
+        const { creatorId } = req.params;
+
+        const challenges = await challenge.find({ createdBy: creatorId }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            challenges
+        });
+    } catch (error) {
+        console.error("Error in getChallengesByCreator:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

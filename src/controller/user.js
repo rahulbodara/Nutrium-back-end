@@ -83,6 +83,13 @@ const SignUp = async (req, res, next) => {
     const clientExist = await Client.findOne({ email });
 
     if (clientExist) {
+      const demoClient = await Client.findOne({ email, isDemoClient: true });
+      if (demoClient) {
+        return res.status(400).json({
+          success: false,
+          message: 'This email is already registered as a demo client and cannot be used to sign up.',
+        });
+      }
       return res.status(400).json({
         success: false,
         message: 'This email already exists',
@@ -107,7 +114,8 @@ const SignUp = async (req, res, next) => {
       zipcode,
       googleId,
       image,
-      role: "Admin"
+      role: "Admin",
+      isDemoClient: false
     });
 
     const savedUser = await userData.save();
@@ -241,27 +249,31 @@ const SignIn = async (req, res, next) => {
     let isClient = false;
 
     if (!userDetails) {
+      // Check in Client collection
       userDetails = await Client.findOne({ email });
 
       if (userDetails) {
         isClient = true;
+
+        // ❌ Block demo clients from logging in via this endpoint
+        if (userDetails.isDemoClient) {
+          return res.status(403).json({
+            message: 'This is a demo client. Please use the demo login endpoint.',
+            status: 403,
+          });
+        }
+
+        // Handle device token
         let updateFields = { isActive: 1 };
 
-        // Update `deviceToken` only if it is provided in the payload
         if (deviceToken) {
           updateFields.deviceToken = deviceToken;
         } else if (!userDetails.deviceToken) {
-          // If `deviceToken` is missing in both payload and database, explicitly set it to `null`
           updateFields.deviceToken = null;
         }
 
-        // Update the client only if necessary
-        if (Object.keys(updateFields).length > 0) {
-          await Client.updateOne({ email }, { $set: updateFields });
-        }
-
-        // Fetch the updated client data to return the correct response
-        userDetails = await Client.findOne({ email });
+        await Client.updateOne({ email }, { $set: updateFields });
+        userDetails = await Client.findOne({ email }); // Refresh after update
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -289,7 +301,7 @@ const SignIn = async (req, res, next) => {
     let permissions = [];
 
     if (!isClient) {
-      const userRoles = await UserRole.find({ userId: userDetails?._id }).populate('roleId');
+      const userRoles = await UserRole.find({ userId: userDetails._id }).populate('roleId');
       const roleIds = userRoles.map((ur) => ur.roleId._id);
 
       const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
@@ -316,6 +328,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 const SignOut = async (req, res, next) => {
   try {
@@ -348,7 +361,110 @@ const SignOut = async (req, res, next) => {
   }
 };
 
+const demoAuth = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      gender,
+      occupation,
+      tags,
+      country,
+      phoneNumber,
+      dateOfBirth,
+      deviceToken,
+      isDemoClient,
+    } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    let client = await Client.findOne({ email });
+
+    if (client) {
+      // Block if existing client is NOT a demo client
+      if (!client.isDemoClient && isDemoClient) {
+        return res.status(403).json({
+          message: 'This email is already registered as a regular client and cannot be used for demo access.',
+        });
+      }
+
+      const isMatch = await bcrypt.compare(password, client.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      if (deviceToken) {
+        client.deviceToken = deviceToken;
+        await client.save();
+      }
+
+      const token = jwt.sign(
+        { id: client._id, role: 'Client' },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      const { password: _, ...userData } = client._doc;
+
+      return res.status(200).json({
+        message: 'Signin successful',
+        token,
+        userData,
+      });
+    } else {
+      // If new client is signing up as demo
+      if (isDemoClient) {
+        if (
+          !firstName || !lastName || !gender || !occupation ||
+          !tags || !country || !phoneNumber || !dateOfBirth
+        ) {
+          return res.status(400).json({ message: 'All fields are required for demo signup' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        client = await Client.create({
+          fullName: `${firstName} ${lastName}`,
+          email,
+          password: hashedPassword,
+          gender,
+          occupation,
+          tags,
+          country,
+          phoneNumber,
+          dateOfBirth,
+          deviceToken: deviceToken || null,
+          createdByClient: true,
+          isDemoClient: true,
+          isActive: 1,
+        });
+
+        const token = jwt.sign(
+          { id: client._id, role: 'Client' },
+          JWT_SECRET,
+          { expiresIn: '30d' }
+        );
+
+        const { password: _, ...userData } = client._doc;
+
+        return res.status(201).json({
+          message: 'Signup successful',
+          token,
+          userData,
+        });
+      } else {
+        return res.status(400).json({ message: 'Only demo users are allowed in this route' });
+      }
+    }
+  } catch (error) {
+    console.error('Demo Auth Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 
 
@@ -1058,6 +1174,7 @@ module.exports = {
   printPdfData,
   getUser,
   uploadMessage,
-  SignOut
+  SignOut,
+  demoAuth
 
 };
