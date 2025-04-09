@@ -73,7 +73,8 @@ exports.getChallengeMasterKeyValues = async (req, res) => {
         const response = masters.map(m => ({
             _id: m._id,
             key: m.type,
-            value: m.type
+            value: m.type,
+            coin: m.coins
         }));
 
         res.status(200).json({ success: true, data: response });
@@ -92,9 +93,10 @@ exports.getRewardRangesDropdown = async (req, res) => {
         const options = master.rewardRanges.map((range, index) => {
             const label = `${range.min} - ${range.max}`;
             return {
-                _id: `${range.min}-${range.max}-${index}`, // unique ID
+                _id: range._id,
                 key: label,
-                value: label
+                value: label,
+                coin: range.coins
             };
         });
 
