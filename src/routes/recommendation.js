@@ -22,7 +22,8 @@ const {
   deleteAllPhysicalActivitiesByClient,
   getQuickAccessActivityByClient,
   getOtherRecommendation,
-  getFoodAvoid
+  getFoodAvoid,
+  getActivitiesByClientId
 } = require("../controller/recommendation");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
@@ -50,6 +51,8 @@ router.put("/updatewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountI
 router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountId", isAuthenticated, deleteWaterIntake);
 
 router.post("/clientSidePhysicalActivity/:clientId", isAuthenticated, addPhysicalActivityByClient)
+
+router.get("/activity/:clientId", isAuthenticated, getActivitiesByClientId )
 
 router.get("/client-physical-activity/:clientId", isAuthenticated, getPhysicalActivityByClient)
 

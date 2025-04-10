@@ -2,6 +2,8 @@ const FoodDiary = require("../../model/FoodDiary");
 const mealTemplate = require("../../model/mealTemplate");
 const mongoose = require("mongoose");
 const Food = require("../../model/Food");
+const moment = require("moment/moment");
+const Activity = require("../../model/Activitys");
 
 const fetchFoodDiary = async (req, res, next) => {
   try {
@@ -36,12 +38,21 @@ const addMealInDiary = async (req, res, next) => {
   try {
     const { clientId } = req.params;
     const { registrationDate, mealType, time, foodId, comments } = req.body;
-
-    const food = await Food.findById(foodId);
-    if (!food) {
-      return res.status(404).json({ success: false, error: "Food not found" });
+    if (!clientId || !registrationDate || !mealType || !time || !foodId) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields (clientId, registrationDate, mealType, time, foodId)",
+      });
     }
 
+    const formattedDate = moment(registrationDate).format("YYYY-MM-DD");
+    const food = await Food.findById(foodId);
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        error: "Food not found",
+      });
+    }
     const mealItem = {
       mealType,
       time,
@@ -53,54 +64,68 @@ const addMealInDiary = async (req, res, next) => {
     const pushData = {
       displayName: food.displayName,
       foodId: food._id,
-      photourl: "",
+      photourl: req.file?.path || "",
       comments,
       foodIndex: new mongoose.Types.ObjectId(),
     };
 
-    if (req.file && req.file.path) {
-      pushData.photourl = req.file.path;
-    }
-
     mealItem.meal.push(pushData);
 
-    if (!clientId) {
-      return res
-        .status(400)
-        .json({ success: false, error: "clientId is required" });
-    }
+    let foodDiary = await FoodDiary.findOne({ clientId });
 
-    const foodDiary = await FoodDiary.findOne({ clientId });
-
-    if (!foodDiary) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Food diary not found" });
-    }
-
-    const today = new Date();
-    const isoDate = today.toISOString();
-
-    const result = await FoodDiary.findOneAndUpdate(
-      {
-        _id: foodDiary._id,
-        "foodDiaryData.registrationDate": registrationDate,
-      },
-      {
-        $push: { "foodDiaryData.$.mealSchedule": mealItem },
-      },
-      {
-        new: true,
-      }
+    const dateEntry = foodDiary.foodDiaryData.find(entry =>
+      moment(entry.registrationDate).format("YYYY-MM-DD") === formattedDate
     );
+
+    let updatedDiary;
+
+    if (dateEntry) {
+      updatedDiary = await FoodDiary.findOneAndUpdate(
+        {
+          _id: foodDiary._id,
+          "foodDiaryData.registrationDate": dateEntry.registrationDate,
+        },
+        {
+          $push: { "foodDiaryData.$.mealSchedule": mealItem },
+        },
+        { new: true }
+      );
+    } else {
+      const newDateEntry = {
+        registrationDate,
+        mealSchedule: [mealItem],
+      };
+
+      updatedDiary = await FoodDiary.findOneAndUpdate(
+        { _id: foodDiary._id },
+        {
+          $push: { foodDiaryData: newDateEntry },
+        },
+        { new: true }
+      );
+    }
+
+    await Activity.create({
+      clientId,
+      action: "Added meal to diary",
+      details: {
+        registrationDate,
+        mealType,
+        foodName: food.displayName,
+        foodId: food._id,
+        time,
+      },
+      timestamp: new Date(),
+    });
 
     return res.status(200).json({
       success: true,
-      message: "Food diary fetched successfully",
-      foodDiary: result,
+      message: "Meal added to food diary successfully",
+      foodDiary: updatedDiary,
     });
+
   } catch (error) {
-    console.error("Error fetching food diary:", error);
+    console.error("Error in addMealInDiary:", error);
     return next(error);
   }
 };
@@ -238,8 +263,8 @@ const deleteMealScheduleInFoodDiary = async (req, res, next) => {
   try {
     const { clientId } = req.params;
     const { registrationDate, scheduleId } = req.body;
-   
-    if (!clientId || !registrationDate || !scheduleId ) {
+
+    if (!clientId || !registrationDate || !scheduleId) {
       return res.status(400).json({
         success: false,
         error: "clientId, registrationDate and scheduleId are required",

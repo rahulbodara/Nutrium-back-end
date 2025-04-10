@@ -26,6 +26,7 @@ const {
 } = require("../../utils/EmailSender");
 const LabTestRequest = require("../../model/LabTestReqest");
 const { sendNotification } = require("../../firebase/sendNotification");
+const Activity = require("../../model/Activitys");
 
 const registerClient = async (req, res, next) => {
   try {
@@ -2303,8 +2304,20 @@ const registerMeasurement = async (req, res, next) => {
     if (existingMeasurement) {
       existingMeasurement.measurements = measurements;
       existingMeasurement.measurementsdate = measurementsdate;
-      console.log(existingMeasurement);
       await existingMeasurement.save();
+
+      const activity = new Activity({
+        userId,
+        clientId,
+        action: 'Updated Measurements',
+        details: {
+          measurementsdate,
+          measurements // ← Include full measurements array
+        },
+        timestamp: new Date(),
+      });
+      await activity.save();
+
       return res.status(200).json({
         success: true,
         message: "Measurement updated successfully",
@@ -2318,6 +2331,19 @@ const registerMeasurement = async (req, res, next) => {
         measurements,
       };
       const createdMeasurement = await Measurements.create(newMeasurement);
+
+      const activity = new Activity({
+        userId,
+        clientId,
+        action: 'Added Measurements',
+        details: {
+          measurementsdate,
+          measurements // ← Include full measurements array
+        },
+        timestamp: new Date(),
+      });
+      await activity.save();
+
       return res.status(200).json({
         success: true,
         message: "Measurement added successfully",
@@ -2329,6 +2355,7 @@ const registerMeasurement = async (req, res, next) => {
     next(error);
   }
 };
+
 
 const addNewMeasurement = async (req, res, next) => {
   try {

@@ -3,7 +3,8 @@ const physicalActivity = require('../model/Physicalactivity');
 const { default: mongoose } = require('mongoose');
 const Recommendation = require('../model/Recommendations');
 const WaterIntake = require('../model/waterIntake');
-const ClientSidePhysicalActivity = require("../model/ClintSidePhysicalActivity")
+const ClientSidePhysicalActivity = require("../model/ClintSidePhysicalActivity");
+const Activity = require('../model/Activitys');
 
 const createRecommendation = async (req, res, next) => {
     try {
@@ -539,6 +540,21 @@ const addPhysicalActivityByClient = async (req, res) => {
 
         await recommendation.save();
 
+        await Activity.create({
+            clientId,
+            action: "Added physical activity",
+            details: {
+              addedBy: userId,
+              activities: physicalActivity.map((a) => ({
+                activity: a.activity,
+                time: a.time,
+                timeunit: a.timeunit,
+                durations: a.durations,
+              })),
+            },
+            timestamp: new Date(),
+          });
+
         return res.status(200).json({
             success: true,
             message: "Activity added successfully and updated in quick access",
@@ -553,6 +569,33 @@ const addPhysicalActivityByClient = async (req, res) => {
     }
 };
 
+const getActivitiesByClientId = async (req, res) => {
+    try {
+      const { clientId } = req.params;
+  
+      if (!clientId) {
+        return res.status(400).json({
+          success: false,
+          message: "clientId is required",
+        });
+      }
+  
+      const activities = await Activity.find({ clientId }).sort({ timestamp: -1 });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Activities fetched successfully",
+        data: activities,
+      });
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error,
+      });
+    }
+  };
 
 const getPhysicalActivityByClient = async (req, res) => {
     try {
@@ -799,6 +842,7 @@ module.exports = {
     updateWaterIntake,
     deleteWaterIntake,
     addPhysicalActivityByClient,
+    getActivitiesByClientId,
     getPhysicalActivityByClient,
     updatePhysicalActivityByClient,
     deletePhysicalActivityByClient,

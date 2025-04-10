@@ -1,3 +1,4 @@
+const Activity = require("../model/Activitys");
 const Client = require("../model/Client");
 const Appointment = require("../model/ScheduleApointment");
 const mongoose = require("mongoose");
@@ -23,12 +24,11 @@ const createAppointment = async (req, res, next) => {
       clientName
     } = req.body;
 
-
     const appointment = new Appointment({
       userId,
       status,
-      start: start,
-      end: end,
+      start,
+      end,
       videoConsultation,
       schedulingNotes,
       newStartTime,
@@ -40,12 +40,27 @@ const createAppointment = async (req, res, next) => {
 
     const result = await appointment.save();
 
+    const activity = new Activity({
+      clientId,
+      action: 'Created Appointment',
+      details: {
+        clientName,
+        appointmentId: result._id,
+        start,
+        end,
+        workplace
+      }
+    });
+
+    await activity.save();
+
     return res.status(201).json({ success: true, data: result });
   } catch (error) {
     console.error("Error creating appointment:", error);
     next(error);
   }
 };
+
 
 const getAllAppointments = async (req, res, next) => {
   try {
