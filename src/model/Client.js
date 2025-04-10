@@ -142,6 +142,10 @@ const clientSchema = new mongoose.Schema(
     isDemoClient: {
       type: Boolean,
       default: false,
+    },
+    goal: {
+      type: String,
+
     }
 
   },

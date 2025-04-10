@@ -370,6 +370,8 @@ const demoAuth = async (req, res) => {
       password,
       gender,
       country,
+      goal,
+      profession,
       phoneNumber,
       dateOfBirth,
       deviceToken,
@@ -417,8 +419,8 @@ const demoAuth = async (req, res) => {
       // If new client is signing up as demo
       if (isDemoClient) {
         if (
-          !firstName || !lastName || !gender || !occupation ||
-          !tags || !country || !phoneNumber || !dateOfBirth
+          !firstName || !lastName || !gender || !profession ||
+          !goal || !country || !phoneNumber || !dateOfBirth
         ) {
           return res.status(400).json({ message: 'All fields are required for demo signup' });
         }
@@ -430,8 +432,8 @@ const demoAuth = async (req, res) => {
           email,
           password: hashedPassword,
           gender,
-          occupation,
-          tags,
+          occupation: profession,
+          goal,
           country,
           phoneNumber,
           dateOfBirth,
