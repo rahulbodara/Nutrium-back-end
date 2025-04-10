@@ -369,8 +369,6 @@ const demoAuth = async (req, res) => {
       email,
       password,
       gender,
-      occupation,
-      tags,
       country,
       phoneNumber,
       dateOfBirth,
