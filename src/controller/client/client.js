@@ -405,6 +405,41 @@ const getClientByID = async (req, res, next) => {
   }
 };
 
+
+const getAllClients = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    const query = {};
+
+    if (search.trim()) {
+      const searchRegex = new RegExp(search.trim().split(' ').join('|'), 'i');
+      query.fullName = { $regex: searchRegex };
+    }
+
+    const clients = await Client.find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    const totalClients = await Client.countDocuments(query);
+
+    res.status(200).json({
+      data: clients,
+      total: totalClients,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalClients / limit),
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+
+
+
+
 const updateClient = async (req, res, next) => {
   try {
     const clientId = req.params.id;
@@ -3116,6 +3151,7 @@ module.exports = {
   deleteClient,
   getClientByID,
   getAllClient,
+  getAllClients,
   searchClients,
   updateClient,
   getScheduleAppointmentInfo,

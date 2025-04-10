@@ -59,6 +59,8 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require("./middleware/messageMiddleware");
 const cloudinary = require("./db/cloudinary");
 const { sendNotification } = require("./firebase/sendNotification");
+const { dailyChallengeSnapshot } = require("./cron");
+const Challenge = require('./model/Challenge/challenge')
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -131,10 +133,12 @@ io.on("connection", (socket) => {
   console.log('New client connected', socket.id);
 
 
-  socket.on('joinChallengeRoom', (challengeId) => {
+  socket.on('joinChallengeRoom', ({ challengeId, userId }) => {
     socket.join(challengeId.toString());
-    console.log(`User joined challenge room: ${challengeId}`);
+    socket.join(userId.toString());
+    console.log("aasasa");
   });
+
 
 
   socket.on("join", async ({ userId, otherUserId }) => {
@@ -328,6 +332,7 @@ io.on("connection", (socket) => {
 
 
 app.set('io', io);
+dailyChallengeSnapshot(io);
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
 app.use('/api/v1', serviceRoutes);
@@ -368,6 +373,52 @@ app.use('/api', rolePermission);
 app.use('/api/v1/challenge-master', challengeMasterRoutes);
 app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)
+
+app.get('/test-daily-challenge-snapshot', async (req, res) => {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  try {
+    const challenges = await Challenge.find({
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
+
+    for (const c of challenges) {
+      const participants = c.participants.filter(p => p.status === 'accepted');
+
+      participants.forEach(participant => {
+        const { clientId, progress } = participant;
+
+        io.to(c._id.toString()).emit('dailyChallengeUpdate', {
+          challengeId: c._id,
+          userId: clientId,
+          date: today,
+          total: progress?.total || 0,
+          entries: progress?.entries || [],
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0
+        });
+
+        io.to(clientId.toString()).emit('dailyChallengeUpdate', {
+          challengeId: c._id,
+          userId: clientId,
+          date: today,
+          total: progress?.total || 0,
+          entries: progress?.entries || [],
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0
+        });
+      });
+    }
+
+    res.send("✅ Snapshot triggered and events emitted.");
+  } catch (err) {
+    console.error("🔥 Error in manual snapshot trigger:", err);
+    res.status(500).send("Error occurred");
+  }
+});
+
 
 
 

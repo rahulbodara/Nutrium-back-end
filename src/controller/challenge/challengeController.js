@@ -256,7 +256,7 @@ exports.joinPublicChallenge = async (req, res) => {
 exports.logProgress = async (req, res) => {
     try {
         const { challengeId, userId } = req.params;
-        const { value, date } = req.body; // ⬅️ accepting optional date
+        const { value, date } = req.body;
 
         const challenges = await challenge.findById(challengeId);
         if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
@@ -309,7 +309,10 @@ exports.logProgress = async (req, res) => {
         io.to(challengeId.toString()).emit('progressUpdated', {
             challengeId,
             userId,
-            total: participant.progress.total
+            total: participant.progress.total,
+            entries: participant.progress.entries,
+            completedAt: participant.completedAt || null,
+            earnedCoins: participant.earnedCoins || 0
         });
 
         res.json({

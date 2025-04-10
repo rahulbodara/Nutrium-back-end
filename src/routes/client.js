@@ -52,7 +52,8 @@ const {
   addOrUpdateClientMeasurement,
   setClientPassword,
   clientFormEmailSend,
-  searchClients
+  searchClients,
+  getAllClients
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
@@ -62,6 +63,7 @@ const pdfUpload = require('../middleware/pdfHandler');
 router.post('/client', isAuthenticated, registerClient);
 router.delete('/client/:id', isAuthenticated, deleteClient);
 router.get('/client', isAuthenticated, getAllClient);
+router.get('/clients', isAuthenticated, getAllClients)
 router.get('/client/:id', isAuthenticated, getClientByID);
 router.put(
   '/client/:id',
