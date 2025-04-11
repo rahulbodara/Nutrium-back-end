@@ -208,6 +208,28 @@ const getFoodById = async (req, res, next) => {
   }
 };
 
+
+const getClientFoodById = async (req, res, next) => {
+  try {
+    const { foodId } = req.params;
+
+    const food = await Food.findById(foodId);
+
+    if (!food) {
+      return res.status(404).json({ message: 'Food not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      food,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
 const getFoodsByUser = async (req, res, next) => {
   try {
     const userId = req.userId;
@@ -388,6 +410,7 @@ module.exports = {
   getAllFood,
   searchFood,
   getFoodById,
+  getClientFoodById,
   getFoodsByUser,
   deleteFood,
   updateFood,
