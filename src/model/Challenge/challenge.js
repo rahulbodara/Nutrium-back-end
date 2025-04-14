@@ -38,7 +38,8 @@ const challengeSchema = new mongoose.Schema({
         required: true
     },
     type: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'challenge_master',
         required: true
     },
     rewardRange: {

@@ -2,6 +2,7 @@ const challenge = require("../../model/Challenge/challenge");
 const challenge_master = require("../../model/Masters/challenge/challenge_master");
 const { addCoinsToClient } = require("../../utils/addCoin");
 
+
 exports.createChallenge = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -140,13 +141,39 @@ exports.getChallenges = async (req, res) => {
         };
 
         const challenges = await challenge.find(query)
+            .populate('participants.clientId', 'fullName email')
+            .populate('rewardRange').populate('type')
+            .lean()
             .skip((page - 1) * limit)
             .limit(Number(limit))
             .sort({ createdAt: -1 });
 
         const total = await challenge.countDocuments(query);
 
-        res.json({ total, page: Number(page), challenges });
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
+        res.json({ total, page: Number(page), challenges: mappedChallenges });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -174,11 +201,35 @@ exports.getParticipatedChallenges = async (req, res) => {
 
         const challenges = await challenge.find({
             participants: { $elemMatch: { clientId: userId } }
-        }).sort({ createdAt: -1 });
+        }).populate('rewardRange').populate('type').lean().sort({ createdAt: -1 })
+
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
 
         res.status(200).json({
             success: true,
-            challenges
+            challenges: mappedChallenges
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -189,14 +240,39 @@ exports.getAllPublicChallenges = async (req, res) => {
     try {
         const challenges = await challenge.find({
             privacy: 'public'
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: -1 }).populate('type').populate('rewardRange').lean();
 
-        res.status(200).json({ success: true, challenges });
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
+
+        res.status(200).json({ success: true, challenges: mappedChallenges });
     } catch (error) {
         console.error("Error in getAllPublicChallenges:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 exports.getPrivateChallenges = async (req, res) => {
     try {
@@ -209,9 +285,32 @@ exports.getPrivateChallenges = async (req, res) => {
                 { 'participants.clientId': { $ne: userId } },
                 { 'participants': { $elemMatch: { clientId: userId, status: 'pending' } } }
             ]
-        }).sort({ createdAt: -1 });
+        }).populate('type').populate('rewardRange').lean().sort({ createdAt: -1 });
 
-        res.status(200).json({ success: true, challenges });
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
+        res.status(200).json({ success: true, challenges: mappedChallenges });
     } catch (error) {
         console.error("Error in getPrivateChallenges:", error);
         res.status(500).json({ success: false, message: error.message });
@@ -334,27 +433,80 @@ exports.getChallengeById = async (req, res) => {
     try {
         const { challengeId } = req.params;
 
-        const challengeData = await challenge.findById(challengeId).populate('participants.clientId', 'fullName email');
+        const challengeData = await challenge
+            .findById(challengeId)
+            .populate('participants.clientId', 'fullName email')
+            .populate('type')
+            .populate('rewardRange')
+            .lean();
+
         if (!challengeData) {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
-        res.status(200).json({ success: true, challenge: challengeData });
+        const reward = challengeData.type?.rewardRanges?.find(r =>
+            challengeData.targetValue >= r.min && challengeData.targetValue <= r.max
+        );
+
+        const mappedChallenge = {
+            ...challengeData,
+            type: {
+                _id: challengeData.type?._id,
+                type: challengeData.type?.type,
+                unitLabel: challengeData.type?.unitLabel
+            },
+            rewardRange: reward
+                ? {
+                    _id: reward._id,
+                    min: reward.min,
+                    max: reward.max,
+                    coins: reward.coins
+                }
+                : null
+        };
+
+        res.status(200).json({ success: true, challenge: mappedChallenge });
     } catch (error) {
         console.error("Error in getChallengeById:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
+
 exports.getChallengesByCreator = async (req, res) => {
     try {
         const { creatorId } = req.params;
 
-        const challenges = await challenge.find({ createdBy: creatorId }).sort({ createdAt: -1 });
+        const challenges = await challenge.find({ createdBy: creatorId }).populate('participants.clientId', 'fullName email')
+            .populate('type')
+            .populate('rewardRange').sort({ createdAt: -1 }).lean();
+
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
 
         res.status(200).json({
             success: true,
-            challenges
+            challenge: mappedChallenges
         });
     } catch (error) {
         console.error("Error in getChallengesByCreator:", error);
