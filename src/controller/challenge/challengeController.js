@@ -56,7 +56,7 @@ exports.respondToChallenge = async (req, res) => {
     try {
         const userId = req.params.userId;
         const challengeId = req.params.challengeId;
-        const { response } = req.body;
+        const { action } = req.body;
 
         const challenges = await challenge.findById(challengeId);
         if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
@@ -64,10 +64,10 @@ exports.respondToChallenge = async (req, res) => {
         const participant = challenges.participants.find(p => p.clientId.toString() === userId);
         if (!participant) return res.status(403).json({ message: 'You are not invited to this challenge' });
 
-        participant.status = response;
+        participant.status = action;
         participant.respondedAt = new Date();
 
-        if (response === 'accepted') {
+        if (action === 'accepted') {
             participant.progress = 0;
             participant.completedAt = null;
         }
@@ -77,10 +77,10 @@ exports.respondToChallenge = async (req, res) => {
         io.to(challenges.createdBy.toString()).emit('challengeResponse', {
             challengeId,
             clientId: userId,
-            response
+            action
         });
 
-        res.json({ message: `Challenge ${response}` });
+        res.status(200).json({ success: true, message: `Challenge ${action}` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
