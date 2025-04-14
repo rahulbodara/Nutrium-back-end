@@ -7,6 +7,7 @@ exports.createChallenge = async (req, res) => {
         const userId = req.params.userId;
         const {
             name, type, description, startDate, endDate,
+            rewardRange,
             targetValue, participationLimit, privacy, selectedClients = []
         } = req.body;
 
@@ -29,6 +30,7 @@ exports.createChallenge = async (req, res) => {
             createdBy: userId,
             selectedClients: privacy === 'private' ? selectedClients : [],
             participants: privacy === 'private' ? selectedClients.map(clientId => ({ clientId })) : [],
+            rewardRange
         });
 
         await challenges.save();

@@ -41,6 +41,11 @@ const challengeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    rewardRange: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'challenge_master',
+        required: true
+    },
     description: String,
     startDate: {
         type: Date,
