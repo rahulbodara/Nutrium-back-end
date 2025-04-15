@@ -37,6 +37,7 @@ const multer = require("../middleware/messageMiddleware");
 const cloudinary = require("../db/cloudinary");
 const UserRole = require('../model/Roles-Permission/UserRole');
 const RolePermission = require('../model/Roles-Permission/RolePermission');
+const { setUserRole } = require('./Role/userRoleController');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -148,6 +149,15 @@ const SignUp = async (req, res, next) => {
     });
     await lookupEntry.save();
 
+    const defaultRole = await Role.findOne({ name: "Nutritionist" });
+    if (defaultRole) {
+      const userRole = new UserRole({
+        userId: savedUser._id,
+        roleId: defaultRole._id
+      });
+      await userRole.save();
+    }
+
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
@@ -249,13 +259,11 @@ const SignIn = async (req, res, next) => {
     let isClient = false;
 
     if (!userDetails) {
-      // Check in Client collection
       userDetails = await Client.findOne({ email });
 
       if (userDetails) {
         isClient = true;
 
-        // ❌ Block demo clients from logging in via this endpoint
         if (userDetails.isDemoClient) {
           return res.status(403).json({
             message: 'This is a demo client. Please use the demo login endpoint.',
@@ -263,7 +271,6 @@ const SignIn = async (req, res, next) => {
           });
         }
 
-        // Handle device token
         let updateFields = { isActive: 1 };
 
         if (deviceToken) {
@@ -273,7 +280,7 @@ const SignIn = async (req, res, next) => {
         }
 
         await Client.updateOne({ email }, { $set: updateFields });
-        userDetails = await Client.findOne({ email }); // Refresh after update
+        userDetails = await Client.findOne({ email });
       } else {
         return res.status(404).json({ message: 'User not found.' });
       }
@@ -416,7 +423,6 @@ const demoAuth = async (req, res) => {
         userData,
       });
     } else {
-      // If new client is signing up as demo
       if (isDemoClient) {
         if (
           !firstName || !lastName || !gender || !profession ||
@@ -609,9 +615,16 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
+    let isClient = false;
+
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      user = await Client.findOne({ email });
+      isClient = true;
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'User or Client not found.' });
     }
 
     const { token, name } = await generateResetToken(user);
@@ -623,6 +636,7 @@ const forgotPassword = async (req, res, next) => {
     next(error.message);
   }
 };
+
 
 const resetPassword = async (req, res, next) => {
   try {
@@ -1157,6 +1171,16 @@ const uploadMessage = async (req, res, next) => {
   }
 }
 
+const getAllUser = async (req, res, next) => {
+  try {
+    const users = await User.find();
+
+    return res.status(200).json(users)
+  } catch (err) {
+    return res.status(500).json({ message: "Error fetching users" });
+  }
+}
+
 
 module.exports = {
   SignUp,
@@ -1175,6 +1199,6 @@ module.exports = {
   getUser,
   uploadMessage,
   SignOut,
-  demoAuth
-
+  demoAuth,
+  getAllUser,
 };
