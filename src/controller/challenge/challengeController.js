@@ -1,5 +1,7 @@
 const challenge = require("../../model/Challenge/challenge");
+const Client = require("../../model/Client");
 const challenge_master = require("../../model/Masters/challenge/challenge_master");
+const User = require("../../model/User")
 const { addCoinsToClient } = require("../../utils/addCoin");
 
 
@@ -18,6 +20,17 @@ exports.createChallenge = async (req, res) => {
         const reward = master.rewardRanges.find(r => targetValue >= r.min && targetValue <= r.max);
         if (!reward) return res.status(400).json({ message: 'No reward found for target value' });
 
+        if (privacy === 'private') {
+            for (const clientId of selectedClients) {
+                const existsInClient = await Client.exists({ _id: clientId });
+                const existsInUser = await User.exists({ _id: clientId });
+
+                if (!existsInClient && !existsInUser) {
+                    return res.status(400).json({ message: `Invalid client ID: ${clientId}` });
+                }
+            }
+        }
+
         const challenges = new challenge({
             name,
             type,
@@ -30,7 +43,14 @@ exports.createChallenge = async (req, res) => {
             privacy,
             createdBy: userId,
             selectedClients: privacy === 'private' ? selectedClients : [],
-            participants: privacy === 'private' ? selectedClients.map(clientId => ({ clientId })) : [],
+            participants: privacy === 'private'
+                ? selectedClients.map(clientId => ({
+                    clientId,
+                    status: 'pending',
+                    progress: { total: 0, entries: [] },
+                    earnedCoins: 0
+                }))
+                : [],
             rewardRange
         });
 
@@ -47,10 +67,10 @@ exports.createChallenge = async (req, res) => {
 
         res.status(201).json({ message: 'Challenge created successfully', challenges });
     } catch (error) {
-        console.log("🚀 ~ exports.createChallenge= ~ error:", error)
         res.status(500).json({ message: error.message });
     }
 };
+
 
 exports.respondToChallenge = async (req, res) => {
     try {
@@ -58,21 +78,28 @@ exports.respondToChallenge = async (req, res) => {
         const challengeId = req.params.challengeId;
         const { action } = req.body;
 
-        const challenges = await challenge.findById(challengeId);
+        const challenges = await challenge.findOne({ _id: challengeId });
         if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
 
-        const participant = challenges.participants.find(p => p.clientId.toString() === userId);
+        const participant = challenges.participants.find(p =>
+            (p.clientId?._id?.toString?.() || p.clientId?.toString?.()) === userId.toString()
+        );
+
         if (!participant) return res.status(403).json({ message: 'You are not invited to this challenge' });
 
         participant.status = action;
         participant.respondedAt = new Date();
 
         if (action === 'accepted') {
-            participant.progress = 0;
+            participant.progress = {
+                total: 0,
+                entries: []
+            };
             participant.completedAt = null;
         }
 
         await challenges.save();
+
         const io = req.app.get('io');
         io.to(challenges.createdBy.toString()).emit('challengeResponse', {
             challengeId,
@@ -85,6 +112,7 @@ exports.respondToChallenge = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 exports.reinviteClient = async (req, res) => {
     try {
