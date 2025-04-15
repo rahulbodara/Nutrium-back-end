@@ -4,25 +4,25 @@ exports.assignPermissionsToRole = async (req, res) => {
     try {
         const { roleId, permissionIds } = req.body;
 
-        if (!roleId || !Array.isArray(permissionIds) || permissionIds.length === 0) {
+        if (!roleId || !Array.isArray(permissionIds)) {
             return res.status(400).json({ message: 'roleId and permissionIds[] are required' });
         }
 
         let rolePermission = await RolePermission.findOne({ roleId });
 
         if (rolePermission) {
-            await RolePermission.updateOne(
-                { roleId },
-                { $addToSet: { permissionIds: { $each: permissionIds } } }
-            );
+
+            rolePermission.permissionIds = permissionIds;
+            await rolePermission.save();
             rolePermission = await RolePermission.findOne({ roleId }).populate('permissionIds');
         } else {
+
             rolePermission = await RolePermission.create({ roleId, permissionIds });
             rolePermission = await RolePermission.findById(rolePermission._id).populate('permissionIds');
         }
 
         res.status(201).json({
-            message: 'Permissions assigned to role',
+            message: 'Permissions updated for role',
             data: rolePermission,
         });
     } catch (error) {
@@ -75,3 +75,16 @@ exports.deleteRolePermission = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getRolpermissionByRoleId = async (req, res) => {
+    const roleId = req.params.id
+    try {
+        const data = await RolePermission.find({ roleId })
+            .populate('roleId')
+            .populate('permissionIds');
+
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

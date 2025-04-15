@@ -40,4 +40,6 @@ userRoute.post('/upload', uploadMessage.single("file"), userController.uploadMes
 
 userRoute.post('/demo-auth', userController.demoAuth)
 
+userRoute.get('/user', userController.getAllUser)
+
 module.exports = userRoute;

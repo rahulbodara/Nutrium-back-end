@@ -42,7 +42,8 @@ exports.getLeaderboard = async (req, res) => {
         const clientIds = leaderboard.map(p => p.clientId);
         const clients = await Client.find({ _id: { $in: clientIds } })
             .select('_id fullName image')
-            .lean();
+            .lean() || await User.find({ _id: { $in: clientIds } }).select('_id fullName image')
+                .lean()
 
         const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c]));
 
