@@ -106,8 +106,7 @@ exports.getUsersWithPermissionsOnly = async (req, res) => {
 
         const permissionsByRoleId = rolePermissions.reduce((acc, rp) => {
             const roleId = rp.roleId.toString();
-            if (!acc[roleId]) acc[roleId] = [];
-            acc[roleId].push(rp.permissionId);
+            acc[roleId] = rp.permissionIds || [];
             return acc;
         }, {});
 
@@ -120,21 +119,18 @@ exports.getUsersWithPermissionsOnly = async (req, res) => {
 
         const permissionsByUserId = userPermissions.reduce((acc, up) => {
             const uid = up.userId.toString();
-            if (!acc[uid]) acc[uid] = [];
-            acc[uid].push(up.permissionId);
+            acc[uid] = up.permissionIds || [];
             return acc;
         }, {});
 
         const usersWithPermissions = users.map(user => {
-
-            const userId = user?._id.toString();
+            const userId = user._id.toString();
             const permissionSet = new Set();
             const permissions = [];
 
             const directPerms = permissionsByUserId[userId] || [];
-            console.log("🚀 ~ exports.getUsersWithPermissionsOnly= ~ directPerms:", directPerms)
             directPerms.forEach(perm => {
-                if (!permissionSet.has(perm._id.toString())) {
+                if (perm && !permissionSet.has(perm._id.toString())) {
                     permissionSet.add(perm._id.toString());
                     permissions.push({ _id: perm._id, name: perm.name });
                 }
@@ -144,7 +140,7 @@ exports.getUsersWithPermissionsOnly = async (req, res) => {
             roleIds.forEach(roleId => {
                 const perms = permissionsByRoleId[roleId] || [];
                 perms.forEach(perm => {
-                    if (!permissionSet.has(perm._id.toString())) {
+                    if (perm && !permissionSet.has(perm._id.toString())) {
                         permissionSet.add(perm._id.toString());
                         permissions.push({ _id: perm._id, name: perm.name });
                     }
@@ -165,3 +161,4 @@ exports.getUsersWithPermissionsOnly = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch user permissions" });
     }
 };
+
