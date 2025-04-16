@@ -48,6 +48,7 @@ const userRoleRoutes = require('./routes/Role/userRoleRoutes')
 const userPermission = require('./routes/Role/userPermission');
 const rolePermission = require('./routes/Role/rolePermission')
 const challengeMasterRoutes = require('./routes/Master/challengeMaster');
+const masterSimRoutes = require('./routes/Master/MasterSim')
 const challenge = require('./routes/Challenge/challeneRoute')
 const leaderBoard = require("./routes/Challenge/leaderBoard")
 const os = require('os');
@@ -373,6 +374,7 @@ app.use('/api', rolePermission);
 app.use('/api/v1/challenge-master', challengeMasterRoutes);
 app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)
+app.use('/api/v1', masterSimRoutes)
 
 app.get('/test-daily-challenge-snapshot', async (req, res) => {
   const now = new Date();
