@@ -62,6 +62,7 @@ const cloudinary = require("./db/cloudinary");
 const { sendNotification } = require("./firebase/sendNotification");
 const { dailyChallengeSnapshot } = require("./cron");
 const Challenge = require('./model/Challenge/challenge')
+const masterModel = require('./routes/masterModelRoute')
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -375,6 +376,7 @@ app.use('/api/v1/challenge-master', challengeMasterRoutes);
 app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)
 app.use('/api/v1', masterSimRoutes)
+app.use('/api/v1', masterModel)
 
 app.get('/test-daily-challenge-snapshot', async (req, res) => {
   const now = new Date();
