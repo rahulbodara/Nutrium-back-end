@@ -542,3 +542,53 @@ exports.getChallengesByCreator = async (req, res) => {
     }
 };
 
+
+exports.getAcceptedChallenges = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const challenges = await challenge.find({
+            'participants': {
+                $elemMatch: {
+                    clientId: userId,
+                    status: 'accepted'
+                }
+            }
+        })
+            .populate('rewardRange')
+            .populate('type')
+            .lean()
+            .sort({ createdAt: -1 });
+
+        const mappedChallenges = challenges.map(ch => {
+            const reward = ch.type?.rewardRanges?.find(r =>
+                ch.targetValue >= r.min && ch.targetValue <= r.max
+            );
+
+            return {
+                ...ch,
+                type: {
+                    _id: ch.type?._id,
+                    type: ch.type?.type,
+                    unitLabel: ch.type?.unitLabel
+                },
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            challenges: mappedChallenges
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
