@@ -1,6 +1,6 @@
 const express = require('express');
 const { createItem, getAllItems, getItemById, updateItem, deleteItem } = require('../../controller/Master/MasterController');
-const alchohol_consumption = require('../../model/Masters/alchohol_consumption');
+const alchohol_consumption = require('../../model/Masters/alcohol_consumption');
 const allergies = require('../../model/Masters/allergies');
 const appointment_status = require('../../model/Masters/appointment_status');
 const AppointmentConsultation = require('../../model/Masters/appointment_consultation');
@@ -8,9 +8,9 @@ const BirthdaySystem = require('../../model/Masters/birthday_system');
 const BloodGroup = require('../../model/Masters/blood_group');
 const BowelMovement = require('../../model/Masters/bowel_movement');
 const ClientFilter = require('../../model/Masters/client_filter');
-const ClinicalGoals = require('../../model/Masters/clinical_goals');
+const ClinicalGoals = require('../../model/Masters/clinical_goal');
 const Country = require('../../model/Masters/country');
-const DietaryDatabaseFilter = require('../../model/Masters/diet_database_filter');
+const DietaryDatabaseFilter = require('../../model/Masters/dietary-databse-filter');
 const Diseases = require('../../model/Masters/diseases');
 const FileCategory = require('../../model/Masters/file_category');
 const FoodDatabaseFilter = require('../../model/Masters/food_database_filter');
@@ -32,6 +32,13 @@ const Smoker = require('../../model/Masters/smoker');
 const TemplateFilter = require('../../model/Masters/template_filter');
 const TimeZone = require('../../model/Masters/time_zones');
 const TypeOFDiet = require('../../model/Masters/type_of_diet');
+const food_diary = require('../../model/Masters/food_diary');
+const measurement_type = require('../../model/Masters/measurement_type');
+const signup_qna = require('../../model/Masters/signup_qna');
+const time_zones = require('../../model/Masters/time_zones');
+const unit = require('../../model/Masters/unit');
+// const diet_databse_filter = require('../../model/Masters/dietary-databse-filter');
+
 
 const router = express.Router();
 
@@ -115,11 +122,11 @@ router.put("/file-category/:id", (req, res) => updateItem(req, res, FileCategory
 router.delete("/file-category/:id", (req, res) => deleteItem(req, res, FileCategory))
 
 
-router.post("/food-databadse-filter", (req, res) => createItem(req, res, FoodDatabaseFilter))
-router.get("/food-databadse-filter", (req, res) => getAllItems(req, res, FoodDatabaseFilter))
-router.get("/food-databadse-filter/:id", (req, res) => getItemById(req, res, FoodDatabaseFilter))
-router.put("/food-databadse-filter/:id", (req, res) => updateItem(req, res, FoodDatabaseFilter))
-router.delete("/food-databadse-filter/:id", (req, res) => deleteItem(req, res, FoodDatabaseFilter))
+router.post("/food-database-filter", (req, res) => createItem(req, res, FoodDatabaseFilter))
+router.get("/food-database-filter", (req, res) => getAllItems(req, res, FoodDatabaseFilter))
+router.get("/food-database-filter/:id", (req, res) => getItemById(req, res, FoodDatabaseFilter))
+router.put("/food-database-filter/:id", (req, res) => updateItem(req, res, FoodDatabaseFilter))
+router.delete("/food-database-filter/:id", (req, res) => deleteItem(req, res, FoodDatabaseFilter))
 
 router.post("/food-filter", (req, res) => createItem(req, res, FoodFilter))
 router.get("/food-filter", (req, res) => getAllItems(req, res, FoodFilter))
@@ -233,12 +240,42 @@ router.get("/time-zone/:id", (req, res) => getItemById(req, res, TimeZone))
 router.put("/time-zone/:id", (req, res) => updateItem(req, res, TimeZone))
 router.delete("/time-zone/:id", (req, res) => deleteItem(req, res, TimeZone))
 
-router.post("/diet-type", (req, res) => createItem(req, res, TypeOFDiet))
-router.get("/diet-type", (req, res) => getAllItems(req, res, TypeOFDiet))
-router.get("/diet-type/:id", (req, res) => getItemById(req, res, TypeOFDiet))
-router.put("/diet-type/:id", (req, res) => updateItem(req, res, TypeOFDiet))
-router.delete("/diet-type/:id", (req, res) => deleteItem(req, res, TypeOFDiet))
+router.post("/type-of-diet", (req, res) => createItem(req, res, TypeOFDiet))
+router.get("/type-of-diet", (req, res) => getAllItems(req, res, TypeOFDiet))
+router.get("/type-of-diet/:id", (req, res) => getItemById(req, res, TypeOFDiet))
+router.put("/type-of-diet/:id", (req, res) => updateItem(req, res, TypeOFDiet))
+router.delete("/type-of-diet/:id", (req, res) => deleteItem(req, res, TypeOFDiet))
 
 
+router.post("/food-diary", (req, res) => createItem(req, res, food_diary))
+router.get("/food-diary", (req, res) => getAllItems(req, res, food_diary))
+router.get("/food-diary/:id", (req, res) => getItemById(req, res, food_diary))
+router.put("/food-diary/:id", (req, res) => updateItem(req, res, food_diary))
+router.delete("/food-diary/:id", (req, res) => deleteItem(req, res, food_diary))
+
+router.post("/measurement-type", (req, res) => createItem(req, res, measurement_type))
+router.get("/measurement-type", (req, res) => getAllItems(req, res, measurement_type))
+router.get("/measurement-type/:id", (req, res) => getItemById(req, res, measurement_type))
+router.put("/measurement-type/:id", (req, res) => updateItem(req, res, measurement_type))
+router.delete("/measurement-type/:id", (req, res) => deleteItem(req, res, measurement_type))
+
+
+router.post("/signup-qna", (req, res) => createItem(req, res, signup_qna))
+router.get("/signup-qna", (req, res) => getAllItems(req, res, signup_qna))
+router.get("/signup-qna/:id", (req, res) => getItemById(req, res, signup_qna))
+router.put("/signup-qna/:id", (req, res) => updateItem(req, res, signup_qna))
+router.delete("/signup-qna/:id", (req, res) => deleteItem(req, res, signup_qna))
+
+router.post("/time-zones", (req, res) => createItem(req, res, time_zones))
+router.get("/time-zones", (req, res) => getAllItems(req, res, time_zones))
+router.get("/time-zones/:id", (req, res) => getItemById(req, res, time_zones))
+router.put("/time-zones/:id", (req, res) => updateItem(req, res, time_zones))
+router.delete("/time-zones/:id", (req, res) => deleteItem(req, res, time_zones))
+
+router.post("/unit", (req, res) => createItem(req, res, unit))
+router.get("/unit", (req, res) => getAllItems(req, res, unit))
+router.get("/unit/:id", (req, res) => getItemById(req, res, unit))
+router.put("/unit/:id", (req, res) => updateItem(req, res, unit))
+router.delete("/unit/:id", (req, res) => deleteItem(req, res, unit))
 
 module.exports = router;

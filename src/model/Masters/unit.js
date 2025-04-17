@@ -1,18 +1,7 @@
 const mongoose = require('mongoose')
+const base_schema = require('./base_schema');
 
-const UnitSchema = new mongoose.Schema({
-    MeasurementType: { type: mongoose.Schema.Types.ObjectId, ref: 'measurement_type', required: true },
-    name: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    value: {
-        type: String,
-        required: true,
-        unique: true,
-    }
-})
+const Unitchema = new mongoose.Schema(base_schema.obj)
 
-const unit = mongoose.model('unit', UnitSchema);
+const unit = mongoose.model('unit', Unitchema);
 module.exports = unit;

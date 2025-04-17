@@ -1,17 +1,8 @@
 const mongoose = require('mongoose');
 
-const MeasurementTypeSchema = new mongoose.Schema({
-    text: { type: String, required: true }
-});
+const base_schema = require('./base_schema');
+const MeasurementSchema = new mongoose.Schema(base_schema.obj)
 
-MeasurementTypeSchema.virtual('unit', {
-    ref: 'unit',
-    localField: '_id',
-    foreignField: 'MeasurementType'
-});
+const measurement_type = mongoose.model('measurement_type', MeasurementSchema);
 
-MeasurementTypeSchema.set('toObject', { virtuals: true });
-MeasurementTypeSchema.set('toJSON', { virtuals: true });
-
-const measurement_type = mongoose.model('measurement_type', MeasurementTypeSchema);
 module.exports = measurement_type;
