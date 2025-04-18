@@ -169,7 +169,7 @@ exports.getChallenges = async (req, res) => {
         };
 
         const challenges = await challenge.find(query)
-            .populate('participants.clientId', 'fullName email')
+            .populate('participants.clientId', 'fullName email image')
             .populate('rewardRange').populate('type')
             .lean()
             .skip((page - 1) * limit)
@@ -211,7 +211,7 @@ exports.viewParticipants = async (req, res) => {
     try {
         const challengeId = req.params.challengeId;
 
-        const challenges = await challenge.findById(challengeId).populate('participants.clientId', 'fullName email');
+        const challenges = await challenge.findById(challengeId).populate('participants.clientId', 'fullName email image');
 
         const accepted = challenges.participants.filter(p => p.status === 'accepted');
         const rejected = challenges.participants.filter(p => p.status === 'rejected');
@@ -229,7 +229,7 @@ exports.getParticipatedChallenges = async (req, res) => {
 
         const challenges = await challenge.find({
             participants: { $elemMatch: { clientId: userId } }
-        }).populate('rewardRange').populate('type').lean().sort({ createdAt: -1 })
+        }).populate('participants.clientId', 'fullName email image').populate('rewardRange').populate('type').lean().sort({ createdAt: -1 })
 
         const mappedChallenges = challenges.map(ch => {
             const reward = ch.type?.rewardRanges?.find(r =>
@@ -268,7 +268,7 @@ exports.getAllPublicChallenges = async (req, res) => {
     try {
         const challenges = await challenge.find({
             privacy: 'public'
-        }).sort({ createdAt: -1 }).populate('type').populate('rewardRange').lean();
+        }).sort({ createdAt: -1 }).populate('participants.clientId', 'fullName email image').populate('type').populate('rewardRange').lean();
 
         const mappedChallenges = challenges.map(ch => {
             const reward = ch.type?.rewardRanges?.find(r =>
@@ -313,7 +313,7 @@ exports.getPrivateChallenges = async (req, res) => {
                 { 'participants.clientId': { $ne: userId } },
                 { 'participants': { $elemMatch: { clientId: userId, status: 'pending' } } }
             ]
-        }).populate('type').populate('rewardRange').lean().sort({ createdAt: -1 });
+        }).populate('participants.clientId', 'fullName email image').populate('type').populate('rewardRange').lean().sort({ createdAt: -1 });
 
         const mappedChallenges = challenges.map(ch => {
             const reward = ch.type?.rewardRanges?.find(r =>
@@ -463,7 +463,7 @@ exports.getChallengeById = async (req, res) => {
 
         const challengeData = await challenge
             .findById(challengeId)
-            .populate('participants.clientId', 'fullName email')
+            .populate('participants.clientId', 'fullName email image')
             .populate('type')
             .populate('rewardRange')
             .lean();
@@ -505,7 +505,7 @@ exports.getChallengesByCreator = async (req, res) => {
     try {
         const { creatorId } = req.params;
 
-        const challenges = await challenge.find({ createdBy: creatorId }).populate('participants.clientId', 'fullName email')
+        const challenges = await challenge.find({ createdBy: creatorId }).populate('participants.clientId', 'fullName email image')
             .populate('type')
             .populate('rewardRange').sort({ createdAt: -1 }).lean();
 
@@ -554,7 +554,7 @@ exports.getAcceptedChallenges = async (req, res) => {
                     status: 'accepted'
                 }
             }
-        })
+        }).populate('participants.clientId', 'fullName email image')
             .populate('rewardRange')
             .populate('type')
             .lean()

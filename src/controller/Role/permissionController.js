@@ -23,11 +23,11 @@ exports.getPermissions = async (req, res) => {
 exports.updatePermission = async (req, res) => {
     try {
         const { id } = req.params;
-        const { action, subject } = req.body;
+        const { name, action, subject } = req.body;
 
         const updated = await Permission.findByIdAndUpdate(
             id,
-            { action, subject },
+            { name, action, subject },
             { new: true }
         );
 

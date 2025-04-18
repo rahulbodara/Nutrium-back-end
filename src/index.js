@@ -309,60 +309,71 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} left room ${roomId}`);
   });
 
-  socket.on("logProgressSocket", async ({ challengeId, userId, value, date }) => {
+  socket.on("logProgressSocket", async ({ userId, value, date }) => {
     try {
-      const challenges = await challenge.findById(challengeId);
-      if (!challenges) return;
-  
-      const participant = challenges.participants.find(p => p.clientId.toString() === userId);
-      if (!participant || participant.status !== 'accepted') return;
-  
-      const now = new Date();
-      const logDate = date ? new Date(date) : now;
+      const logDate = date ? new Date(date) : new Date();
       const logDateStr = logDate.toISOString().split('T')[0];
-  
-      if (logDate < new Date(challenges.startDate) || logDate > new Date(challenges.endDate)) return;
-  
-      if (!participant.progress) {
-        participant.progress = { total: 0, entries: [] };
-      }
-  
-      const existingEntry = participant.progress.entries.find(e => e.date === logDateStr);
-      if (existingEntry) {
-        existingEntry.value += value;
-      } else {
-        participant.progress.entries.push({ date: logDateStr, value });
-      }
-  
-      participant.progress.total += value;
-  
-      if (participant.progress.total >= challenges.targetValue && !participant.completedAt) {
-        participant.completedAt = now;
-        participant.earnedCoins = challenges.coinReward;
-  
-        await addCoinsToClient({
-          clientId: participant.clientId,
-          coins: challenges.coinReward,
-          type: 'challenge_complete',
-          description: `Completed challenge: ${challenges.name}`,
-          challengeId,
+
+      const challenges = await Challenge.find({
+        participants: {
+          $elemMatch: {
+            clientId: userId,
+            status: 'accepted'
+          }
+        },
+        startDate: { $lte: logDate },
+        endDate: { $gte: logDate }
+      });
+
+      if (!challenges.length) return;
+
+      for (const c of challenges) {
+        const participant = c.participants.find(p => p.clientId.toString() === userId);
+        if (!participant) continue;
+
+        if (!participant.progress) {
+          participant.progress = { total: 0, entries: [] };
+        }
+
+        const existingEntry = participant.progress.entries.find(e => e.date === logDateStr);
+        if (existingEntry) {
+          existingEntry.value += value;
+        } else {
+          participant.progress.entries.push({ date: logDateStr, value });
+        }
+
+        participant.progress.total += value;
+
+        if (participant.progress.total >= c.targetValue && !participant.completedAt) {
+          participant.completedAt = logDate;
+          participant.earnedCoins = c.coinReward;
+
+          await addCoinsToClient({
+            clientId: participant.clientId,
+            coins: c.coinReward,
+            type: 'challenge_complete',
+            description: `Completed challenge: ${c.name}`,
+            challengeId: c._id,
+          });
+        }
+
+        await c.save();
+
+        io.to(c._id.toString()).emit('progressUpdated', {
+          challengeId: c._id,
+          userId,
+          total: participant.progress.total,
+          entries: participant.progress.entries,
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0,
         });
       }
-  
-      await challenges.save();
-  
-      io.to(challengeId.toString()).emit('progressUpdated', {
-        challengeId,
-        userId,
-        total: participant.progress.total,
-        entries: participant.progress.entries,
-        completedAt: participant.completedAt || null,
-        earnedCoins: participant.earnedCoins || 0,
-      });
     } catch (error) {
       console.error('Socket Progress Error:', error);
     }
   });
+
+
 
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);

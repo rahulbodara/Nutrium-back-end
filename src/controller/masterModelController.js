@@ -1,5 +1,3 @@
-
-
 const fs = require('fs');
 const path = require('path');
 
@@ -19,7 +17,7 @@ exports.getMasterModels = (req, res) => {
         }
 
         const masterModels = files
-            .filter(file => file.endsWith('.js'))
+            .filter(file => file.endsWith('.js') && file !== 'base_schema.js') // <-- Exclude this file
             .map(file => {
                 const value = file.replace('.js', '');
                 return {

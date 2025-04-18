@@ -38,6 +38,7 @@ const cloudinary = require("../db/cloudinary");
 const UserRole = require('../model/Roles-Permission/UserRole');
 const RolePermission = require('../model/Roles-Permission/RolePermission');
 const { setUserRole } = require('./Role/userRoleController');
+const Role = require('../model/Roles-Permission/Role');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -150,19 +151,36 @@ const SignUp = async (req, res, next) => {
     await lookupEntry.save();
 
     const defaultRole = await Role.findOne({ name: "Nutritionist" });
+    let permissions = []
     if (defaultRole) {
       const userRole = new UserRole({
         userId: savedUser._id,
         roleId: defaultRole._id
       });
-      await userRole.save();
+      await userRole.save()
+      const roleIds = userRole.roleId
+
+      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+
+      rolePermissions.forEach((rp) => {
+        rp.permissionIds.forEach((perm) => {
+          permissions.push({
+            action: perm.action,
+            subject: perm.subject,
+          });
+        });
+      });
+
+      permissions = rolePermissions || []
+
     }
 
     return res.status(200).json({
       success: true,
       message: 'User Signup successfully',
       token: token,
-      role: savedUser.role
+      role: savedUser.role,
+      permissions
     });
   } catch (error) {
     console.log("🚀 ~ SignUp ~ error:", error)
