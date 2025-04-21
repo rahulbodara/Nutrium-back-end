@@ -37,6 +37,13 @@ const measurement_type = require('../../model/Masters/measurement_type');
 const signup_qna = require('../../model/Masters/signup_qna');
 const time_zones = require('../../model/Masters/time_zones');
 const unit = require('../../model/Masters/unit');
+const weightunit = require('../../model/Masters/weight_unit');
+const lengthUnit = require('../../model/Masters/length_unit');
+const energyUnit = require('../../model/Masters/energy_unit');
+const volumeunit = require('../../model/Masters/volume_unit');
+const distanceUnit = require('../../model/Masters/distance_unit');
+
+
 // const diet_databse_filter = require('../../model/Masters/dietary-databse-filter');
 
 
@@ -277,5 +284,38 @@ router.get("/unit", (req, res) => getAllItems(req, res, unit))
 router.get("/unit/:id", (req, res) => getItemById(req, res, unit))
 router.put("/unit/:id", (req, res) => updateItem(req, res, unit))
 router.delete("/unit/:id", (req, res) => deleteItem(req, res, unit))
+
+
+router.post("/weight-unit", (req, res) => createItem(req, res, weightunit))
+router.get("/weight-unit", (req, res) => getAllItems(req, res, weightunit))
+router.get("/weight-unit/:id", (req, res) => getItemById(req, res, weightunit))
+router.put("/weight-unit/:id", (req, res) => updateItem(req, res, weightunit))
+router.delete("/weight-unit/:id", (req, res) => deleteItem(req, res, weightunit))
+
+router.post("/length-unit", (req, res) => createItem(req, res, lengthUnit))
+router.get("/length-unit", (req, res) => getAllItems(req, res, lengthUnit))
+router.get("/length-unit/:id", (req, res) => getItemById(req, res, lengthUnit))
+router.put("/length-unit/:id", (req, res) => updateItem(req, res, lengthUnit))
+router.delete("/length-unit/:id", (req, res) => deleteItem(req, res, lengthUnit))
+
+
+router.post("/energy-unit", (req, res) => createItem(req, res, energyUnit))
+router.get("/energy-unit", (req, res) => getAllItems(req, res, energyUnit))
+router.get("/energy-unit/:id", (req, res) => getItemById(req, res, energyUnit))
+router.put("/energy-unit/:id", (req, res) => updateItem(req, res, energyUnit))
+router.delete("/energy-unit/:id", (req, res) => deleteItem(req, res, energyUnit))
+
+router.post("/volume-unit", (req, res) => createItem(req, res, volumeunit))
+router.get("/volume-unit", (req, res) => getAllItems(req, res, volumeunit))
+router.get("/volume-unit/:id", (req, res) => getItemById(req, res, volumeunit))
+router.put("/volume-unit/:id", (req, res) => updateItem(req, res, volumeunit))
+router.delete("/volume-unit/:id", (req, res) => deleteItem(req, res, volumeunit))
+
+
+router.post("/distance-unit", (req, res) => createItem(req, res, distanceUnit))
+router.get("/distance-unit", (req, res) => getAllItems(req, res, distanceUnit))
+router.get("/distance-unit/:id", (req, res) => getItemById(req, res, distanceUnit))
+router.put("/distance-unit/:id", (req, res) => updateItem(req, res, distanceUnit))
+router.delete("/distance-unit/:id", (req, res) => deleteItem(req, res, distanceUnit))
 
 module.exports = router;
