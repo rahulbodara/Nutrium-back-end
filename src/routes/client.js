@@ -243,7 +243,7 @@ router.get('/client-getWeight/:clientId', isAuthenticated, getClientInfo);
 
 router.put('/client-updateBmi/:clientId', isAuthenticated, updateBmi);
 
-router.put('/setPassword/:clientId', updateClientPassword)
+router.put('/setPassword/:email', updateClientPassword)
 
 router.get('/sendEmail/:clientId', isAuthenticated, sendClientEmail);
 

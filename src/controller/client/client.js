@@ -1302,14 +1302,9 @@ const updatePersonalHistory = async (req, res, next) => {
 
     const existingPersonalHistory = await PersonalHistory.findOne({ clientId });
 
-    if (!existingPersonalHistory) {
-      return res.status(404).json({
-        success: false,
-        message: "Personal History not found",
-      });
-    }
 
-    const updatedData = { ...req.body };
+
+    const updatedData = { ...req.body, clientId };
 
     const pictureFields = [
       'beforePicture1', 'beforePicture2', 'beforePicture3', 'beforePicture4', 'beforePicture5',
@@ -1328,7 +1323,7 @@ const updatePersonalHistory = async (req, res, next) => {
     const updatedPersonalHistory = await PersonalHistory.findOneAndUpdate(
       { clientId: clientId },
       { $set: updatedData },
-      { new: true, upsert: false }
+      { new: true, upsert: true }
     );
 
     if (client.deviceToken) {
@@ -2811,8 +2806,13 @@ const updateBmi = async (req, res, next) => {
 };
 
 const updateClientPassword = async (req, res) => {
-  const { clientId } = req.params;
+  const { email } = req.params;
   const { newPassword, confirmPassword } = req.body;
+
+  const clientData = await Client.findOne({ email })
+  if (!clientData) {
+    return res.status(404).json({ message: "Client not found" })
+  }
 
   if (!newPassword || !confirmPassword) {
     return res.status(400).json({
@@ -2830,8 +2830,8 @@ const updateClientPassword = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
+    const updatedClient = await Client.findOneAndUpdate(
+      { email },
       { password: hashedPassword },
       { new: true, runValidators: true }
     );

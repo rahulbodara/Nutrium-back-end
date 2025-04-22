@@ -163,7 +163,7 @@ const sendInvitationEmail = async (
   await transporter.sendMail(mailOptions);
 };
 
-const clientEmailSend = async (sender, receiver, clientId) => {
+const clientEmailSend = async (sender, receiver, email) => {
   const transporter = nodemailer.createTransport({
     service: process.env.SERVICE,
     auth: {
@@ -172,7 +172,7 @@ const clientEmailSend = async (sender, receiver, clientId) => {
     },
   });
 
-  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/clientPassword/resetPassword?clientId=${clientId}`;
+  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/clientPassword/resetPassword?email=${email}`;
 
   const templatePath = path.join(__dirname, '../view', 'password.ejs');
   const html = await ejs.renderFile(templatePath, { updateUrl });
