@@ -12,7 +12,7 @@ router.get('/accepted-challenges/:userId', challengeController.getAcceptedChalle
 router.get('/public', challengeController.getAllPublicChallenges);
 router.get('/private/:userId', challengeController.getPrivateChallenges)
 router.post('/public/join/:userId/:challengeId', challengeController.joinPublicChallenge)
-router.put('/log-progress/:challengeId/:userId', challengeController.logProgress);
+router.put('/log-progress/:userId', challengeController.logProgress);
 router.get('/:challengeId', challengeController.getChallengeById)
 router.get('/creator/:creatorId', challengeController.getChallengesByCreator)
 

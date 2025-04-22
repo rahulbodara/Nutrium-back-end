@@ -384,72 +384,100 @@ exports.joinPublicChallenge = async (req, res) => {
 
 exports.logProgress = async (req, res) => {
     try {
-        const { challengeId, userId } = req.params;
+        const { userId } = req.params;
         const { value, date } = req.body;
-
-        const challenges = await challenge.findById(challengeId);
-        if (!challenges) return res.status(404).json({ message: 'Challenge not found' });
-
-        const participant = challenges.participants.find(p => p.clientId.toString() === userId);
-        if (!participant || participant.status !== 'accepted') {
-            return res.status(403).json({ message: 'You are not a valid participant' });
-        }
 
         const now = new Date();
         const logDate = date ? new Date(date) : now;
         const logDateStr = logDate.toISOString().split('T')[0];
 
-        if (logDate < new Date(challenges.startDate) || logDate > new Date(challenges.endDate)) {
-            return res.status(400).json({ message: 'You can only log progress during the challenge period' });
+        const challenges = await challenge.find({
+            participants: {
+                $elemMatch: {
+                    clientId: userId,
+                    status: 'accepted',
+                },
+            },
+            startDate: { $lte: logDate },
+            endDate: { $gte: logDate },
+        });
+
+        if (!challenges.length) {
+            return res.status(404).json({ message: 'No active challenges found for this user on the given date' });
         }
 
-        if (!participant.progress) {
-            participant.progress = {
-                total: 0,
-                entries: []
-            };
-        }
+        const results = [];
 
-        const existingEntry = participant.progress.entries.find(e => e.date === logDateStr);
-        if (existingEntry) {
-            existingEntry.value += value;
-        } else {
-            participant.progress.entries.push({ date: logDateStr, value });
-        }
+        for (const challenge of challenges) {
+            const participant = challenge.participants.find(p => p.clientId.toString() === userId);
+            if (!participant) continue;
 
-        participant.progress.total += value;
+            if (!participant.progress) {
+                participant.progress = { total: 0, entries: [] };
+            }
 
-        if (participant.progress.total >= challenges.targetValue && !participant.completedAt) {
-            participant.completedAt = now;
-            participant.earnedCoins = challenges.coinReward;
+            const existingEntry = participant.progress.entries.find(e => e.date === logDateStr);
+            if (existingEntry) {
+                existingEntry.value += value;
+            } else {
+                participant.progress.entries.push({ date: logDateStr, value });
+            }
 
-            await addCoinsToClient({
-                clientId: participant.clientId,
-                coins: challenges.coinReward,
-                type: 'challenge_complete',
-                description: `Completed challenge: ${challenges.name}`,
-                challengeId: challengeId
+            participant.progress.total += value;
+
+            if (participant.progress.total >= challenge.targetValue && !participant.completedAt) {
+                participant.completedAt = logDate;
+                participant.earnedCoins = challenge.coinReward;
+
+                await addCoinsToClient({
+                    clientId: participant.clientId,
+                    coins: challenge.coinReward,
+                    type: 'challenge_complete',
+                    description: `Completed challenge: ${challenge.name}`,
+                    challengeId: challenge._id,
+                });
+            }
+
+            await challenge.save();
+
+            const io = req.app.get('io');
+            io.to(challenge._id.toString()).emit('progressUpdated', {
+                challengeId: challenge._id,
+                userId,
+                total: participant.progress.total,
+                entries: participant.progress.entries,
+                completedAt: participant.completedAt || null,
+                earnedCoins: participant.earnedCoins || 0,
+            });
+
+            results.push({
+                challengeId: challenge._id,
+                progress: participant.progress,
+                earnedCoins: participant.earnedCoins || 0,
+                completedAt: participant.completedAt || null,
             });
         }
 
-        await challenges.save();
+        const client = await Client.findById(userId);
+        if (client) {
+            if (!client.stepLogs) client.stepLogs = [];
 
-        const io = req.app.get('io');
-        io.to(challengeId.toString()).emit('progressUpdated', {
-            challengeId,
-            userId,
-            total: participant.progress.total,
-            entries: participant.progress.entries,
-            completedAt: participant.completedAt || null,
-            earnedCoins: participant.earnedCoins || 0
-        });
+            const existingLog = client.stepLogs.find(l => l.date === logDateStr);
+            if (existingLog) {
+                existingLog.steps += value;
+            } else {
+                client.stepLogs.push({ date: logDateStr, steps: value });
+            }
+
+            await client.save();
+        }
 
         res.json({
-            message: 'Progress logged',
-            progress: participant.progress,
-            earnedCoins: participant.earnedCoins || 0,
-            completedAt: participant.completedAt || null
+            message: 'Progress logged for active challenges',
+            challengesUpdated: results.length,
+            results,
         });
+
     } catch (error) {
         console.error('Progress log error:', error);
         res.status(500).json({ message: 'Internal Server Error' });

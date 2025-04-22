@@ -146,7 +146,13 @@ const clientSchema = new mongoose.Schema(
     goal: {
       type: String,
 
-    }
+    },
+    stepLogs: [
+      {
+        date: { type: String, required: true },
+        steps: { type: Number, required: true }
+      }
+    ]
 
   },
   { timestamps: true }

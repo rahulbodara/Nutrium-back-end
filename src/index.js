@@ -62,7 +62,8 @@ const cloudinary = require("./db/cloudinary");
 const { sendNotification } = require("./firebase/sendNotification");
 const { dailyChallengeSnapshot } = require("./cron");
 const Challenge = require('./model/Challenge/challenge')
-const masterModel = require('./routes/masterModelRoute')
+const masterModel = require('./routes/masterModelRoute');
+const Client = require("./model/Client");
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
@@ -369,10 +370,23 @@ io.on("connection", (socket) => {
           earnedCoins: participant.earnedCoins || 0,
         });
       }
+
+      const client = await Client.findById(userId);
+      if (client) {
+        const existingLog = client.stepLogs.find(l => l.date === logDateStr);
+        if (existingLog) {
+          existingLog.steps += value;
+        } else {
+          client.stepLogs.push({ date: logDateStr, steps: value });
+        }
+        await client.save();
+      }
+
     } catch (error) {
       console.error('Socket Progress Error:', error);
     }
   });
+
 
 
 
