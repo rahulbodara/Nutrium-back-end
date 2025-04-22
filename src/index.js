@@ -310,6 +310,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("logProgressSocket", async ({ userId, value, date }) => {
+    console.log("🚀 ~ socket.on ~ logProgressSocket:")
     try {
       const logDate = date ? new Date(date) : new Date();
       const logDateStr = logDate.toISOString().split('T')[0];
