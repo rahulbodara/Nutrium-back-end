@@ -42,6 +42,10 @@ const lengthUnit = require('../../model/Masters/length_unit');
 const energyUnit = require('../../model/Masters/energy_unit');
 const volumeunit = require('../../model/Masters/volume_unit');
 const distanceUnit = require('../../model/Masters/distance_unit');
+const staticMeasure = require('../../model/Masters/statistic_measure');
+const appointment_req = require('../../model/Masters/appointment_req');
+const deduce_measurement = require('../../model/Masters/deduce_measurement');
+const water_drink = require('../../model/Masters/water_drink');
 
 
 // const diet_databse_filter = require('../../model/Masters/dietary-databse-filter');
@@ -317,5 +321,33 @@ router.get("/distance-unit", (req, res) => getAllItems(req, res, distanceUnit))
 router.get("/distance-unit/:id", (req, res) => getItemById(req, res, distanceUnit))
 router.put("/distance-unit/:id", (req, res) => updateItem(req, res, distanceUnit))
 router.delete("/distance-unit/:id", (req, res) => deleteItem(req, res, distanceUnit))
+
+router.post("/static-measure", (req, res) => createItem(req, res, staticMeasure))
+router.get("/static-measure", (req, res) => getAllItems(req, res, staticMeasure))
+router.get("/static-measure/:id", (req, res) => getItemById(req, res, staticMeasure))
+router.put("/static-measure/:id", (req, res) => updateItem(req, res, staticMeasure))
+router.delete("/static-measure/:id", (req, res) => deleteItem(req, res, staticMeasure))
+
+
+router.post("/appointmentreq-system", (req, res) => createItem(req, res, appointment_req))
+router.get("/appointmentreq-system", (req, res) => getAllItems(req, res, appointment_req))
+router.get("/appointmentreq-system/:id", (req, res) => getItemById(req, res, appointment_req))
+router.put("/appointmentreq-system/:id", (req, res) => updateItem(req, res, appointment_req))
+router.delete("/appointmentreq-system/:id", (req, res) => deleteItem(req, res, appointment_req))
+
+router.post("/deduce-measurement", (req, res) => createItem(req, res, deduce_measurement))
+router.get("/deduce-measurement", (req, res) => getAllItems(req, res, deduce_measurement))
+router.get("/deduce-measurement/:id", (req, res) => getItemById(req, res, deduce_measurement))
+router.put("/deduce-measurement/:id", (req, res) => updateItem(req, res, deduce_measurement))
+router.delete("/deduce-measurement/:id", (req, res) => deleteItem(req, res, deduce_measurement))
+
+
+
+router.post("/water-drink", (req, res) => createItem(req, res, water_drink))
+router.get("/water-drink", (req, res) => getAllItems(req, res, water_drink))
+router.get("/water-drink/:id", (req, res) => getItemById(req, res, water_drink))
+router.put("/water-drink/:id", (req, res) => updateItem(req, res, water_drink))
+router.delete("/water-drink/:id", (req, res) => deleteItem(req, res, water_drink))
+
 
 module.exports = router;
