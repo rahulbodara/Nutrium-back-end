@@ -372,6 +372,7 @@ io.on("connection", (socket) => {
       }
 
       const client = await Client.findById(userId);
+      console.log("🚀 ~ socket.on ~ client:", client)
       if (client) {
         const existingLog = client.stepLogs.find(l => l.date === logDateStr);
         if (existingLog) {
@@ -382,6 +383,7 @@ io.on("connection", (socket) => {
         await client.save();
       }
 
+      console.log("🚀 ~ socket.on ~ client:", client)
     } catch (error) {
       console.error('Socket Progress Error:', error);
     }
