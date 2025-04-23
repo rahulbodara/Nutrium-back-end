@@ -15,6 +15,7 @@ router.post('/public/join/:userId/:challengeId', challengeController.joinPublicC
 router.put('/log-progress/:userId', challengeController.logProgress);
 router.get('/:challengeId', challengeController.getChallengeById)
 router.get('/creator/:creatorId', challengeController.getChallengesByCreator)
+router.get('/all/private/:userId', challengeController.getAllPrivateChallenges)
 
 
 module.exports = router;

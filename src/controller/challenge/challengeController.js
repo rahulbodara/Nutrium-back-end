@@ -620,3 +620,66 @@ exports.getAcceptedChallenges = async (req, res) => {
     }
 };
 
+
+exports.getAllPrivateChallenges = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const challenges = await challenge.find({
+            privacy: 'private',
+            selectedClients: userId,
+            $or: [
+                { 'participants.clientId': { $ne: userId } },
+                {
+                    participants: {
+                        $elemMatch: {
+                            clientId: userId,
+                            status: 'accepted'
+                        }
+                    }
+                }
+            ]
+        })
+            .populate('participants.clientId', 'fullName email image')
+            .populate('type')
+            .populate('rewardRange')
+            .lean()
+            .sort({ createdAt: -1 });
+
+        const mappedChallenges = challenges.map(ch => {
+            let reward = null;
+
+            if (ch.type?.rewardRanges && ch.targetValue != null) {
+                reward = ch.type.rewardRanges.find(r =>
+                    ch.targetValue >= r.min && ch.targetValue <= r.max
+                );
+            }
+
+            return {
+                ...ch,
+                type: ch.type
+                    ? {
+                        _id: ch.type._id,
+                        type: ch.type.type,
+                        unitLabel: ch.type.unitLabel
+                    }
+                    : null,
+                rewardRange: reward
+                    ? {
+                        _id: reward._id,
+                        min: reward.min,
+                        max: reward.max,
+                        coins: reward.coins
+                    }
+                    : null
+            };
+        });
+
+        res.status(200).json({ success: true, challenges: mappedChallenges });
+    } catch (error) {
+        console.error("Error in getAllPrivateChallenges:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
