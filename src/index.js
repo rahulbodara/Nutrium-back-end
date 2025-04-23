@@ -302,7 +302,7 @@ io.on("connection", (socket) => {
       if (client) {
         const stepLog = client.stepLogs.find(log => log.date === logDateStr);
         if (stepLog) {
-          stepLog.steps += value;
+          stepLog.steps = value;
         } else {
           client.stepLogs.push({ date: logDateStr, steps: value });
         }
@@ -325,7 +325,8 @@ io.on("connection", (socket) => {
 
         const entry = participant.progress.entries.find(e => e.date === logDateStr);
         if (entry) {
-          entry.value += value;
+          participant.progress.total -= entry.value;
+          entry.value = value;
         } else {
           participant.progress.entries.push({ date: logDateStr, value });
         }
