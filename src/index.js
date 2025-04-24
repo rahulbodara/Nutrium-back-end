@@ -420,11 +420,11 @@ app.use("/api/v1", foodDiary);
 app.use("/api/v1", labTest)
 app.use("/api/v1", foodToAvoidTamplate)
 app.use("/api/v1", RecommendationTemplate)
-app.use('/api', roleRoutes);
-app.use('/api', permissionRoutes);
-app.use('/api', userRoleRoutes);
-app.use('/api', userPermission);
-app.use('/api', rolePermission);
+app.use('/api/v1', permissionRoutes);
+app.use('/api/v1', roleRoutes);
+app.use('/api/v1', userRoleRoutes);
+app.use('/api/v1', userPermission);
+app.use('/api/v1', rolePermission);
 app.use('/api/v1/challenge-master', challengeMasterRoutes);
 app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)

@@ -5,8 +5,8 @@ const { createRole, getRoles, updateRole, deleteRole } = require('../../controll
 const { isAuthenticated } = require('../../middleware/auth');
 
 
-router.post('/role', isAuthenticated, checkPermission('create', 'Role'), createRole);
-router.get('/role', isAuthenticated, checkPermission('read', 'Role'), getRoles);
+router.post('/role', isAuthenticated, checkPermission('create', 'Create Role'), createRole);
+router.get('/role', isAuthenticated, checkPermission('read', 'Read Role'), getRoles);
 router.put('/role/:id', isAuthenticated, checkPermission('update', 'Role'), updateRole);
 router.delete('/role/:id', isAuthenticated, checkPermission('delete', 'Role'), deleteRole);
 

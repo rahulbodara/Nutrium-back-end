@@ -125,35 +125,51 @@ exports.getUsersWithPermissionsOnly = async (req, res) => {
 
         const usersWithPermissions = users.map(user => {
             const userId = user._id.toString();
-            const permissionSet = new Set();
-            const permissions = [];
 
-            const directPerms = permissionsByUserId[userId] || [];
-            directPerms.forEach(perm => {
-                if (perm && !permissionSet.has(perm._id.toString())) {
-                    permissionSet.add(perm._id.toString());
-                    permissions.push({ _id: perm._id, name: perm.name });
-                }
-            });
+            const directPermissions = (permissionsByUserId[userId] || []).map(perm => ({
+                _id: perm._id,
+                name: perm.name,
+                subject: perm.subject
+            }));
 
             const roleIds = rolesByUserId[userId] || [];
+            const rolePermissionsArr = [];
+
             roleIds.forEach(roleId => {
+                const role = userRoles.find(ur => ur.roleId._id.toString() === roleId)?.roleId;
                 const perms = permissionsByRoleId[roleId] || [];
                 perms.forEach(perm => {
-                    if (perm && !permissionSet.has(perm._id.toString())) {
-                        permissionSet.add(perm._id.toString());
-                        permissions.push({ _id: perm._id, name: perm.name });
+                    if (perm) {
+                        rolePermissionsArr.push({
+                            _id: perm._id,
+                            name: perm.name,
+                            subject: perm.subject,
+                            role: {
+                                _id: role?._id,
+                                name: role?.name
+                            }
+                        });
                     }
                 });
+            });
+
+            const seen = new Set();
+            const uniqueRolePermissions = rolePermissionsArr.filter(p => {
+                const id = p._id.toString();
+                if (seen.has(id)) return false;
+                seen.add(id);
+                return true;
             });
 
             return {
                 _id: user._id,
                 fullName: user.fullName,
                 email: user.email,
-                permissions
+                directPermissions,
+                rolePermissions: uniqueRolePermissions
             };
         });
+
 
         res.json(usersWithPermissions);
     } catch (error) {
