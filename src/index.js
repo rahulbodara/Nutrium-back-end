@@ -115,7 +115,7 @@ app.get('/downloads', async (req, res) => {
 
 
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new socketIo.Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
