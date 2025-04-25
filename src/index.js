@@ -183,9 +183,11 @@ io.on("connection", (socket) => {
 
       const lastMessage = await Message.findOne({ roomId }).sort({ createdAt: -1 });
 
+      console.log("🚀 ~ socket.on ~ lastMessage:", lastMessage)
       if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) return;
 
       const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
+      console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
 
       const newMessage = new Message({
         senderId,
@@ -198,13 +200,16 @@ io.on("connection", (socket) => {
       });
 
       await newMessage.save();
+      console.log("🚀 ~ socket.on ~ newMessage:", newMessage)
 
       io.to(roomId).emit('receiveMessage', newMessage);
+      consle.log("aaaaaaaaaaaaaaaaaaaaaaaaa, reacevie")
       io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
 
       // await sendNotification(fcmToken, receiverId, message, senderName);
 
       if (isReceiverInRoom) {
+        console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
         io.to(roomId).emit("messagesSeen", {
           messageIds: [newMessage._id],
           senderId,
