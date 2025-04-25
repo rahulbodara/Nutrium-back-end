@@ -115,7 +115,7 @@ app.get('/downloads', async (req, res) => {
 
 
 const server = http.createServer(app);
-const io = new socketIo.Server(server, {
+const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -133,6 +133,8 @@ function getRoomId(senderId, receiverId) {
 }
 
 io.on("connection", (socket) => {
+  console.log('New client connected', socket.id);
+
 
 
   io.on("connection", (socket) => {
@@ -269,6 +271,7 @@ io.on("connection", (socket) => {
       const unseenMessageIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
+      console.log("🚀 ~ socket.on ~ unseenMessageIds:", unseenMessageIds)
 
       io.to(socket.id).emit("chatHistory", messages);
 
@@ -327,8 +330,9 @@ io.on("connection", (socket) => {
   });
 });
 
-// app.set('io', io);
-// dailyChallengeSnapshot(io);
+
+
+
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
 app.use('/api/v1', serviceRoutes);
@@ -371,52 +375,6 @@ app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)
 app.use('/api/v1', masterSimRoutes)
 app.use('/api/v1', masterModel)
-
-// app.get('/test-daily-challenge-snapshot', async (req, res) => {
-//   const now = new Date();
-//   const today = now.toISOString().split('T')[0];
-
-//   try {
-//     const challenges = await Challenge.find({
-//       startDate: { $lte: now },
-//       endDate: { $gte: now }
-//     });
-
-//     for (const c of challenges) {
-//       const participants = c.participants.filter(p => p.status === 'accepted');
-
-//       participants.forEach(participant => {
-//         const { clientId, progress } = participant;
-
-//         io.to(c._id.toString()).emit('dailyChallengeUpdate', {
-//           challengeId: c._id,
-//           userId: clientId,
-//           date: today,
-//           total: progress?.total || 0,
-//           entries: progress?.entries || [],
-//           completedAt: participant.completedAt || null,
-//           earnedCoins: participant.earnedCoins || 0
-//         });
-
-//         io.to(clientId.toString()).emit('dailyChallengeUpdate', {
-//           challengeId: c._id,
-//           userId: clientId,
-//           date: today,
-//           total: progress?.total || 0,
-//           entries: progress?.entries || [],
-//           completedAt: participant.completedAt || null,
-//           earnedCoins: participant.earnedCoins || 0
-//         });
-//       });
-//     }
-
-//     res.send("✅ Snapshot triggered and events emitted.");
-//   } catch (err) {
-//     console.error("🔥 Error in manual snapshot trigger:", err);
-//     res.status(500).send("Error occurred");
-//   }
-// });
-
 
 
 
