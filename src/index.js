@@ -203,7 +203,7 @@ io.on("connection", (socket) => {
       console.log("🚀 ~ socket.on ~ newMessage:", newMessage)
 
       io.to(roomId).emit('receiveMessage', newMessage);
-      consle.log("aaaaaaaaaaaaaaaaaaaaaaaaa, reacevie")
+      console.log("aaaaaaaaaaaaaaaaaaaaaaaaa, reacevie")
       io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
 
       // await sendNotification(fcmToken, receiverId, message, senderName);
