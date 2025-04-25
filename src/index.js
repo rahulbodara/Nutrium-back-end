@@ -202,7 +202,7 @@ io.on("connection", (socket) => {
       io.to(roomId).emit('receiveMessage', newMessage);
       io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
 
-      await sendNotification(fcmToken, receiverId, message, senderName);
+      // await sendNotification(fcmToken, receiverId, message, senderName);
 
       if (isReceiverInRoom) {
         io.to(roomId).emit("messagesSeen", {
