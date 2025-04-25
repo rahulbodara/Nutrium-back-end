@@ -186,7 +186,9 @@ io.on("connection", (socket) => {
       console.log("🚀 ~ socket.on ~ lastMessage:", lastMessage)
       if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) return;
 
-      const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
+      const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
+      const isReceiverInRoom = [...socketsInRoom].some(socketId => userSockets.get(receiverId)?.has(socketId));
+
       console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
 
       const newMessage = new Message({
