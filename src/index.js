@@ -115,7 +115,7 @@ app.get('/downloads', async (req, res) => {
 
 
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new socketIo.Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -133,206 +133,261 @@ function getRoomId(senderId, receiverId) {
 }
 
 io.on("connection", (socket) => {
-  console.log('New client connected', socket.id);
+  console.log('✅ New client connected:', socket.id);
 
+  socket.on('joinChallengeRoom', ({ challengeId, userId }) => {
+    socket.join(challengeId.toString());
+    socket.join(userId.toString());
+    console.log("📌 User joined challenge & user room");
+  });
 
+  socket.on("join", async ({ userId, otherUserId }) => {
+    const roomId = getRoomId(userId, otherUserId);
+    socket.join(roomId);
+    console.log("👥 User joined chat room:", roomId);
 
-  io.on("connection", (socket) => {
-    console.log('New client connected', socket.id);
+    if (!userSockets.has(userId)) userSockets.set(userId, new Set());
+    userSockets.get(userId).add(socket.id);
 
-    socket.on("join", async ({ userId, otherUserId }) => {
-      console.log("user joined", userId, otherUserId)
-
-      const roomId = getRoomId(userId, otherUserId);
-      socket.join(roomId);
-
-      if (!userSockets.has(userId)) {
-        userSockets.set(userId, new Set());
-      }
-      userSockets.get(userId).add(socket.id);
-
-      const unseenMessages = await Message.find({
-        senderId: otherUserId,
-        receiverId: userId,
-        seen: false
-      });
-
-
-
-
-      if (unseenMessages.length > 0) {
-        const unseenMessageIds = unseenMessages.map(msg => msg._id);
-
-
-        await Message.updateMany(
-          { _id: { $in: unseenMessageIds } },
-          { $set: { seen: true } }
-        );
-
-
-        io.to(socket.id).emit("unreadMessages", {
-          messageIds: unseenMessageIds,
-          messages: unseenMessages
-        });
-
-
-        if (userSockets.has(otherUserId)) {
-          userSockets.get(otherUserId).forEach((socketId) => {
-            io.to(socketId).emit("messagesSeen", {
-              messageIds: unseenMessageIds,
-              senderId: otherUserId,
-              receiverId: userId,
-            });
-          });
-        }
-      }
+    const unseenMessages = await Message.find({
+      senderId: otherUserId,
+      receiverId: userId,
+      seen: false
     });
 
+    if (unseenMessages.length > 0) {
+      const unseenIds = unseenMessages.map(msg => msg._id);
+
+      await Message.updateMany({ _id: { $in: unseenIds } }, { $set: { seen: true } });
+
+      io.to(socket.id).emit("unreadMessages", {
+        messageIds: unseenIds,
+        messages: unseenMessages
+      });
+
+      if (userSockets.has(otherUserId)) {
+        userSockets.get(otherUserId).forEach(socketId => {
+          io.to(socketId).emit("messagesSeen", {
+            messageIds: unseenIds,
+            senderId: otherUserId,
+            receiverId: userId
+          });
+        });
+      }
+    }
   });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message, file, fcmToken, senderName, tempId }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
 
-      const lastMessage = await Message.findOne({ roomId }).sort({ createdAt: -1 }).limit(1);
+      const lastMessage = await Message.findOne({ roomId }).sort({ createdAt: -1 });
 
-      if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) {
-        return;
-      }
+      if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) return;
 
       const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
-      let fileUrl = file || null;
-      let seen = false;
 
-      if (isReceiverInRoom) {
-        seen = true;
-      }
-
-      const newMessage = new Message({ senderId, receiverId, message, fileUrl, roomId, seen, tempId });
-      await newMessage.save();
-
-      console.log(`Sending message to room ${roomId}`);
-
-      io.to(roomId).emit('receiveMessage', newMessage);
-      io.to(socket.id).emit('messageSent', {
-        ...newMessage.toObject(),
+      const newMessage = new Message({
+        senderId,
+        receiverId,
+        message,
+        fileUrl: file || null,
+        roomId,
+        seen: isReceiverInRoom,
         tempId
       });
 
-      await sendNotification(fcmToken, receiverId, message, senderName);
+      await newMessage.save();
 
-      if (seen) {
-        io.to(roomId).emit("messagesSeen", { messageIds: [newMessage._id], senderId, receiverId });
+      io.to(roomId).emit('receiveMessage', newMessage);
+      io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
+
+      // await sendNotification(fcmToken, receiverId, message, senderName);
+
+      if (isReceiverInRoom) {
+        io.to(roomId).emit("messagesSeen", {
+          messageIds: [newMessage._id],
+          senderId,
+          receiverId
+        });
       }
 
     } catch (error) {
-      console.log("Error in sendMessage:", error);
+      console.log("❌ Error in sendMessage:", error);
     }
   });
 
   socket.on("messageSeen", async ({ messageIds, senderId, receiverId }) => {
     try {
-      const unseenMessages = await Message.find({
+      const unseen = await Message.find({
         _id: { $in: messageIds },
-        receiverId: receiverId,
-        seen: false,
+        receiverId,
+        seen: false
       });
 
-      if (unseenMessages.length > 0) {
+      if (unseen.length > 0) {
         await Message.updateMany(
-          { _id: { $in: unseenMessages.map(msg => msg._id) } },
+          { _id: { $in: unseen.map(m => m._id) } },
           { $set: { seen: true } }
         );
 
-        console.log(`Messages seen by user ${receiverId}`);
-
         if (userSockets.has(senderId)) {
           userSockets.get(senderId).forEach(socketId => {
-            io.to(socketId).emit("messagesSeen", { senderId: receiverId, receiverId: senderId, messageIds });
+            io.to(socketId).emit("messagesSeen", {
+              messageIds,
+              senderId: receiverId,
+              receiverId: senderId
+            });
           });
         }
       }
-
     } catch (error) {
-      console.log("Error in messageSeen:", error);
+      console.log("❌ Error in messageSeen:", error);
     }
   });
-
 
   socket.on("getHistory", async ({ userId, otherUserId }) => {
     try {
       const messages = await Message.find({
         $or: [
           { senderId: userId, receiverId: otherUserId },
-          { senderId: otherUserId, receiverId: userId },
+          { senderId: otherUserId, receiverId: userId }
         ]
       }).sort({ createdAt: 1 });
 
-      const unseenMessageIds = messages
+      const unseenIds = messages
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
-      console.log("🚀 ~ socket.on ~ unseenMessageIds:", unseenMessageIds)
 
       io.to(socket.id).emit("chatHistory", messages);
 
-      if (unseenMessageIds.length > 0 && userId !== otherUserId) {
-        await Message.updateMany(
-          { _id: { $in: unseenMessageIds } },
-          { $set: { seen: true } }
-        );
+      if (unseenIds.length > 0) {
+        await Message.updateMany({ _id: { $in: unseenIds } }, { $set: { seen: true } });
 
         io.to(socket.id).emit("messagesSeen", {
-          messageIds: unseenMessageIds,
+          messageIds: unseenIds,
           senderId: otherUserId,
-          receiverId: userId,
+          receiverId: userId
         });
 
         if (userSockets.has(otherUserId)) {
-          userSockets.get(otherUserId).forEach((socketId) => {
+          userSockets.get(otherUserId).forEach(socketId => {
             io.to(socketId).emit("messagesSeen", {
-              messageIds: unseenMessageIds,
+              messageIds: unseenIds,
               senderId: otherUserId,
-              receiverId: userId,
+              receiverId: userId
             });
           });
         }
       }
     } catch (error) {
-      console.log("Error in getHistory:", error);
+      console.log("❌ Error in getHistory:", error);
     }
   });
 
   socket.on("leave", ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
     socket.leave(roomId);
-    console.log(`User ${userId} left room ${roomId}`);
+    console.log(`👋 User ${userId} left room ${roomId}`);
   });
 
+  socket.on("logProgressSocket", async ({ userId, value, date }) => {
+    console.log("📥 logProgressSocket received");
+
+    try {
+      const logDate = date ? new Date(date) : new Date();
+      const logDateStr = logDate.toISOString().split('T')[0];
+
+      const client = await Client.findById(userId);
+      if (client) {
+        const stepLog = client.stepLogs.find(log => log.date === logDateStr);
+        if (stepLog) {
+          stepLog.steps = value;
+        } else {
+          client.stepLogs.push({ date: logDateStr, steps: value });
+        }
+        await client.save();
+      }
+
+      const challenges = await Challenge.find({
+        participants: { $elemMatch: { clientId: userId, status: 'accepted' } },
+        startDate: { $lte: logDate },
+        endDate: { $gte: logDate }
+      });
+
+      for (const challenge of challenges) {
+        const participant = challenge.participants.find(p => p.clientId.toString() === userId);
+        if (!participant) continue;
+
+        if (!participant.progress) {
+          participant.progress = { total: 0, entries: [] };
+        }
+
+        const entry = participant.progress.entries.find(e => e.date === logDateStr);
+        if (entry) {
+          participant.progress.total -= entry.value;
+          entry.value = value;
+        } else {
+          participant.progress.entries.push({ date: logDateStr, value });
+        }
+
+        participant.progress.total += value;
+
+        if (participant.progress.total >= challenge.targetValue && !participant.completedAt) {
+          participant.completedAt = logDate;
+          participant.earnedCoins = challenge.coinReward;
+
+          await addCoinsToClient({
+            clientId: userId,
+            coins: challenge.coinReward,
+            type: 'challenge_complete',
+            description: `Completed challenge: ${challenge.name}`,
+            challengeId: challenge._id
+          });
+
+          client.coins += challenge.coinReward;
+          await client.save();
+        }
+
+        await challenge.save();
+
+        io.to(challenge._id.toString()).emit('progressUpdated', {
+          challengeId: challenge._id,
+          userId,
+          total: participant.progress.total,
+          entries: participant.progress.entries,
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error in logProgressSocket:', error);
+    }
+  });
 
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-
+    console.log(`❌ User disconnected: ${socket.id}`);
     let userToRemove = null;
+
     for (const [userId, socketSet] of userSockets.entries()) {
       if (socketSet.has(socket.id)) {
         socketSet.delete(socket.id);
-        if (socketSet.size === 0) {
-          userToRemove = userId;
-        }
+        if (socketSet.size === 0) userToRemove = userId;
         break;
       }
     }
 
     if (userToRemove) {
       userSockets.delete(userToRemove);
-      console.log(`User ${userToRemove} removed from active connections`);
+      console.log(`ℹ️ User ${userToRemove} removed from active sockets`);
     }
   });
 });
 
 
-
-
+app.set('io', io);
+// dailyChallengeSnapshot(io);
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
 app.use('/api/v1', serviceRoutes);
@@ -375,6 +430,52 @@ app.use('/api/v1/challenge', challenge)
 app.use('/api/v1/leaderboard', leaderBoard)
 app.use('/api/v1', masterSimRoutes)
 app.use('/api/v1', masterModel)
+
+app.get('/test-daily-challenge-snapshot', async (req, res) => {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  try {
+    const challenges = await Challenge.find({
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
+
+    for (const c of challenges) {
+      const participants = c.participants.filter(p => p.status === 'accepted');
+
+      participants.forEach(participant => {
+        const { clientId, progress } = participant;
+
+        io.to(c._id.toString()).emit('dailyChallengeUpdate', {
+          challengeId: c._id,
+          userId: clientId,
+          date: today,
+          total: progress?.total || 0,
+          entries: progress?.entries || [],
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0
+        });
+
+        io.to(clientId.toString()).emit('dailyChallengeUpdate', {
+          challengeId: c._id,
+          userId: clientId,
+          date: today,
+          total: progress?.total || 0,
+          entries: progress?.entries || [],
+          completedAt: participant.completedAt || null,
+          earnedCoins: participant.earnedCoins || 0
+        });
+      });
+    }
+
+    res.send("✅ Snapshot triggered and events emitted.");
+  } catch (err) {
+    console.error("🔥 Error in manual snapshot trigger:", err);
+    res.status(500).send("Error occurred");
+  }
+});
+
 
 
 
