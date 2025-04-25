@@ -327,7 +327,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.set('io', io);
+// app.set('io', io);
 // dailyChallengeSnapshot(io);
 app.use('/api/v1', userRouter);
 app.use('/api/v1', workplaceRoutes);
@@ -372,50 +372,50 @@ app.use('/api/v1/leaderboard', leaderBoard)
 app.use('/api/v1', masterSimRoutes)
 app.use('/api/v1', masterModel)
 
-app.get('/test-daily-challenge-snapshot', async (req, res) => {
-  const now = new Date();
-  const today = now.toISOString().split('T')[0];
+// app.get('/test-daily-challenge-snapshot', async (req, res) => {
+//   const now = new Date();
+//   const today = now.toISOString().split('T')[0];
 
-  try {
-    const challenges = await Challenge.find({
-      startDate: { $lte: now },
-      endDate: { $gte: now }
-    });
+//   try {
+//     const challenges = await Challenge.find({
+//       startDate: { $lte: now },
+//       endDate: { $gte: now }
+//     });
 
-    for (const c of challenges) {
-      const participants = c.participants.filter(p => p.status === 'accepted');
+//     for (const c of challenges) {
+//       const participants = c.participants.filter(p => p.status === 'accepted');
 
-      participants.forEach(participant => {
-        const { clientId, progress } = participant;
+//       participants.forEach(participant => {
+//         const { clientId, progress } = participant;
 
-        io.to(c._id.toString()).emit('dailyChallengeUpdate', {
-          challengeId: c._id,
-          userId: clientId,
-          date: today,
-          total: progress?.total || 0,
-          entries: progress?.entries || [],
-          completedAt: participant.completedAt || null,
-          earnedCoins: participant.earnedCoins || 0
-        });
+//         io.to(c._id.toString()).emit('dailyChallengeUpdate', {
+//           challengeId: c._id,
+//           userId: clientId,
+//           date: today,
+//           total: progress?.total || 0,
+//           entries: progress?.entries || [],
+//           completedAt: participant.completedAt || null,
+//           earnedCoins: participant.earnedCoins || 0
+//         });
 
-        io.to(clientId.toString()).emit('dailyChallengeUpdate', {
-          challengeId: c._id,
-          userId: clientId,
-          date: today,
-          total: progress?.total || 0,
-          entries: progress?.entries || [],
-          completedAt: participant.completedAt || null,
-          earnedCoins: participant.earnedCoins || 0
-        });
-      });
-    }
+//         io.to(clientId.toString()).emit('dailyChallengeUpdate', {
+//           challengeId: c._id,
+//           userId: clientId,
+//           date: today,
+//           total: progress?.total || 0,
+//           entries: progress?.entries || [],
+//           completedAt: participant.completedAt || null,
+//           earnedCoins: participant.earnedCoins || 0
+//         });
+//       });
+//     }
 
-    res.send("✅ Snapshot triggered and events emitted.");
-  } catch (err) {
-    console.error("🔥 Error in manual snapshot trigger:", err);
-    res.status(500).send("Error occurred");
-  }
-});
+//     res.send("✅ Snapshot triggered and events emitted.");
+//   } catch (err) {
+//     console.error("🔥 Error in manual snapshot trigger:", err);
+//     res.status(500).send("Error occurred");
+//   }
+// });
 
 
 
