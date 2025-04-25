@@ -177,7 +177,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message, file, tempId }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, message, file, tempId, fcmToken, senderName }) => {
     try {
       const roomId = getRoomId(senderId, receiverId);
       console.log("🚀 ~ socket.on ~ roomId:", roomId)
@@ -187,7 +187,6 @@ io.on("connection", (socket) => {
       if (lastMessage && lastMessage.message === message && lastMessage.fileUrl === file) return;
 
       const isReceiverInRoom = io.sockets.adapter.rooms.get(roomId)?.size > 1;
-      console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
 
       const newMessage = new Message({
         senderId,
@@ -201,13 +200,16 @@ io.on("connection", (socket) => {
 
       await newMessage.save();
 
+      console.log("🚀 ~ socket.on ~ newMessage:", newMessage)
       io.to(roomId).emit('receiveMessage', newMessage);
+      console.log("🚀 ~ socket.on ~ newMessage:------", newMessage)
 
       io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
 
       // await sendNotification(fcmToken, receiverId, message, senderName);
 
       if (isReceiverInRoom) {
+        console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
         io.to(roomId).emit("messagesSeen", {
           messageIds: [newMessage._id],
           senderId,
@@ -218,7 +220,6 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.log("❌ Error in sendMessage:", error);
     }
-    console.log("🚀 ~ socket.on ~ newMessage:", newMessage)
   });
 
   socket.on("messageSeen", async ({ messageIds, senderId, receiverId }) => {
