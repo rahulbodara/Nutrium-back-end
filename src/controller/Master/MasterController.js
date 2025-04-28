@@ -4,6 +4,18 @@ const mongoose = require('mongoose');
 const createItem = async (req, res, Model) => {
     try {
         const { name, value } = req.body;
+        const existingItem = await Model.findOne({
+            $or: [
+                { name: { $regex: `^${name}$`, $options: 'i' } },
+                { value: { $regex: `^${value}$`, $options: 'i' } }
+            ]
+        });
+
+        if (existingItem) {
+            return res.status(400).json({
+                message: 'Item with the same name or value already exists.'
+            });
+        }
         const newItem = await Model.create({ name, value });
         res.status(201).json(newItem);
     } catch (error) {
