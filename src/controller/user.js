@@ -292,7 +292,7 @@ const SignIn = async (req, res, next) => {
         const update = { $set: { isActive: 1 } };
 
         if (deviceToken && !userDetails.deviceToken.includes(deviceToken)) {
-          update.$addToSet = { deviceTokens: deviceToken };
+          update.$addToSet = { deviceToken: deviceToken };
         }
 
         await Client.updateOne({ email }, update);
