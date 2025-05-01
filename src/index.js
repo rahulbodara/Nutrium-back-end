@@ -135,12 +135,6 @@ function getRoomId(senderId, receiverId) {
 io.on("connection", (socket) => {
   console.log('✅ New client connected:', socket.id);
 
-  socket.on('joinChallengeRoom', ({ challengeId, userId }) => {
-    socket.join(challengeId.toString());
-    socket.join(userId.toString());
-    console.log("📌 User joined challenge & user room");
-  });
-
   socket.on("join", async ({ userId, otherUserId }) => {
     const roomId = getRoomId(userId, otherUserId);
     socket.join(roomId);

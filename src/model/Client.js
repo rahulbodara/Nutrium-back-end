@@ -135,9 +135,9 @@ const clientSchema = new mongoose.Schema(
     googleId: {
       type: String,
     },
-    deviceToken: {
-      type: String,
-      default: null,
+    deviceTokens: {
+      type: [String],
+      default: [],
     },
     isDemoClient: {
       type: Boolean,

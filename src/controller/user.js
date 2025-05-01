@@ -289,15 +289,14 @@ const SignIn = async (req, res, next) => {
           });
         }
 
-        let updateFields = { isActive: 1 };
+        const update = { $set: { isActive: 1 } };
 
-        if (deviceToken) {
-          updateFields.deviceToken = deviceToken;
-        } else if (!userDetails.deviceToken) {
-          updateFields.deviceToken = null;
+        if (deviceToken && !userDetails.deviceTokens.includes(deviceToken)) {
+          update.$addToSet = { deviceTokens: deviceToken };
         }
 
-        await Client.updateOne({ email }, { $set: updateFields });
+        await Client.updateOne({ email }, update);
+
         userDetails = await Client.findOne({ email });
       } else {
         return res.status(404).json({ message: 'User not found.' });
@@ -355,9 +354,10 @@ const SignIn = async (req, res, next) => {
 };
 
 
+
 const SignOut = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, deviceToken } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: "Email is required", status: 400 });
@@ -370,9 +370,17 @@ const SignOut = async (req, res, next) => {
     }
 
     if (user instanceof User) {
-      await User.updateOne({ email }, { $set: { deviceToken: null, isActive: 0 } });
+      await User.updateOne({ email }, { $set: { isActive: 0 } });
     } else {
-      await Client.updateOne({ email }, { $set: { deviceToken: null, isActive: 0 } });
+      const update = { $set: { isActive: 0 } };
+
+      if (deviceToken) {
+        update.$pull = { deviceTokens: deviceToken };
+      } else {
+        update.$set.deviceTokens = [];
+      }
+
+      await Client.updateOne({ email }, update);
     }
 
     return res.status(200).json({ message: "Logout successful", status: 200 });
@@ -385,6 +393,7 @@ const SignOut = async (req, res, next) => {
     });
   }
 };
+
 
 const demoAuth = async (req, res) => {
   try {
@@ -1168,7 +1177,6 @@ const getUser = async (req, res, next) => {
 const uploadMessage = async (req, res, next) => {
   try {
 
-    console.log("🚀 ~ app.post ~ req.file:", req.file)
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
