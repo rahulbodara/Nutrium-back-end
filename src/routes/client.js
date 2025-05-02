@@ -53,7 +53,8 @@ const {
   setClientPassword,
   clientFormEmailSend,
   searchClients,
-  getAllClients
+  getAllClients,
+  getFormConfiguration
 } = require('../controller/client/client');
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
