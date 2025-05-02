@@ -255,7 +255,7 @@ router.post('/client-getpdfData/:clientId', isAuthenticated, getPdfData)
 router.post('/client/login', clientLogin)
 router.post('/client/goolelogin', clientGoogleLogin)
 
-router.post("/client/sendClientform/:id", isAuthenticated, clientFormEmailSend)
+router.get("/client/sendClientform/:id", isAuthenticated, clientFormEmailSend)
 
 router.get('/client/form-configuration/:id', getFormConfiguration)
 
