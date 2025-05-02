@@ -27,6 +27,7 @@ const {
 const LabTestRequest = require("../../model/LabTestReqest");
 const { sendNotification } = require("../../firebase/sendNotification");
 const Activity = require("../../model/Activitys");
+const professionalPreference = require("../../model/professionalPreference");
 
 const registerClient = async (req, res, next) => {
   try {
@@ -3126,7 +3127,7 @@ const clientFormEmailSend = async (req, res) => {
     const { token } = await generateResetToken(user)
 
 
-    await EmailForm(user.email, client.email, client, token);
+    await EmailForm(user.email, client.email, client, user, token);
 
     return res.status(200).json({ message: "email sent successfully" })
 
@@ -3167,6 +3168,32 @@ const searchClients = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+const getFormConfiguration = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+
+    const client = await Client.findOne({ _id: clientId });
+    if (!client) return res.status(404).json({ message: 'Client not found' });
+
+    const userId = client.userId;
+
+    const existingPreference = await professionalPreference.findOne(
+      { userId: userId },
+      { nutritionassessmentformconfiguration: 1, _id: 0 }
+    );
+
+    if (!existingPreference) {
+      return res.status(404).json({ message: 'Preferences not found' });
+    }
+
+    res.status(200).json(existingPreference.nutritionassessmentformconfiguration);
+  } catch (error) {
+    console.error('Error fetching form configuration:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -3228,7 +3255,8 @@ module.exports = {
   getOneLabTest,
   updateLabTestRequest,
   deleteLabTestRequest,
-  clientFormEmailSend
+  clientFormEmailSend,
+  getFormConfiguration
 
 
 };

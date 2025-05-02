@@ -256,4 +256,6 @@ router.post('/client/goolelogin', clientGoogleLogin)
 
 router.post("/client/sendClientform/:id", isAuthenticated, clientFormEmailSend)
 
+router.get('/client/form-configuration/:id', getFormConfiguration)
+
 module.exports = router;

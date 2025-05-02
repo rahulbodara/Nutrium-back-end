@@ -196,7 +196,7 @@ const EmailForm = async (sender, receiver, client, user, token) => {
     },
   });
 
-  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/assessmentForm?token=${token}&&clientId=${client._id}`;
+  const updateUrl = `https://nutrium-front-end-ci66-git-feature-val-rahulbodaras-projects.vercel.app/accounts/assessmentForm?token=${token}&&clientId=${client._id}&&gender=${client.gender}`;
   const clientName = client.fullName;
   const userName = user.fullName;
 
