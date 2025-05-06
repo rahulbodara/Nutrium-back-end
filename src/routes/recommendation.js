@@ -25,6 +25,7 @@ const {
   getFoodAvoid,
   getActivitiesByClientId
 } = require("../controller/recommendation");
+const { checkPermission } = require("../middleware/checkPermission");
 
 router.put('/recommendations/:clientId', isAuthenticated, createRecommendation);
 
@@ -50,19 +51,19 @@ router.put("/updatewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountI
 
 router.delete("/deletewaterintake/:waterIntakeId/:waterRecordId/:waterIntakeAmountId", isAuthenticated, deleteWaterIntake);
 
-router.post("/clientSidePhysicalActivity/:clientId", isAuthenticated, addPhysicalActivityByClient)
+router.post("/clientSidePhysicalActivity/:clientId", isAuthenticated, checkPermission("create", "Add client physical activity API"), addPhysicalActivityByClient)
 
-router.get("/activity/:clientId", isAuthenticated, getActivitiesByClientId )
+router.get("/activity/:clientId", isAuthenticated, getActivitiesByClientId)
 
-router.get("/client-physical-activity/:clientId", isAuthenticated, getPhysicalActivityByClient)
+router.get("/client-physical-activity/:clientId", isAuthenticated, checkPermission("read", "Get client physical activity API"), getPhysicalActivityByClient)
 
-router.put("/update-physical-activity/:clientId/:activityId", isAuthenticated, updatePhysicalActivityByClient)
+router.put("/update-physical-activity/:clientId/:activityId", isAuthenticated, checkPermission("update", "Update client physical activity API"), updatePhysicalActivityByClient)
 
 router.delete("/delete-physical-activity/:clientId/:activityId", isAuthenticated, deletePhysicalActivityByClient)
 
 router.delete("/delete-physical-activity/:clientId", isAuthenticated, deleteAllPhysicalActivitiesByClient)
 
-router.get("/get-quick-access-activity/:clientId", isAuthenticated, getQuickAccessActivityByClient)
+router.get("/get-quick-access-activity/:clientId", isAuthenticated, checkPermission("read", "Get client quick access activity API"), getQuickAccessActivityByClient)
 
 router.get("/get-other-recommendation/:clientId", isAuthenticated, getOtherRecommendation)
 

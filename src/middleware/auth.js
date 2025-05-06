@@ -7,7 +7,7 @@ const isAuthenticated = (req, res, next) => {
 
   if (!token) {
     return res
-      .status(401) 
+      .status(401)
       .json({ message: 'Access denied. No token provided.' });
   }
 
@@ -16,7 +16,7 @@ const isAuthenticated = (req, res, next) => {
       return res.status(401).json({ message: 'Invalid token.' });
     }
 
-    req.userId = decoded.id;
+    req.userId = decoded?.id || decoded?.userId;
     next();
   });
 };

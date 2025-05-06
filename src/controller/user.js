@@ -39,6 +39,8 @@ const UserRole = require('../model/Roles-Permission/UserRole');
 const RolePermission = require('../model/Roles-Permission/RolePermission');
 const { setUserRole } = require('./Role/userRoleController');
 const Role = require('../model/Roles-Permission/Role');
+const FoodDiary = require('../model/FoodDiary');
+const Recommendation = require('../model/Recommendations');
 
 const SignUp = async (req, res, next) => {
   try {
@@ -279,28 +281,26 @@ const SignIn = async (req, res, next) => {
     if (!userDetails) {
       userDetails = await Client.findOne({ email });
 
-      if (userDetails) {
-        isClient = true;
-
-        if (userDetails.isDemoClient) {
-          return res.status(403).json({
-            message: 'This is a demo client. Please use the demo login endpoint.',
-            status: 403,
-          });
-        }
-
-        const update = { $set: { isActive: 1 } };
-
-        if (deviceToken && !userDetails.deviceToken.includes(deviceToken)) {
-          update.$addToSet = { deviceToken: deviceToken };
-        }
-
-        await Client.updateOne({ email }, update);
-
-        userDetails = await Client.findOne({ email });
-      } else {
+      if (!userDetails) {
         return res.status(404).json({ message: 'User not found.' });
       }
+
+      isClient = true;
+
+      if (userDetails.isDemoClient) {
+        return res.status(403).json({
+          message: 'This is a demo client. Please use the demo login endpoint.',
+          status: 403,
+        });
+      }
+
+      const update = { $set: { isActive: 1 } };
+      if (deviceToken && !userDetails.deviceToken.includes(deviceToken)) {
+        update.$addToSet = { deviceToken: deviceToken };
+      }
+
+      await Client.updateOne({ email }, update);
+      userDetails = await Client.findOne({ email });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
@@ -312,6 +312,7 @@ const SignIn = async (req, res, next) => {
       return res.status(403).json({ message: 'Clients cannot log in from the web.', status: 403 });
     }
 
+    const userId = isClient ? userDetails._id : userDetails._id;
     const token = jwt.sign(
       {
         id: isClient ? userDetails.userId : userDetails._id,
@@ -322,23 +323,28 @@ const SignIn = async (req, res, next) => {
 
     const { password: _, ...userData } = userDetails._doc;
 
-    let permissions = [];
+    let userRoles = await UserRole.find({ userId }).populate('roleId');
 
-    if (!isClient) {
-      const userRoles = await UserRole.find({ userId: userDetails._id }).populate('roleId');
-      const roleIds = userRoles.map((ur) => ur.roleId._id);
+    if (isClient && userRoles.length === 0) {
+      const clientRole = await Role.findOne({ name: 'Client' });
+      if (clientRole) {
+        await UserRole.create({ userId, roleId: clientRole._id });
+        userRoles.push({ roleId: clientRole });
+      }
+    }
 
-      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+    const roleIds = userRoles.map((ur) => ur.roleId._id);
+    const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
 
-      rolePermissions.forEach((rp) => {
-        rp.permissionIds.forEach((perm) => {
-          permissions.push({
-            action: perm.action,
-            subject: perm.subject,
-          });
+    const permissions = [];
+    rolePermissions.forEach((rp) => {
+      rp.permissionIds.forEach((perm) => {
+        permissions.push({
+          action: perm.action,
+          subject: perm.subject,
         });
       });
-    }
+    });
 
     return res.status(200).json({
       token,
@@ -352,6 +358,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
@@ -1120,6 +1127,7 @@ const printPdfData = async (req, res, next) => {
     const personalSocialHistory = await PersonalHistory.find({ clientId: clientId, userId: userId });
     const medicalHistory = await MedicalHistory.find({ clientId: clientId, userId: userId });
     const dietHistory = await DietHistory.find({ clientId: clientId, userId: userId });
+    const mealPlan = await FoodDiary.find({ clientId: clientId, userId })
     const clientData = await Client.aggregate([
       {
         $match: {
@@ -1148,10 +1156,14 @@ const printPdfData = async (req, res, next) => {
       },
 
     ])
+
+    const recommendation = await Recommendation.find({ clientId, userId })
     const userDatas = await User.findOne({ _id: userId }, { email: 1, fullName: 1, profession: 1, phoneNumber: 1 });
 
 
-    return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas });
+
+
+    return res.status(200).json({ appointmentInformation, pregnancyhistory, observation, Eatingbehaviours, foodDiaries, goalsData, personalSocialHistory, medicalHistory, dietHistory, clientData, userDatas, mealPlan, recommendation });
   } catch (error) {
     next(error);
   }

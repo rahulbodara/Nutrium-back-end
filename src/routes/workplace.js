@@ -10,28 +10,32 @@ router.post(
   "/workplaces",
   upload.single('image'),
   isAuthenticated,
-  // checkPermission('create', 'Workplace'),
+  checkPermission('create', 'Create workplace API'),
   workplaceController.createWorkplace
 );
 
 router.get(
   "/workplaces",
   isAuthenticated,
+  checkPermission('read', "Get all workplace data API"),
   workplaceController.getAllWorkplaces
 );
 router.get(
   "/workplaces/:id",
   isAuthenticated,
+  checkPermission("read", "Get workplace API"),
   workplaceController.getWorkplaceById
 );
 router.put(
   "/workplaces/:id", upload.single('image'),
   isAuthenticated,
+  checkPermission("update", "Update workplace API"),
   workplaceController.updateWorkplace
 );
 router.delete(
   "/workplaces/:id",
   isAuthenticated,
+  checkPermission("delete", "Delete workplace API"),
   workplaceController.deleteWorkplace
 );
 

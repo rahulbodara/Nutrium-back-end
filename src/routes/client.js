@@ -59,13 +59,14 @@ const {
 const upload = require('../middleware/imageHandler');
 const { getPdfData } = require('../controller/user');
 const pdfUpload = require('../middleware/pdfHandler');
+const { checkPermission } = require('../middleware/checkPermission');
 
 //===================client CRUD===================//
-router.post('/client', isAuthenticated, registerClient);
-router.delete('/client/:id', isAuthenticated, deleteClient);
-router.get('/client', isAuthenticated, getAllClient);
-router.get('/clients', isAuthenticated, getAllClients)
-router.get('/client/:id', isAuthenticated, getClientByID);
+router.post('/client', isAuthenticated, checkPermission("create", "Create client API"), registerClient);
+router.delete('/client/:id', checkPermission("delete", "Delete client API"), isAuthenticated, deleteClient);
+router.get('/client', isAuthenticated, checkPermission("read", "Get all clients of user API"), getAllClient);
+router.get('/clients', isAuthenticated, checkPermission("read", "Get all clients API"), getAllClients)
+router.get('/client/:id', isAuthenticated, checkPermission("read", "Get client data API"), getClientByID);
 router.put(
   '/client/:id',
   upload.single('image'),
@@ -73,7 +74,7 @@ router.put(
   updateClient
 );
 
-router.put("/client/set-client-password/:clientId", isAuthenticated, setClientPassword)
+router.put("/client/set-client-password/:clientId", isAuthenticated, checkPermission("update", "Set client password API"), setClientPassword)
 
 router.get('/client/search/list', isAuthenticated, searchClients);
 
@@ -84,7 +85,7 @@ router.post('/client/import-history', isAuthenticated, addImportHistory);
 
 
 //===================Appointment information===================//
-router.put('/client/appointment/:id', isAuthenticated, updateAppointmentInfo);
+router.put('/client/appointment/:id', isAuthenticated, checkPermission("update", "Update appointment info API"), updateAppointmentInfo);
 
 //===================Personal and social history===================//
 router.put(
@@ -101,6 +102,7 @@ router.put(
     { name: 'afterPicture4', maxCount: 1 },
     { name: 'afterPicture5', maxCount: 1 },]),
   isAuthenticated,
+  checkPermission("update", "Update personal history info API"),
   updatePersonalHistory
 );
 
@@ -109,49 +111,55 @@ router.put(
 router.post(
   '/client/pregnancy-history',
   isAuthenticated,
+  checkPermission("create", "Create pregnancy history API"),
   createPregnancyHistory);
 
 router.get(
   '/client/get-pregnancy-history/:clientId',
   isAuthenticated,
+  checkPermission("read", "Get pregnancy history API"),
   getPregnancyHistory);
 
 
 router.put(
   '/client/update-pregnancy-history/:id',
   isAuthenticated,
+  checkPermission("update", "Update pregnancy history API"),
   updatePregnancyHistory);
 
 router.delete(
   '/client/delete-pregnancy-history/:pregnancyId',
   isAuthenticated,
+  checkPermission("delete", "Delete pregnancy history API"),
   deletePregnancyHistory);
 
 
 //===================Observations===================//
-router.post('/client/observation', isAuthenticated, addObservation);
+router.post('/client/observation', isAuthenticated, checkPermission("create", "Create observation info API"), addObservation);
 
-router.put('/client/observation/:id', isAuthenticated, updateObservation);
+router.put('/client/observation/:id', isAuthenticated, checkPermission("update", "Update observation info API"), updateObservation);
 
-router.delete('/client/observation/:id', isAuthenticated, deleteObservation);
+router.delete('/client/observation/:id', isAuthenticated, checkPermission("delete", "Delete observation info API"), deleteObservation);
 
-router.get('/client/observation/:clientId', isAuthenticated, getObservation);
+router.get('/client/observation/:clientId', isAuthenticated, checkPermission("read", "Get observation info API"), getObservation);
 
 
 //===================Medical history===================//
 router.put(
   '/client/medical-history/:id',
   isAuthenticated,
+  checkPermission("update", "Update medical history API"),
   updateMedicalHistory
 );
 
 //===================Dietary history===================//
-router.put('/client/diet-history/:id', isAuthenticated, updateDietHistory);
+router.put('/client/diet-history/:id', isAuthenticated, checkPermission("update", "Update diet history API"), updateDietHistory);
 
 //===================Files===================//
 router.post(
   '/client/file/:id',
   isAuthenticated,
+  checkPermission("create", "Create file detail API"),
   pdfUpload.single('file'),
   createFileDetail
 );
@@ -159,81 +167,89 @@ router.post(
 router.put(
   '/client/file/:fileId',
   isAuthenticated,
+  checkPermission("update", "Update file detail API"),
   pdfUpload.single('file'),
   updateFileDetail
 );
 
-router.delete('/client/file/:fileId', isAuthenticated, deleteFileDetail);
+router.delete('/client/file/:fileId', isAuthenticated, checkPermission("delete", "Delete file detail API"), deleteFileDetail);
 
-router.get('/client/file/:id', isAuthenticated, getAllFileDetail);
+router.get('/client/file/:id', isAuthenticated, checkPermission("read", "Get file detail API"), getAllFileDetail);
 
 //===================Eating behaviour===================//
 router.post(
   '/client/eating-behaviour/:id',
   isAuthenticated,
+  checkPermission("create", "Create eating behaviour API"),
   createEatingBehaviour
 );
 
 router.put(
   '/client/eating-behaviour/:clientId/:behaviourId',
   isAuthenticated,
+  checkPermission("update", "Update eating behaviour API"),
   updateEatingBehaviour
 );
 
 router.delete(
   '/client/eating-behaviour/:clientId/:behaviourId',
   isAuthenticated,
+  checkPermission("delete", "Delete eating behaviour API"),
   deleteEatingBehaviour
 );
 
-router.get('/client/eating-behaviour/:clientId', isAuthenticated, getAllEatingBehaviour);
+router.get('/client/eating-behaviour/:clientId', isAuthenticated, checkPermission("read", "Get eating behaviour API"), getAllEatingBehaviour);
 
 
 //===================Food Diaries===================//
-router.post('/client/food-diary/:id', isAuthenticated, createFoodDiary);
+router.post('/client/food-diary/:id', isAuthenticated, checkPermission("create", "Create food diary API"), createFoodDiary);
 
-router.delete('/client/food-diary/:foodId', isAuthenticated, deleteFoodDiary);
+router.delete('/client/food-diary/:foodId', isAuthenticated, checkPermission("delete", "Delete food diary API"), deleteFoodDiary);
 
-router.put('/client/food-diary/:foodDiaryId', isAuthenticated, updateFoodDiary);
+router.put('/client/food-diary/:foodDiaryId', isAuthenticated, checkPermission("update", "Update food diary API"), updateFoodDiary);
 
-router.get('/client/food-diary/:clientId', isAuthenticated, getAllFoodDiary);
+router.get('/client/food-diary/:clientId', isAuthenticated, checkPermission("read", "Get food diary API"), getAllFoodDiary);
 
 //===================Goals===================//
-router.post('/client/goals/:id', isAuthenticated, createGoal);
+router.post('/client/goals/:id', isAuthenticated, checkPermission("create", "Create goal API"), createGoal);
 
-router.delete('/client/goals/:clientId/:id', isAuthenticated, deleteGoal);
+router.delete('/client/goals/:clientId/:id', isAuthenticated, checkPermission("delete", "Delete goal API"), deleteGoal);
 
-router.get('/client/goals/:clientId/:measurementType', isAuthenticated, getGoalByMeasurementType);
+router.get('/client/goals/:clientId/:measurementType', isAuthenticated, checkPermission("read", "Get goal by measurement type API"), getGoalByMeasurementType);
 
-router.get('/client/allGoals/:clientId', isAuthenticated, getAllGoals);
+router.get('/client/allGoals/:clientId', isAuthenticated, checkPermission("read", "Get all goal of client API"), getAllGoals);
 
-router.put('/client-updateGoal/:clientId/entries/:entryId', isAuthenticated, updateGoal);
+router.put('/client-updateGoal/:clientId/entries/:entryId', isAuthenticated, checkPermission("update", "Update goal API"), updateGoal);
 
 //===================Measurements===================//
 
-router.post('/client/measurements/:id', isAuthenticated, registerMeasurement);
+router.post('/client/measurements/:id', isAuthenticated, checkPermission("create", "Register measurement API"), registerMeasurement);
 
 router.post(
   '/client/new-measurements/:measurementId',
   isAuthenticated,
+  checkPermission("create", "Add new measurement API"),
   addNewMeasurement
 );
 
 router.get(
   '/client/measurements/:clientId',
   isAuthenticated,
+  checkPermission("read", "Get client measurement API"),
   getMeasurementById
 );
 
 router.delete(
   '/client/measurements/:clientId/entries/:entryId',
   isAuthenticated,
+  checkPermission("delete", "Delete client measurement API"),
   deleteMeasurementObject
 );
 
 router.put(
   '/client/measurements/:clientId/entries/:entryId',
   isAuthenticated,
+  checkPermission("update", "Update client measurement API"),
   updateMeasurementObject);
 
 router.post("/client/update-measurements/:clientId", isAuthenticated, addOrUpdateClientMeasurement)

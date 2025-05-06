@@ -6,6 +6,7 @@ const { isAuthenticated } = require('../middleware/auth');
 const { createPersonalDetail } = require('../controller/personalPage');
 const upload = require('../middleware/imageHandler');
 const uploadMessage = require('../middleware/messageMiddleware');
+const { checkPermission } = require('../middleware/checkPermission');
 
 
 userRoute.post('/sign_up', upload.single('image'), userController.SignUp);
@@ -26,17 +27,18 @@ userRoute.post('/reset-password/:token', userController.resetPassword);
 userRoute.delete(
   '/delete-account',
   isAuthenticated,
+  checkPermission("delete", "Delete User"),
   userController.deleteUserProfile
 );
 userRoute.put('/professionals/website', isAuthenticated, createPersonalDetail);
 
 userRoute.post('/createClientByForm/:clientId', isAuthenticated, userController.createClientByForm)
 
-userRoute.get('/getFormData/:clientId', isAuthenticated, userController.printPdfData)
+userRoute.get('/getFormData/:clientId', isAuthenticated, checkPermission("read", "Print PDF of client data"), userController.printPdfData)
 
-userRoute.get('/getUser', isAuthenticated, userController.getUser);
+userRoute.get('/getUser', isAuthenticated, checkPermission('read', 'Get user data'), userController.getUser);
 
-userRoute.post('/upload', uploadMessage.single("file"), userController.uploadMessage);
+userRoute.post('/upload', isAuthenticated, checkPermission("create", "Upload file or image into message"), uploadMessage.single("file"), userController.uploadMessage);
 
 userRoute.post('/demo-auth', userController.demoAuth)
 

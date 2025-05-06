@@ -329,11 +329,11 @@ router.put("/static-measure/:id", (req, res) => updateItem(req, res, staticMeasu
 router.delete("/static-measure/:id", (req, res) => deleteItem(req, res, staticMeasure))
 
 
-router.post("/appointmentreq-system", (req, res) => createItem(req, res, appointment_req))
-router.get("/appointmentreq-system", (req, res) => getAllItems(req, res, appointment_req))
-router.get("/appointmentreq-system/:id", (req, res) => getItemById(req, res, appointment_req))
-router.put("/appointmentreq-system/:id", (req, res) => updateItem(req, res, appointment_req))
-router.delete("/appointmentreq-system/:id", (req, res) => deleteItem(req, res, appointment_req))
+router.post("/appointment-req", (req, res) => createItem(req, res, appointment_req))
+router.get("/appointment-req", (req, res) => getAllItems(req, res, appointment_req))
+router.get("/appointment-req/:id", (req, res) => getItemById(req, res, appointment_req))
+router.put("/appointment-req/:id", (req, res) => updateItem(req, res, appointment_req))
+router.delete("/appointment-req/:id", (req, res) => deleteItem(req, res, appointment_req))
 
 router.post("/deduce-measurement", (req, res) => createItem(req, res, deduce_measurement))
 router.get("/deduce-measurement", (req, res) => getAllItems(req, res, deduce_measurement))
