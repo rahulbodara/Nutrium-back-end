@@ -14,7 +14,8 @@ const cloudinaryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'uploads/',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'tiff'],
+    resource_type: 'auto', // Important for PDFs
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'tiff', 'pdf'],
     transformation: [{ width: 500, height: 500, crop: 'limit' }],
   },
 });
@@ -23,23 +24,25 @@ const localStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true }); 
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); 
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
 const customStorage = {
   _handleFile(req, file, cb) {
-    const isImage = file.mimetype.startsWith('image/');
+    const isCloudinaryFile =
+      file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf';
 
-    if (isImage) {
+    if (isCloudinaryFile) {
       return cloudinaryStorage._handleFile(req, file, (err, info) => {
         if (!err) {
           file.storageType = 'cloudinary';
+          file.secure_url = info.secure_url || info.path;
         }
         cb(err, info);
       });
@@ -72,7 +75,7 @@ const uploadMessage = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 10485760 } 
+  limits: { fileSize: 10485760 }, // 10MB
 });
 
 module.exports = uploadMessage;

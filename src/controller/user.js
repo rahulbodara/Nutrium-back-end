@@ -3,6 +3,7 @@ const User = require('../model/User');
 const Workplace = require('../model/Workplace');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const JWT_SECRET = process.env.JWT_SECRET;
 const fs = require('fs');
 const createSubscription = require('./subscription').createSubscription;
@@ -1219,6 +1220,60 @@ const getAllUser = async (req, res, next) => {
   }
 }
 
+const sendMailMealplan = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const clientId = req.params.id;
+    const { message: emailBody, category, subject, fullName } = req.body;
+    const file = req.file;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const client = await Client.findById(clientId);
+    if (!client) return res.status(404).json({ message: "Client not found" });
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.GMAIL,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
+
+
+    const formattedBody = emailBody
+      .split('\n')
+      .map(line => `<p>${line.trim()}</p>`)
+      .join('');
+
+    let attachments = [];
+    if (file) {
+      attachments.push({
+        filename: file.originalname,
+        path: file.secure_url || file.path,
+      });
+    }
+
+
+
+    const mailOptions = {
+      from: `"${user.fullName}" <${user.email}>`,
+      to: client.email,
+      subject: subject || "Your Personalized Meal Plan",
+      html: formattedBody,
+      attachments,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (err) {
+    console.error("Email sending error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 module.exports = {
   SignUp,
@@ -1239,4 +1294,5 @@ module.exports = {
   SignOut,
   demoAuth,
   getAllUser,
+  sendMailMealplan
 };

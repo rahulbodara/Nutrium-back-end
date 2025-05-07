@@ -17,9 +17,12 @@ exports.createChallenge = async (req, res) => {
         const master = await challenge_master.findById(type);
         if (!master) return res.status(400).json({ message: 'Invalid challenge type' });
 
-        const reward = master.rewardRanges.find(r => targetValue >= r.min && targetValue <= r.max);
-        if (!reward) return res.status(400).json({ message: 'No reward found for target value' });
+        const selectedRange = master.rewardRanges.id(rewardRange);
+        if (!selectedRange) return res.status(400).json({ message: 'Invalid reward range ID' });
 
+        if (targetValue < selectedRange.min || targetValue > selectedRange.max) {
+            return res.status(400).json({ message: 'Target value is not within selected reward range' });
+        }
         if (privacy === 'private') {
             for (const clientId of selectedClients) {
                 const existsInClient = await Client.exists({ _id: clientId });
@@ -38,7 +41,7 @@ exports.createChallenge = async (req, res) => {
             startDate,
             endDate,
             targetValue,
-            coinReward: reward.coins,
+            coinReward: selectedRange.coins,
             participationLimit,
             privacy,
             createdBy: userId,
@@ -67,6 +70,7 @@ exports.createChallenge = async (req, res) => {
 
         res.status(201).json({ message: 'Challenge created successfully', challenges });
     } catch (error) {
+        console.log("🚀 ~ exports.createChallenge= ~ error:", error)
         res.status(500).json({ message: error.message });
     }
 };

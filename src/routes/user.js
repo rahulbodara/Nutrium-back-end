@@ -44,4 +44,6 @@ userRoute.post('/demo-auth', userController.demoAuth)
 
 userRoute.get('/user', userController.getAllUser)
 
+userRoute.post("/send-mealplan/:id", isAuthenticated, uploadMessage.single("file"), userController.sendMailMealplan)
+
 module.exports = userRoute;
