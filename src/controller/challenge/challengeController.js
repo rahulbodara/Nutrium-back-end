@@ -747,3 +747,126 @@ exports.getAllPublicJoinedChallenges = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
+exports.getAllChallenges = async (req, res) => {
+    console.log('HIT: getAllChallenges API');
+
+    try {
+        const {
+            search = '',
+            privacy,
+            type,
+            sortBy = 'createdAt',
+            order = 'desc',
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const filter = {};
+
+        if (privacy) {
+            filter.privacy = privacy;
+        }
+
+        if (type) {
+            filter.type = type;
+        }
+
+        if (search) {
+            filter.name = { $regex: search, $options: 'i' }; // case-insensitive search
+        }
+
+        const skip = (page - 1) * limit;
+
+        const challengesRaw = await challenge.find(filter)
+            .populate({
+                path: 'type',
+                select: 'type rewardRanges unitLabel'
+            })
+            .populate({
+                path: 'rewardRange', // optional if you still want original populated reference
+            })
+            .populate({
+                path: 'selectedClients',
+                select: 'fullName image'
+            })
+            .populate({
+                path: 'participants.clientId',
+                select: 'fullName stepLogs image'
+            })
+            .populate({
+                path: 'createdBy',
+                select: 'fullName stepLogs coin image'
+            })
+            .sort({ [sortBy]: order === 'asc' ? 1 : -1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit))
+            .lean(); // Use lean for plain JS objects
+
+        const challenges = challengesRaw.map(ch => {
+            // Find matching reward range based on targetValue
+            const rewardRange =
+                ch.type?.rewardRanges?.find(r =>
+                    ch.targetValue >= r.min && ch.targetValue <= r.max
+                ) || null;
+
+            return {
+                ...ch,
+                type: ch.type
+                    ? {
+                        _id: ch.type._id,
+                        type: ch.type.type,
+                        unitLabel: ch.type.unitLabel,
+                    }
+                    : null,
+                rewardRange,
+                selectedClients: ch.selectedClients?.map(client => ({
+                    _id: client._id,
+                    fullName: client.fullName,
+                    image: client.image,
+                })),
+                participants: ch.participants?.map(p => ({
+                    ...p,
+                    clientId: p.clientId
+                        ? {
+                            _id: p.clientId._id,
+                            fullName: p.clientId.fullName,
+                            image: p.clientId.image,
+                            stepLogs: p.clientId.stepLogs,
+                        }
+                        : null,
+                })),
+                createdBy: ch.createdBy
+                    ? {
+                        _id: ch.createdBy._id,
+                        fullName: ch.createdBy.fullName,
+                        image: ch.createdBy.image,
+                        stepLogs: ch.createdBy.stepLogs,
+                        coin: ch.createdBy.coin,
+                    }
+                    : null,
+            };
+        });
+
+        const total = await challenge.countDocuments(filter);
+
+        res.status(200).json({
+            success: true,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / limit),
+            challenges,
+        });
+
+
+
+    } catch (error) {
+        console.error('Error fetching challenges:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch challenges',
+            error: error.message
+        });
+    }
+};

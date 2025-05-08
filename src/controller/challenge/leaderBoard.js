@@ -1,10 +1,11 @@
 const moment = require('moment');
 const Challenge = require('../../model/Challenge/challenge');
 const Client = require('../../model/Client');
+const User = require('../../model/User');
 
 exports.getLeaderboard = async (req, res) => {
     try {
-        const { challengeId } = req.params;
+        const { challengeId } = req.params; // single challengeId from URL
         const { type, date, limit } = req.query;
 
         const challenge = await Challenge.findById(challengeId).lean();
@@ -14,38 +15,43 @@ exports.getLeaderboard = async (req, res) => {
             return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
         }
 
-        const participants = challenge.participants.filter(p => p.status === 'accepted');
+        const leaderboard = challenge.participants
+            .filter(p => p.status === 'accepted')
+            .map(p => {
+                const progressEntries = p.progress?.entries || [];
+                let total = 0;
 
-        const leaderboard = participants.map(p => {
-            const progressEntries = p.progress?.entries || [];
-            let total = 0;
-
-            if (!type || type === 'overall') {
-                total = p.progress?.total || 0;
-            } else {
-                const entryDate = moment(date, 'YYYY-MM-DD');
-                for (const entry of progressEntries) {
-                    const eDate = moment(entry.date, 'YYYY-MM-DD');
-                    if ((type === 'date' || type === 'day') && eDate.isSame(entryDate, 'day')) total += entry.value;
-                    if (type === 'week' && eDate.isSame(entryDate, 'week')) total += entry.value;
-                    if (type === 'month' && eDate.isSame(entryDate, 'month')) total += entry.value;
+                if (!type || type === 'overall') {
+                    total = p.progress?.total || 0;
+                } else {
+                    const entryDate = moment(date, 'YYYY-MM-DD');
+                    for (const entry of progressEntries) {
+                        const eDate = moment(entry.date, 'YYYY-MM-DD');
+                        if ((type === 'date' || type === 'day') && eDate.isSame(entryDate, 'day')) total += entry.value;
+                        if (type === 'week' && eDate.isSame(entryDate, 'week')) total += entry.value;
+                        if (type === 'month' && eDate.isSame(entryDate, 'month')) total += entry.value;
+                    }
                 }
-            }
 
-            return {
-                clientId: p.clientId.toString(),
-                progress: total,
-                completedAt: p.completedAt
-            };
-        });
+                return {
+                    clientId: p.clientId.toString(),
+                    progress: total,
+                    completedAt: p.completedAt
+                };
+            });
 
         const clientIds = leaderboard.map(p => p.clientId);
+
         const clients = await Client.find({ _id: { $in: clientIds } })
             .select('_id fullName image')
-            .lean() || await User.find({ _id: { $in: clientIds } }).select('_id fullName image')
-                .lean()
+            .lean();
 
-        const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c]));
+        const foundClientIds = clients.map(c => c._id.toString());
+        const missingClientIds = clientIds.filter(id => !foundClientIds.includes(id));
+        const users = await User.find({ _id: { $in: missingClientIds } }).select('_id fullName image').lean();
+
+        const allClients = [...clients, ...users];
+        const clientMap = Object.fromEntries(allClients.map(c => [c._id.toString(), c]));
 
         const sorted = leaderboard
             .map(entry => ({

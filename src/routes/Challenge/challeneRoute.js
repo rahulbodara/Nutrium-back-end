@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const challengeController = require('../../controller/challenge/challengeController');
 const { isAuthenticated } = require('../../middleware/auth');
+const { checkPermission } = require('../../middleware/checkPermission');
 
 router.post('/create/:userId', isAuthenticated, challengeController.createChallenge);
+router.get('/all-challenge', challengeController.getAllChallenges)
 router.post('/respond/:userId/:challengeId', isAuthenticated, challengeController.respondToChallenge);
 router.post('/reinvite/:challengeId/:clientId', isAuthenticated, challengeController.reinviteClient);
 router.get('/list/:userId', isAuthenticated, challengeController.getChallenges);
