@@ -64,6 +64,7 @@ const { dailyChallengeSnapshot } = require("./cron");
 const Challenge = require('./model/Challenge/challenge')
 const masterModel = require('./routes/masterModelRoute');
 const Client = require("./model/Client");
+const { addCoinsToClient } = require("./utils/addCoin");
 
 // // Find the local IP address
 const interfaces = os.networkInterfaces();
