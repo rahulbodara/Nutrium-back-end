@@ -317,7 +317,7 @@ exports.getPrivateChallenges = async (req, res) => {
                 { 'participants.clientId': { $ne: userId } },
                 { 'participants': { $elemMatch: { clientId: userId, status: 'pending' } } }
             ]
-        }).populate('participants.clientId', 'fullName email image').populate('type').populate('rewardRange').lean().sort({ createdAt: -1 });
+        }).populate('participants.clientId', 'fullName email image').populate('type').populate('rewardRange').populate("createdBy", "fullName").lean().sort({ createdAt: -1 });
 
         const mappedChallenges = challenges.map(ch => {
             const reward = ch.type?.rewardRanges?.find(r =>
