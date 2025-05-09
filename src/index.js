@@ -261,11 +261,19 @@ io.on("connection", (socket) => {
         .filter(msg => msg.receiverId === userId && !msg.seen)
         .map(msg => msg._id);
 
-      io.to(socket.id).emit("chatHistory", messages);
+      // Emit chat history to both users
+      io.to(socket.id).emit("chatHistory", messages); // Current user
+      if (userSockets.has(otherUserId)) {
+        userSockets.get(otherUserId).forEach(socketId => {
+          io.to(socketId).emit("chatHistory", messages); // Other user
+        });
+      }
 
+      // Mark unseen messages as 'seen'
       if (unseenIds.length > 0) {
         await Message.updateMany({ _id: { $in: unseenIds } }, { $set: { seen: true } });
 
+        // Emit 'messagesSeen' to both users
         io.to(socket.id).emit("messagesSeen", {
           messageIds: unseenIds,
           senderId: otherUserId,
