@@ -65,7 +65,7 @@ const { checkPermission } = require('../middleware/checkPermission');
 router.post('/client', isAuthenticated, checkPermission("create", "Create client API"), registerClient);
 router.delete('/client/:id', checkPermission("delete", "Delete client API"), isAuthenticated, deleteClient);
 router.get('/client', isAuthenticated, checkPermission("read", "Get all clients of user API"), getAllClient);
-router.get('/clients', isAuthenticated, checkPermission("read", "Get all clients API"), getAllClients)
+router.get('/clients', isAuthenticated, checkPermission("read", "Get all clients of user API"), getAllClients)
 router.get('/client/:id', isAuthenticated, checkPermission("read", "Get client data API"), getClientByID);
 router.put(
   '/client/:id',
