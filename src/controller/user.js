@@ -521,7 +521,7 @@ const VerifyExistingUser = async (req, res, next) => {
     if (!userDetails) {
       userDetails = await Client.findOne({ email: email });
       if (userDetails) {
-        isClient = true
+        isClient = true;
       } else {
         return res.status(404).json({ message: "User not found." });
       }
@@ -540,6 +540,21 @@ const VerifyExistingUser = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid Google ID.", status: 400 });
     }
 
+    const userId = isClient ? userDetails._id : userDetails._id;
+
+    // ✅ Assign "Client" role if client and not already assigned
+    if (isClient) {
+      let userRoles = await UserRole.find({ userId }).populate('roleId');
+
+      if (userRoles.length === 0) {
+        const clientRole = await Role.findOne({ name: 'Client' });
+        if (clientRole) {
+          await UserRole.create({ userId, roleId: clientRole._id });
+          userRoles.push({ roleId: clientRole });
+        }
+      }
+    }
+
     const token = jwt.sign(
       {
         id: isClient ? userDetails.userId : userDetails._id,
@@ -549,13 +564,12 @@ const VerifyExistingUser = async (req, res, next) => {
       // { expiresIn: "2h" }
     );
 
-
     return res.status(200).json({
       token,
       message: "Login successfully",
       status: 200,
       user: userDetails,
-      role: isClient ? "client" : userDetails.role
+      role: isClient ? "Client" : userDetails.role
     });
   } catch (error) {
     console.error(error);
