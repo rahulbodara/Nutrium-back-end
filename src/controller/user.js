@@ -293,12 +293,10 @@ const SignIn = async (req, res, next) => {
         return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
       }
 
-      // Restrict demo client web login if needed
       if (userDetails.isDemoClient && isWebLogin) {
         return res.status(403).json({ message: 'Demo clients cannot log in from the web.', status: 403 });
       }
 
-      // Update deviceToken and isActive
       const update = { $set: { isActive: 1 } };
       if (deviceToken && (!userDetails.deviceToken || !userDetails.deviceToken.includes(deviceToken))) {
         update.$addToSet = { deviceToken: deviceToken };
@@ -306,15 +304,15 @@ const SignIn = async (req, res, next) => {
       await Client.updateOne({ email }, update);
       userDetails = await Client.findOne({ email });
 
-      const userId = userDetails._id;
+      const userId = userDetails.userId;
 
-      // Assign "Demo Client" role if not already assigned
       let userRoles = await UserRole.find({ userId }).populate('roleId');
-      if (userDetails.isDemoClient && userRoles.length === 0) {
-        const demoRole = await Role.findOne({ name: 'Demo Client' });
-        if (demoRole) {
-          await UserRole.create({ userId, roleId: demoRole._id });
-          userRoles.push({ roleId: demoRole });
+      if (userRoles.length === 0) {
+        const roleName = userDetails.isDemoClient ? 'Demo Client' : 'Client';
+        const role = await Role.findOne({ name: roleName });
+        if (role) {
+          await UserRole.create({ userId, roleId: role._id });
+          userRoles.push({ roleId: role });
         }
       }
 
@@ -340,7 +338,7 @@ const SignIn = async (req, res, next) => {
       const { password: _, ...userData } = userDetails._doc;
 
       return res.status(200).json({
-        message: 'Demo client login successful',
+        message: userDetails.isDemoClient ? 'Demo client login successful' : 'Login successful',
         token,
         userData,
         permissions,
@@ -348,37 +346,21 @@ const SignIn = async (req, res, next) => {
       });
     }
 
+    // If user is a platform User
     const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
     if (!isPasswordMatch) {
       return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
     }
 
-    if (isClient && isWebLogin) {
-      return res.status(403).json({ message: 'Clients cannot log in from the web.', status: 403 });
-    }
-
     const userId = userDetails._id;
     const token = jwt.sign(
-      {
-        id: isClient ? userDetails.userId : userDetails._id,
-        role: isClient ? 'Client' : userDetails.role,
-      },
+      { id: userId, role: userDetails.role },
       JWT_SECRET
     );
 
     const { password: _, ...userData } = userDetails._doc;
 
-    let userRoles = await UserRole.find({ userId }).populate('roleId');
-
-    // Assign default role "Client" if needed
-    if (isClient && userRoles.length === 0) {
-      const clientRole = await Role.findOne({ name: 'Client' });
-      if (clientRole) {
-        await UserRole.create({ userId, roleId: clientRole._id });
-        userRoles.push({ roleId: clientRole });
-      }
-    }
-
+    const userRoles = await UserRole.find({ userId }).populate('roleId');
     const roleIds = userRoles.map((ur) => ur.roleId._id);
     const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
 
@@ -393,17 +375,19 @@ const SignIn = async (req, res, next) => {
     });
 
     return res.status(200).json({
-      token,
       message: 'Login successful',
-      status: 200,
+      token,
       userData,
       permissions,
+      status: 200,
     });
+
   } catch (error) {
-    console.log(error);
+    console.error(error);
     next(error);
   }
 };
+
 
 
 
