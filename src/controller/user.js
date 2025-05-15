@@ -288,20 +288,64 @@ const SignIn = async (req, res, next) => {
 
       isClient = true;
 
-      if (userDetails.isDemoClient) {
-        return res.status(403).json({
-          message: 'This is a demo client. Please use the demo login endpoint.',
-          status: 403,
-        });
+      const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
+      if (!isPasswordMatch) {
+        return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
       }
 
+      // Restrict demo client web login if needed
+      if (userDetails.isDemoClient && isWebLogin) {
+        return res.status(403).json({ message: 'Demo clients cannot log in from the web.', status: 403 });
+      }
+
+      // Update deviceToken and isActive
       const update = { $set: { isActive: 1 } };
-      if (deviceToken && !userDetails.deviceToken.includes(deviceToken)) {
+      if (deviceToken && (!userDetails.deviceToken || !userDetails.deviceToken.includes(deviceToken))) {
         update.$addToSet = { deviceToken: deviceToken };
       }
-
       await Client.updateOne({ email }, update);
       userDetails = await Client.findOne({ email });
+
+      const userId = userDetails._id;
+
+      // Assign "Demo Client" role if not already assigned
+      let userRoles = await UserRole.find({ userId }).populate('roleId');
+      if (userDetails.isDemoClient && userRoles.length === 0) {
+        const demoRole = await Role.findOne({ name: 'Demo Client' });
+        if (demoRole) {
+          await UserRole.create({ userId, roleId: demoRole._id });
+          userRoles.push({ roleId: demoRole });
+        }
+      }
+
+      const roleIds = userRoles.map((ur) => ur.roleId._id);
+      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+
+      const permissions = [];
+      rolePermissions.forEach((rp) => {
+        rp.permissionIds.forEach((perm) => {
+          permissions.push({
+            action: perm.action,
+            subject: perm.subject,
+          });
+        });
+      });
+
+      const token = jwt.sign(
+        { id: userId, role: 'Client' },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      const { password: _, ...userData } = userDetails._doc;
+
+      return res.status(200).json({
+        message: 'Demo client login successful',
+        token,
+        userData,
+        permissions,
+        status: 200,
+      });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
@@ -313,7 +357,7 @@ const SignIn = async (req, res, next) => {
       return res.status(403).json({ message: 'Clients cannot log in from the web.', status: 403 });
     }
 
-    const userId = isClient ? userDetails._id : userDetails._id;
+    const userId = userDetails._id;
     const token = jwt.sign(
       {
         id: isClient ? userDetails.userId : userDetails._id,
@@ -326,6 +370,7 @@ const SignIn = async (req, res, next) => {
 
     let userRoles = await UserRole.find({ userId }).populate('roleId');
 
+    // Assign default role "Client" if needed
     if (isClient && userRoles.length === 0) {
       const clientRole = await Role.findOne({ name: 'Client' });
       if (clientRole) {
@@ -359,6 +404,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
@@ -427,7 +473,6 @@ const demoAuth = async (req, res) => {
     let client = await Client.findOne({ email });
 
     if (client) {
-      // Block if existing client is NOT a demo client
       if (!client.isDemoClient && isDemoClient) {
         return res.status(403).json({
           message: 'This email is already registered as a regular client and cannot be used for demo access.',
@@ -450,62 +495,111 @@ const demoAuth = async (req, res) => {
         { expiresIn: '30d' }
       );
 
+      const userId = client._id;
+
+      let userRoles = await UserRole.find({ userId }).populate('roleId');
+      if (userRoles.length === 0) {
+        const demoRole = await Role.findOne({ name: 'Demo Client' });
+        if (demoRole) {
+          await UserRole.create({ userId, roleId: demoRole._id });
+          userRoles.push({ roleId: demoRole });
+        }
+      }
+
+      const roleIds = userRoles.map((ur) => ur.roleId._id);
+      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+
+      const permissions = [];
+      rolePermissions.forEach((rp) => {
+        rp.permissionIds.forEach((perm) => {
+          permissions.push({
+            action: perm.action,
+            subject: perm.subject,
+          });
+        });
+      });
+
       const { password: _, ...userData } = client._doc;
 
       return res.status(200).json({
         message: 'Signin successful',
         token,
         userData,
+        permissions,
       });
     } else {
-      if (isDemoClient) {
-        if (
-          !firstName || !lastName || !gender || !profession ||
-          !goal || !country || !phoneNumber || !dateOfBirth
-        ) {
-          return res.status(400).json({ message: 'All fields are required for demo signup' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        client = await Client.create({
-          fullName: `${firstName} ${lastName}`,
-          email,
-          password: hashedPassword,
-          gender,
-          occupation: profession,
-          goal,
-          country,
-          phoneNumber,
-          dateOfBirth,
-          deviceToken: deviceToken || null,
-          createdByClient: true,
-          isDemoClient: true,
-          isActive: 1,
-        });
-
-        const token = jwt.sign(
-          { id: client._id, role: 'Client' },
-          JWT_SECRET,
-          { expiresIn: '30d' }
-        );
-
-        const { password: _, ...userData } = client._doc;
-
-        return res.status(201).json({
-          message: 'Signup successful',
-          token,
-          userData,
-        });
-      } else {
+      if (!isDemoClient) {
         return res.status(400).json({ message: 'Only demo users are allowed in this route' });
       }
+
+      if (
+        !firstName || !lastName || !gender || !profession ||
+        !goal || !country || !phoneNumber || !dateOfBirth
+      ) {
+        return res.status(400).json({ message: 'All fields are required for demo signup' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      client = await Client.create({
+        fullName: `${firstName} ${lastName}`,
+        email,
+        password: hashedPassword,
+        gender,
+        occupation: profession,
+        goal,
+        country,
+        phoneNumber,
+        dateOfBirth,
+        deviceToken: deviceToken || null,
+        createdByClient: true,
+        isDemoClient: true,
+        isActive: 1,
+      });
+
+      const userId = client._id;
+
+      let userRoles = [];
+      const demoRole = await Role.findOne({ name: 'Demo Client' });
+      if (demoRole) {
+        await UserRole.create({ userId, roleId: demoRole._id });
+        userRoles.push({ roleId: demoRole });
+      }
+
+      const roleIds = userRoles.map((ur) => ur.roleId._id);
+      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+
+      const permissions = [];
+      rolePermissions.forEach((rp) => {
+        rp.permissionIds.forEach((perm) => {
+          permissions.push({
+            action: perm.action,
+            subject: perm.subject,
+          });
+        });
+      });
+
+      const token = jwt.sign(
+        { id: client._id, role: 'Client' },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      const { password: _, ...userData } = client._doc;
+
+      return res.status(201).json({
+        message: 'Signup successful',
+        token,
+        userData,
+        permissions,
+      });
     }
   } catch (error) {
     console.error('Demo Auth Error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 
