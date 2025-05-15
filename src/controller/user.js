@@ -278,25 +278,29 @@ const SignIn = async (req, res, next) => {
 
     let userDetails = await User.findOne({ email });
     let isClient = false;
+    let userId;
 
     if (!userDetails) {
+      // Check if it's a Client
       userDetails = await Client.findOne({ email });
-
       if (!userDetails) {
         return res.status(404).json({ message: 'User not found.' });
       }
 
       isClient = true;
 
+      // Check password
       const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
       if (!isPasswordMatch) {
         return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
       }
 
+      // Restrict demo client from web login
       if (userDetails.isDemoClient && isWebLogin) {
         return res.status(403).json({ message: 'Demo clients cannot log in from the web.', status: 403 });
       }
 
+      // Update device token
       const update = { $set: { isActive: 1 } };
       if (deviceToken && (!userDetails.deviceToken || !userDetails.deviceToken.includes(deviceToken))) {
         update.$addToSet = { deviceToken: deviceToken };
@@ -304,60 +308,68 @@ const SignIn = async (req, res, next) => {
       await Client.updateOne({ email }, update);
       userDetails = await Client.findOne({ email });
 
-      const userId = userDetails.userId;
+      // For demo client, skip userId/permissions
+      if (!userDetails.isDemoClient) {
+        userId = userDetails.userId;
 
-      let userRoles = await UserRole.find({ userId }).populate('roleId');
-      if (userRoles.length === 0) {
-        const roleName = userDetails.isDemoClient ? 'Demo Client' : 'Client';
-        const role = await Role.findOne({ name: roleName });
-        if (role) {
-          await UserRole.create({ userId, roleId: role._id });
-          userRoles.push({ roleId: role });
+        // Fetch or create user roles
+        let userRoles = await UserRole.find({ userId }).populate('roleId');
+        if (userRoles.length === 0) {
+          const roleName = 'Client';
+          const role = await Role.findOne({ name: roleName });
+          if (role) {
+            await UserRole.create({ userId, roleId: role._id });
+            userRoles.push({ roleId: role });
+          }
         }
-      }
 
-      const roleIds = userRoles.map((ur) => ur.roleId._id);
-      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+        // Get permissions from roles
+        const roleIds = userRoles.map((ur) => ur.roleId._id);
+        const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
 
-      const permissions = [];
-      rolePermissions.forEach((rp) => {
-        rp.permissionIds.forEach((perm) => {
-          permissions.push({
-            action: perm.action,
-            subject: perm.subject,
+        const permissions = [];
+        rolePermissions.forEach((rp) => {
+          rp.permissionIds.forEach((perm) => {
+            permissions.push({
+              action: perm.action,
+              subject: perm.subject,
+            });
           });
         });
-      });
 
-      const token = jwt.sign(
-        { id: userId, role: 'Client' },
-        JWT_SECRET,
-        { expiresIn: '30d' }
-      );
+        const token = jwt.sign({ id: userId, role: 'Client' }, JWT_SECRET, { expiresIn: '30d' });
 
-      const { password: _, ...userData } = userDetails._doc;
-
-      return res.status(200).json({
-        message: userDetails.isDemoClient ? 'Demo client login successful' : 'Login successful',
-        token,
-        userData,
-        permissions,
-        status: 200,
-      });
+        const { password: _, ...userData } = userDetails._doc;
+        return res.status(200).json({
+          message: 'Login successful',
+          token,
+          userData,
+          permissions,
+          status: 200,
+        });
+      } else {
+        // For demo client — no userId or permissions
+        const token = jwt.sign({ id: userDetails._id, role: 'DemoClient' }, JWT_SECRET, { expiresIn: '30d' });
+        const { password: _, ...userData } = userDetails._doc;
+        return res.status(200).json({
+          message: 'Demo client login successful',
+          token,
+          userData,
+          permissions: [],
+          status: 200,
+        });
+      }
     }
 
-    // If user is a platform User
+    // If it's a platform user
     const isPasswordMatch = await bcrypt.compare(password, userDetails.password);
     if (!isPasswordMatch) {
       return res.status(400).json({ message: 'Invalid Credentials', status: 400 });
     }
 
-    const userId = userDetails._id;
-    const token = jwt.sign(
-      { id: userId, role: userDetails.role },
-      JWT_SECRET
-    );
+    userId = userDetails._id;
 
+    const token = jwt.sign({ id: userId, role: userDetails.role }, JWT_SECRET, { expiresIn: '30d' });
     const { password: _, ...userData } = userDetails._doc;
 
     const userRoles = await UserRole.find({ userId }).populate('roleId');
@@ -387,6 +399,7 @@ const SignIn = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
