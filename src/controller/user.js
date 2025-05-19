@@ -154,16 +154,15 @@ const SignUp = async (req, res, next) => {
     await lookupEntry.save();
 
     const defaultRole = await Role.findOne({ name: "Nutritionist" });
-    let permissions = []
+    let permissions = [];
     if (defaultRole) {
       const userRole = new UserRole({
         userId: savedUser._id,
         roleId: defaultRole._id
       });
-      await userRole.save()
-      const roleIds = userRole.roleId
+      await userRole.save();
 
-      const rolePermissions = await RolePermission.find({ roleId: { $in: roleIds } }).populate('permissionIds');
+      const rolePermissions = await RolePermission.find({ roleId: defaultRole._id }).populate('permissionIds');
 
       rolePermissions.forEach((rp) => {
         rp.permissionIds.forEach((perm) => {
@@ -173,10 +172,8 @@ const SignUp = async (req, res, next) => {
           });
         });
       });
-
-      permissions = rolePermissions || []
-
     }
+
 
     return res.status(200).json({
       success: true,
