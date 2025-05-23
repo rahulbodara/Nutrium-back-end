@@ -219,6 +219,41 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("deleteMessage", async ({ userId, otherUserId, messageId }) => {
+    try {
+      const roomId = getRoomId(userId, otherUserId);
+
+      // Find the message and verify ownership
+      const message = await Message.findById(messageId);
+
+      if (!message) {
+        socket.emit('deleteMessageError', { error: 'Message not found' });
+        return;
+      }
+
+      // Verify that the user requesting deletion is the sender
+      if (message.senderId.toString() !== userId) {
+        socket.emit('deleteMessageError', { error: 'Unauthorized to delete this message' });
+        return;
+      }
+
+      // Soft delete the message
+      message.isDeleted = true;
+      await message.save();
+
+      // Emit deletion event to all users in the room
+      io.to(roomId).emit('messageDeleted', {
+        messageId,
+        senderId: userId,
+        receiverId: otherUserId
+      });
+
+    } catch (error) {
+      console.log("❌ Error in deleteMessage:", error);
+      socket.emit('deleteMessageError', { error: 'Failed to delete message' });
+    }
+  });
+
   socket.on("messageSeen", async ({ messageIds, senderId, receiverId }) => {
     try {
       const unseen = await Message.find({
