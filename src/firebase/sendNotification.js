@@ -39,17 +39,48 @@ const sendNotification = async (fcmTokens, receiverId, message, senderName) => {
     data: {
       receiverId: receiverId?.toString() || "",
       message: message || "",
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
+      sound: "default",
+      status: "done",
+      screen: "chat",
     },
     android: {
+      priority: "high",
       notification: {
         sound: "default",
+        priority: "high",
+        channelId: "high_importance_channel",
+        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+        visibility: "public",
+        importance: "high",
+        icon: "@mipmap/ic_launcher",
+        color: "#1ab394",
       },
     },
     apns: {
       payload: {
         aps: {
           sound: "default",
+          badge: 1,
+          contentAvailable: true,
+          mutableContent: true,
+          category: "MESSAGE_CATEGORY",
         },
+      },
+      headers: {
+        "apns-priority": "10",
+        "apns-push-type": "alert",
+      },
+    },
+    webpush: {
+      headers: {
+        Urgency: "high",
+      },
+      notification: {
+        requireInteraction: true,
+        icon: "/icon.png",
+        badge: "/badge.png",
+        vibrate: [100, 50, 100],
       },
     },
   }));

@@ -203,7 +203,27 @@ io.on("connection", (socket) => {
       console.log("aaaaaaaaaaaaaaaaaaaaaaaaa, reacevie")
       io.to(socket.id).emit('messageSent', { ...newMessage.toObject(), tempId });
 
-      // await sendNotification(fcmToken, receiverId, message, senderName);
+      // Send notification if receiver is not in room (app closed or in background)
+      if (!isReceiverInRoom && fcmToken) {
+        try {
+          const notificationData = {
+            title: senderName || 'New Message',
+            body: message || 'You have received a new message',
+            data: {
+              type: 'message',
+              senderId: senderId,
+              receiverId: receiverId,
+              messageId: newMessage._id,
+              roomId: roomId
+            }
+          };
+
+          await sendNotification(fcmToken, notificationData);
+          console.log("📱 Background notification sent successfully");
+        } catch (notificationError) {
+          console.error("❌ Error sending background notification:", notificationError);
+        }
+      }
 
       if (isReceiverInRoom) {
         console.log("🚀 ~ socket.on ~ isReceiverInRoom:", isReceiverInRoom)
@@ -223,7 +243,6 @@ io.on("connection", (socket) => {
     try {
       const roomId = getRoomId(userId, otherUserId);
 
-      // Find the message and verify ownership
       const message = await Message.findById(messageId);
 
       if (!message) {
@@ -231,17 +250,14 @@ io.on("connection", (socket) => {
         return;
       }
 
-      // Verify that the user requesting deletion is the sender
       if (message.senderId.toString() !== userId) {
         socket.emit('deleteMessageError', { error: 'Unauthorized to delete this message' });
         return;
       }
 
-      // Soft delete the message
       message.isDeleted = true;
       await message.save();
 
-      // Emit deletion event to all users in the room
       io.to(roomId).emit('messageDeleted', {
         messageId,
         senderId: userId,
