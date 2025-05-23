@@ -241,31 +241,20 @@ io.on("connection", (socket) => {
 
   socket.on("deleteMessage", async ({ userId, otherUserId, messageId }) => {
     try {
-      const roomId = getRoomId(userId, otherUserId);
-
       const message = await Message.findById(messageId);
-
       if (!message) {
         socket.emit('deleteMessageError', { error: 'Message not found' });
         return;
       }
-
       if (message.senderId.toString() !== userId) {
         socket.emit('deleteMessageError', { error: 'Unauthorized to delete this message' });
         return;
       }
-
       message.isDeleted = true;
       await message.save();
-
-      io.to(roomId).emit('messageDeleted', {
-        messageId,
-        senderId: userId,
-        receiverId: otherUserId
-      });
-
+      const roomId = getRoomId(userId, otherUserId);
+      io.to(roomId).emit('messageDeleted', { messageId });
     } catch (error) {
-      console.log("❌ Error in deleteMessage:", error);
       socket.emit('deleteMessageError', { error: 'Failed to delete message' });
     }
   });
