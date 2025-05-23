@@ -427,6 +427,66 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("editMessage", async ({ messageId, newMessage, userId, otherUserId }) => {
+    try {
+      const message = await Message.findById(messageId);
+
+      if (!message) {
+        socket.emit('editMessageError', { error: 'Message not found' });
+        return;
+      }
+
+      if (message.senderId.toString() !== userId) {
+        socket.emit('editMessageError', { error: 'Unauthorized to edit this message' });
+        return;
+      }
+
+      message.message = newMessage;
+      message.edited = true;
+      await message.save();
+
+      const roomId = getRoomId(userId, otherUserId);
+      io.to(roomId).emit('messageEdited', message);
+
+    } catch (error) {
+      console.log("❌ Error in editMessage:", error);
+      socket.emit('editMessageError', { error: 'Failed to edit message' });
+    }
+  });
+
+  socket.on("likeMessage", async ({ messageId, userId, otherUserId }) => {
+    try {
+      const message = await Message.findById(messageId);
+
+      if (!message) {
+        socket.emit('likeMessageError', { error: 'Message not found' });
+        return;
+      }
+
+      const likeIndex = message.likes.indexOf(userId);
+      const liked = likeIndex === -1;
+
+      if (liked) {
+        message.likes.push(userId);
+      } else {
+        message.likes.splice(likeIndex, 1);
+      }
+
+      await message.save();
+
+      const roomId = getRoomId(userId, otherUserId);
+      io.to(roomId).emit('messageLiked', {
+        messageId,
+        liked,
+        userId
+      });
+
+    } catch (error) {
+      console.log("❌ Error in likeMessage:", error);
+      socket.emit('likeMessageError', { error: 'Failed to like message' });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`❌ User disconnected: ${socket.id}`);
     let userToRemove = null;
