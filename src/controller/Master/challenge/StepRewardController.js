@@ -68,16 +68,10 @@ exports.deleteChallengeMaster = async (req, res) => {
 
 exports.getChallengeMasterKeyValues = async (req, res) => {
     try {
-        const masters = await challenge_master.find({}, { _id: 1, type: 1 });
+        const masters = await challenge_master.find({});
 
-        const response = masters.map(m => ({
-            _id: m._id,
-            key: m.type,
-            value: m.type,
-            coin: m.coins
-        }));
 
-        res.status(200).json({ success: true, data: response });
+        res.status(200).json({ success: true, data: masters });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

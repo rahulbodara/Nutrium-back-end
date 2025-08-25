@@ -10,7 +10,7 @@ router.post(
   "/workplaces",
   upload.single('image'),
   isAuthenticated,
-  checkPermission('create', 'Create workplace API'),
+  checkPermission('create', 'Create workplace api'),
   workplaceController.createWorkplace
 );
 

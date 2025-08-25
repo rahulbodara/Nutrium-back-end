@@ -52,7 +52,7 @@ const sendNotification = async (fcmTokens, receiverId, message, senderName) => {
         channelId: "high_importance_channel",
         clickAction: "FLUTTER_NOTIFICATION_CLICK",
         visibility: "public",
-        importance: "high",
+        // importance: "high",
         icon: "@mipmap/ic_launcher",
         color: "#1ab394",
       },

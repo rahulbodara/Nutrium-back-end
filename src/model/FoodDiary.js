@@ -9,7 +9,7 @@ const mealScheduleSchema = new mongoose.Schema({
   },
   meal: {
     type: [Object],
-    default: [], 
+    default: [],
   },
   notes: {
     type: String,
